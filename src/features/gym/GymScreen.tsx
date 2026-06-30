@@ -20,12 +20,19 @@ export function GymScreen() {
   const logged = useGymStore((state) => state.logged);
   const active = useGymStore((state) => state.active);
   const addSet = useGymStore((state) => state.addSet);
+  const addExercise = useGymStore((state) => state.addExercise);
+  const finishWorkout = useGymStore((state) => state.finishWorkout);
+  const cancelWorkout = useGymStore((state) => state.cancelWorkout);
 
-  // "4 / 5 exercises" — logged + the active one, of a 5-exercise plan.
-  const progressLabel = `${logged.length + 1} / 5 exercises`;
+  const progressLabel = `${logged.length + (active ? 1 : 0)} exercises logged`;
 
-  const handleBack = () => router.navigate('/');
-  const handleFinish = () => router.navigate('/');
+  const handleBack = () => {
+    cancelWorkout();
+  };
+
+  const handleFinish = async () => {
+    await finishWorkout();
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -44,14 +51,15 @@ export function GymScreen() {
           <LoggedExerciseCard key={exercise.name} exercise={exercise} />
         ))}
 
-        <ActiveExerciseCard exercise={active} onAddSet={addSet} />
+        {active && <ActiveExerciseCard exercise={active} onAddSet={addSet} />}
 
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Add exercise"
+          onPress={() => addExercise('New Exercise')}
+          accessibilityRole='button'
+          accessibilityLabel='Add exercise'
           style={styles.addExercise}
         >
-          <Icon name="plus" size={17} color={colors.muted} />
+          <Icon name='plus' size={17} color={colors.muted} />
           <Text style={styles.addExerciseText}>Add exercise</Text>
         </Pressable>
       </ScrollView>

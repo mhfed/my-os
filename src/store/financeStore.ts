@@ -97,7 +97,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
 
   setBudget: async (categoryId, amount, month) => {
     const existing = get().budgets.find(
-      (b) => b.categoryId === categoryId && b.month === month
+      (b) => b.categoryId === categoryId && b.month === month,
     );
     const budget: Budget = existing
       ? { ...existing, amount }
@@ -114,6 +114,36 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         ? state.budgets.map((b) => (b.id === budget.id ? budget : b))
         : [...state.budgets, budget],
     }));
+  },
+
+  addRecurring: async (input) => {
+    const rule = {
+      ...input,
+      id: newId(),
+      createdAt: Date.now(),
+    };
+    const { runSql } = await import('@/db/database');
+    await runSql(
+      `INSERT INTO recurring (id, userId, type, amount, categoryId, note, dayOfMonth, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+      [
+        rule.id,
+        rule.userId ?? null,
+        rule.type,
+        rule.amount,
+        rule.categoryId,
+        rule.note ?? null,
+        rule.dayOfMonth,
+        rule.createdAt,
+      ],
+    );
+    set((state) => ({ recurring: [rule, ...state.recurring] }));
+  },
+
+  deleteRecurring: async (id) => {
+    const { runSql } = await import('@/db/database');
+    await runSql('DELETE FROM recurring WHERE id = ?;', [id]);
+    set((state) => ({ recurring: state.recurring.filter((r) => r.id !== id) }));
   },
 
   // ----- selectors (active month only) -----

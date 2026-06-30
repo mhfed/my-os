@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
+import { SetBudgetModal } from './SetBudgetModal';
 import { fonts } from '@/theme/typography';
 import type { CategorySpend } from '@/types/finance';
 
@@ -12,9 +14,16 @@ interface CategoryBreakdownProps {
 
 /** "By category" section: donut + legend rows. */
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
+  const [budgetOpen, setBudgetOpen] = useState(false);
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>By category</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.sectionTitle}>By category</Text>
+        <Pressable onPress={() => setBudgetOpen(true)}>
+          <Text style={styles.actionText}>Set budget</Text>
+        </Pressable>
+      </View>
 
       <View style={styles.card}>
         <CategoryDonut data={data} />
@@ -31,6 +40,13 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
           ))}
         </View>
       </View>
+
+      {budgetOpen && (
+        <SetBudgetModal
+          visible={budgetOpen}
+          onClose={() => setBudgetOpen(false)}
+        />
+      )}
     </View>
   );
 }
@@ -39,11 +55,21 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
   sectionTitle: {
     fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.text,
-    marginBottom: 14,
+  },
+  actionText: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.purple,
   },
   card: {
     flexDirection: 'row',

@@ -70,23 +70,23 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ### 3.1 Health (Gym + Run)
 
-| Tính năng                                        | Trạng thái                                              |
-| ------------------------------------------------ | ------------------------------------------------------- |
-| Màn Workout (timer chạy, sets, PR badge, finish) | ✅ UI                                                   |
-| Lưu workout / lịch sử tập                        | ❌ (hiện session-only, dữ liệu seed, **không** persist) |
-| Run / cardio tracker                             | ❌                                                      |
+| Tính năng                                        | Trạng thái                                               |
+| ------------------------------------------------ | -------------------------------------------------------- |
+| Màn Workout (timer chạy, sets, PR badge, finish) | ✅ UI và state machine                                   |
+| Lưu workout / lịch sử tập                        | ✅ Build `HealthDashboard` và persist vào SQLite         |
+| Run / cardio tracker                             | ⚠️ Mock UI ở `HealthDashboard` (Connect to Strava later) |
 
 ### 3.2 Finance Tracker
 
-| Tính năng                   | Ưu tiên | Trạng thái                                                                                              |
-| --------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
-| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                                                                |
-| Categories tùy chỉnh        | P0      | ⚠️ Tạo mới được; chưa sửa/xóa                                                                           |
-| Ngân sách (Budget)          | P0      | ⚠️ Tính & hiển thị % budget + `setBudget` trong store; **chưa có UI đặt budget**, chưa cảnh báo gần đạt |
-| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                                                                     |
-| Recurring transaction       | P1      | ⚠️ Có schema + store; chưa có UI                                                                        |
-| Export CSV                  | P1      | ❌                                                                                                      |
-| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)                                               |
+| Tính năng                   | Ưu tiên | Trạng thái                                                     |
+| --------------------------- | ------- | -------------------------------------------------------------- |
+| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                       |
+| Categories tùy chỉnh        | P0      | ⚠️ Tạo mới được; chưa sửa/xóa                                  |
+| Ngân sách (Budget)          | P0      | ✅ Tính & hiển thị % budget + `setBudget` UI Modal ở Breakdown |
+| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                            |
+| Recurring transaction       | P1      | ✅ Modal quản lý và thiết lập                                  |
+| Export CSV                  | P1      | ❌                                                             |
+| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)      |
 
 ---
 

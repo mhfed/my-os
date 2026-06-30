@@ -10,6 +10,7 @@ import { monthLabel } from '@/utils/date';
 
 import { AddTransactionSheet } from './components/AddTransactionSheet';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
+import { ManageRecurringModal } from './components/ManageRecurringModal';
 import { MonthSelector } from './components/MonthSelector';
 import { RecentTransactions } from './components/RecentTransactions';
 import { SpendingOverview } from './components/SpendingOverview';
@@ -27,6 +28,7 @@ export function FinanceScreen() {
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
 
   if (!ready) {
     return <View style={styles.placeholder} />;
@@ -42,6 +44,7 @@ export function FinanceScreen() {
         month={monthLabel(activeMonth)}
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
+        onManageRecurring={() => setRecurringOpen(true)}
       />
 
       <ScrollView
@@ -65,8 +68,8 @@ export function FinanceScreen() {
       <Pressable
         style={styles.fab}
         onPress={() => setSheetOpen(true)}
-        accessibilityRole="button"
-        accessibilityLabel="Add transaction"
+        accessibilityRole='button'
+        accessibilityLabel='Add transaction'
       >
         <LinearGradient
           colors={[colors.purple, '#5D52C9']}
@@ -74,13 +77,18 @@ export function FinanceScreen() {
           end={{ x: 0.94, y: 0.34 }}
           style={styles.fabGradient}
         >
-          <Icon name="plus" size={28} color={colors.white} />
+          <Icon name='plus' size={28} color={colors.white} />
         </LinearGradient>
       </Pressable>
 
       <AddTransactionSheet
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
+      />
+
+      <ManageRecurringModal
+        visible={recurringOpen}
+        onClose={() => setRecurringOpen(false)}
       />
     </SafeAreaView>
   );

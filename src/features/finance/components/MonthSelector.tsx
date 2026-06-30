@@ -9,34 +9,51 @@ interface MonthSelectorProps {
   month: string;
   onPrev: () => void;
   onNext: () => void;
+  onManageRecurring?: () => void;
 }
 
 /** Screen header: "Finance" title + the month stepper control. */
-export function MonthSelector({ month, onPrev, onNext }: MonthSelectorProps) {
+export function MonthSelector({
+  month,
+  onPrev,
+  onNext,
+  onManageRecurring,
+}: MonthSelectorProps) {
   return (
     <View style={styles.header}>
       <Text style={styles.title}>Finance</Text>
 
-      <View style={styles.stepper}>
-        <TouchableOpacity
-          onPress={onPrev}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Previous month"
-        >
-          <Icon name="chevron-left" size={16} color={colors.muted} />
-        </TouchableOpacity>
+      <View style={styles.rightGroup}>
+        {onManageRecurring && (
+          <TouchableOpacity
+            onPress={onManageRecurring}
+            hitSlop={8}
+            style={styles.iconBtn}
+          >
+            <Icon name='calendar-sync' size={18} color={colors.text} />
+          </TouchableOpacity>
+        )}
+        <View style={styles.stepper}>
+          <TouchableOpacity
+            onPress={onPrev}
+            hitSlop={8}
+            accessibilityRole='button'
+            accessibilityLabel='Previous month'
+          >
+            <Icon name='chevron-left' size={16} color={colors.muted} />
+          </TouchableOpacity>
 
-        <Text style={styles.month}>{month}</Text>
+          <Text style={styles.month}>{month}</Text>
 
-        <TouchableOpacity
-          onPress={onNext}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Next month"
-        >
-          <Icon name="chevron-right" size={16} color={colors.muted} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onNext}
+            hitSlop={8}
+            accessibilityRole='button'
+            accessibilityLabel='Next month'
+          >
+            <Icon name='chevron-right' size={16} color={colors.muted} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -55,6 +72,21 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: colors.text,
     letterSpacing: -0.4,
+  },
+  rightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stepper: {
     flexDirection: 'row',

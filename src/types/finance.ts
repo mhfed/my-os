@@ -126,11 +126,19 @@ export interface FinanceState {
 
   // mutations (persist to SQLite)
   addTransaction: (
-    input: Omit<Transaction, 'id' | 'createdAt'>
+    input: Omit<Transaction, 'id' | 'createdAt'>,
   ) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addCategory: (input: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
-  setBudget: (categoryId: string, amount: number, month: string) => Promise<void>;
+  setBudget: (
+    categoryId: string,
+    amount: number,
+    month: string,
+  ) => Promise<void>;
+  addRecurring: (
+    input: Omit<RecurringRule, 'id' | 'createdAt'>,
+  ) => Promise<void>;
+  deleteRecurring: (id: string) => Promise<void>;
 
   // selectors (derived view-models for the active month)
   getOverview: () => MonthlyOverview;
