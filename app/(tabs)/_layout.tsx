@@ -9,7 +9,7 @@ import { Icon, TABS } from '@/theme/icons';
 function TabBarBackground() {
   return (
     <View style={StyleSheet.absoluteFill}>
-      <BlurView tint="dark" intensity={30} style={StyleSheet.absoluteFill} />
+      <BlurView tint='dark' intensity={30} style={StyleSheet.absoluteFill} />
       <View style={styles.tabBarTint} />
     </View>
   );
@@ -52,16 +52,20 @@ export default function TabsLayout() {
             ),
             // The Health tab is the immersive active-workout view — it has its
             // own "Finish workout" bar, so hide the app tab bar while focused.
-            ...(tab.route === 'health' ? { tabBarStyle: { display: 'none' } } : {}),
+            ...(tab.route === 'health'
+              ? { tabBarStyle: { display: 'none' } }
+              : {}),
           }}
         />
       ))}
 
       {/* Hidden routes — not shown in the bar, reached from the More hub.
           The bar stays visible so the user can navigate away by tapping a tab. */}
-      <Tabs.Screen name="inbox" options={{ href: null }} />
-      <Tabs.Screen name="journal" options={{ href: null }} />
-      <Tabs.Screen name="habits" options={{ href: null }} />
+      <Tabs.Screen name='inbox' options={{ href: null }} />
+      <Tabs.Screen name='journal' options={{ href: null }} />
+      <Tabs.Screen name='habits' options={{ href: null }} />
+      <Tabs.Screen name='notes' options={{ href: null }} />
+      <Tabs.Screen name='goals' options={{ href: null }} />
     </Tabs>
   );
 }

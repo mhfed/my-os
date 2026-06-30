@@ -15,11 +15,41 @@ interface MoreItem {
 }
 
 const ITEMS: MoreItem[] = [
-  { label: 'Inbox', sub: 'Triage your quick captures', icon: 'inbox', color: colors.purple, route: '/inbox' },
-  { label: 'Journal', sub: 'Daily entry · mood · time capsule', icon: 'notebook', color: colors.teal, route: '/journal' },
-  { label: 'Habits', sub: 'Streaks & weekly grid', icon: 'chart-box', color: colors.purple, route: '/habits' },
-  { label: 'Notes', sub: 'Second brain — coming soon', icon: 'brain', color: colors.orange },
-  { label: 'Goals', sub: 'OKRs & milestones — coming soon', icon: 'target', color: colors.red },
+  {
+    label: 'Inbox',
+    sub: 'Triage your quick captures',
+    icon: 'inbox',
+    color: colors.purple,
+    route: '/inbox',
+  },
+  {
+    label: 'Journal',
+    sub: 'Daily entry · mood · time capsule',
+    icon: 'notebook',
+    color: colors.teal,
+    route: '/journal',
+  },
+  {
+    label: 'Habits',
+    sub: 'Streaks & weekly grid',
+    icon: 'chart-box',
+    color: colors.purple,
+    route: '/habits',
+  },
+  {
+    label: 'Notes',
+    sub: 'Second brain · reading list',
+    icon: 'brain',
+    color: colors.orange,
+    route: '/notes' as any,
+  },
+  {
+    label: 'Goals',
+    sub: 'OKRs & milestones',
+    icon: 'target',
+    color: colors.red,
+    route: '/goals' as any,
+  },
 ];
 
 export default function MoreScreen() {
@@ -45,7 +75,9 @@ export default function MoreScreen() {
                 !enabled ? styles.rowDisabled : null,
               ]}
             >
-              <View style={[styles.iconChip, { backgroundColor: tint(item.color) }]}>
+              <View
+                style={[styles.iconChip, { backgroundColor: tint(item.color) }]}
+              >
                 <Icon name={item.icon} size={20} color={item.color} />
               </View>
               <View style={styles.rowText}>
@@ -53,9 +85,13 @@ export default function MoreScreen() {
                 <Text style={styles.rowSub}>{item.sub}</Text>
               </View>
               {enabled ? (
-                <Icon name="chevron-right" size={20} color={colors.muted} />
+                <Icon name='chevron-right' size={20} color={colors.muted} />
               ) : (
-                <Icon name="lock-outline" size={16} color={colors.tabInactive} />
+                <Icon
+                  name='lock-outline'
+                  size={16}
+                  color={colors.tabInactive}
+                />
               )}
             </Pressable>
           );

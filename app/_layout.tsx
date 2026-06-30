@@ -23,6 +23,8 @@ import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
+import { useNoteStore } from '@/store/noteStore';
+import { useGoalStore } from '@/store/goalStore';
 import { GlobalCapture } from '@/components/GlobalCapture';
 
 // Keep the splash screen visible while we bootstrap fonts + every module store.
@@ -56,12 +58,23 @@ export default function RootLayout() {
         useHabitsStore.getState().init(),
         useJournalStore.getState().init(),
         useInboxStore.getState().init(),
+        useNoteStore.getState().init(),
+        useGoalStore.getState().init(),
       ]);
     }
   }, [initStarted]);
 
+  const noteReady = useNoteStore((s) => s.ready);
+  const goalReady = useGoalStore((s) => s.ready);
+
   const storesReady =
-    financeReady && tasksReady && habitsReady && journalReady && inboxReady;
+    financeReady &&
+    tasksReady &&
+    habitsReady &&
+    journalReady &&
+    inboxReady &&
+    noteReady &&
+    goalReady;
   const ready = fontsLoaded && storesReady;
 
   const onLayoutRootView = useCallback(() => {

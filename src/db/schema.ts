@@ -115,6 +115,69 @@ export const SCHEMA: string[] = [
     updatedAt INTEGER NOT NULL
   );`,
 
+  // ----- Phase 2 Gym -----------------------------------------------------
+  `CREATE TABLE IF NOT EXISTS workouts (
+    id TEXT PRIMARY KEY NOT NULL,
+    userId TEXT,
+    name TEXT NOT NULL,
+    startTime INTEGER NOT NULL,
+    endTime INTEGER,
+    createdAt INTEGER NOT NULL
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS workout_exercises (
+    id TEXT PRIMARY KEY NOT NULL,
+    workoutId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    orderIndex INTEGER NOT NULL,
+    pr INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(workoutId) REFERENCES workouts(id) ON DELETE CASCADE
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS workout_sets (
+    id TEXT PRIMARY KEY NOT NULL,
+    exerciseId TEXT NOT NULL,
+    weight TEXT NOT NULL,
+    reps TEXT NOT NULL,
+    orderIndex INTEGER NOT NULL,
+    FOREIGN KEY(exerciseId) REFERENCES workout_exercises(id) ON DELETE CASCADE
+  );`,
+
+  // ----- Phase 3 Knowledge & Goals ---------------------------------------
+  `CREATE TABLE IF NOT EXISTS notes (
+    id TEXT PRIMARY KEY NOT NULL,
+    userId TEXT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL DEFAULT '',
+    tags TEXT NOT NULL DEFAULT '[]',
+    isReadingList INTEGER NOT NULL DEFAULT 0,
+    url TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS goals (
+    id TEXT PRIMARY KEY NOT NULL,
+    userId TEXT,
+    title TEXT NOT NULL,
+    description TEXT,
+    deadline INTEGER,
+    status TEXT NOT NULL DEFAULT 'active',
+    dropReason TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS milestones (
+    id TEXT PRIMARY KEY NOT NULL,
+    goalId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0,
+    linkedTaskId TEXT,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY(goalId) REFERENCES goals(id) ON DELETE CASCADE
+  );`,
+
   // Quick Capture inbox (PRD §2.1). `status`: 'inbox' | 'archived'.
   `CREATE TABLE IF NOT EXISTS inbox_items (
     id TEXT PRIMARY KEY NOT NULL,
@@ -128,4 +191,9 @@ export const SCHEMA: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_task_subtasks_taskId ON task_subtasks (taskId);`,
   `CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON habit_logs (date);`,
   `CREATE INDEX IF NOT EXISTS idx_inbox_status ON inbox_items (status);`,
+  `CREATE INDEX IF NOT EXISTS idx_workouts_startTime ON workouts (startTime);`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_exercises_workoutId ON workout_exercises (workoutId);`,
+  `CREATE INDEX IF NOT EXISTS idx_notes_updatedAt ON notes (updatedAt);`,
+  `CREATE INDEX IF NOT EXISTS idx_goals_status ON goals (status);`,
+  `CREATE INDEX IF NOT EXISTS idx_milestones_goalId ON milestones (goalId);`,
 ];

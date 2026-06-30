@@ -92,10 +92,10 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ## Phase 3 — Knowledge & Goals
 
-| Module               | Trạng thái                                |
-| -------------------- | ----------------------------------------- |
-| Notes / Second Brain | ❌ (placeholder "coming soon" trong More) |
-| Goals                | ❌ (placeholder)                          |
+| Module               | Trạng thái                                                                 |
+| -------------------- | -------------------------------------------------------------------------- |
+| Notes / Second Brain | ✅ Schema SQLite, list UI, Modal Editor markdown, quản lý dạng lưới tags   |
+| Goals                | ✅ Goal Modal (kèm auto gen sub-tasks), Milestone Checklist, Schema đầy đủ |
 
 ---
 
@@ -115,5 +115,6 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 1. **Gym persistence** — lưu workout đã xong + màn lịch sử tập; Run tracker. ✅
 2. **Finance hoàn thiện** — UI đặt budget, recurring UI, export CSV. ✅
 3. **Quick Capture đầy đủ** — nút capture nổi toàn cục ✅; voice; swipe để triage.
-4. **Test trên iPhone + polish** — chạy thật, fix runtime, haptics, animation.
-5. **Phase 3** — Notes/Second Brain, Goals.
+4. **Phase 3 (Knowledge & Goals)** — Đã hoàn thiện flow Notes và Goals.
+5. **Test trên iPhone + polish** — chạy thật, fix runtime, haptics, animation.
+6. **Phase 3** — Notes/Second Brain, Goals.
