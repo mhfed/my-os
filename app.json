@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Personal OS",
+    "slug": "personal-os",
+    "version": "1.0.0",
+    "scheme": "personalos",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.personalos.app"
+    },
+    "android": {
+      "package": "com.personalos.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
