@@ -131,6 +131,18 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     }));
   },
 
+  updateTransaction: async (id, patch) => {
+    const { runSql } = await import('@/db/database');
+    const existing = get().transactions.find((t) => t.id === id);
+    if (!existing) return;
+    const updated = { ...existing, ...patch };
+    await runSql(
+      'UPDATE transactions SET type=?, amount=?, category_id=?, note=?, date=? WHERE id=?;',
+      [updated.type, updated.amount, updated.categoryId, updated.note ?? null, updated.date, id],
+    );
+    set((s) => ({ transactions: s.transactions.map((t) => (t.id === id ? updated : t)) }));
+  },
+
   addCategory: async (input) => {
     const category: Category = {
       ...input,
@@ -279,7 +291,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
   },
 
   getCategorySpend: (): CategorySpend[] => {
-    const { activeMonth, transactions, categories } = get();
+    const { activeMonth, transactions, categories, budgets } = get();
     const { start, end } = monthRange(activeMonth);
 
     const totals = new Map<string, number>();
@@ -295,6 +307,9 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     for (const category of categories) {
       const amount = totals.get(category.id) ?? 0;
       if (amount <= 0) continue;
+      const catBudget = budgets.find(
+        (b) => b.categoryId === category.id && b.month === activeMonth,
+      )?.amount ?? 0;
       result.push({
         categoryId: category.id,
         name: category.name,
@@ -302,6 +317,8 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         icon: category.icon,
         amount,
         pct: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
+        budget: catBudget,
+        budgetUsed: catBudget > 0 ? amount / catBudget : 0,
       });
     }
 

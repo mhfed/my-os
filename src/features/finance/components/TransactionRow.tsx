@@ -11,6 +11,7 @@ import { formatTxnDate } from '@/utils/date';
 interface TransactionRowProps {
   txn: TransactionView;
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 function DeleteAction({ onPress }: { onPress: () => void }) {
@@ -21,7 +22,7 @@ function DeleteAction({ onPress }: { onPress: () => void }) {
   );
 }
 
-export function TransactionRow({ txn, onDelete }: TransactionRowProps) {
+export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
   const isIncome = txn.type === 'income';
   const amountColor = isIncome ? colors.teal : colors.text;
   const amountText = isIncome
@@ -29,7 +30,7 @@ export function TransactionRow({ txn, onDelete }: TransactionRowProps) {
     : formatVND(txn.amount);
 
   const rowContent = (
-    <View style={styles.row}>
+    <Pressable onPress={onEdit} style={styles.row}>
       <View style={[styles.chip, { backgroundColor: tint(txn.color) }]}>
         <Icon name={txn.icon as IconName} size={19} color={txn.color} />
       </View>
@@ -44,7 +45,7 @@ export function TransactionRow({ txn, onDelete }: TransactionRowProps) {
       </View>
 
       <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
-    </View>
+    </Pressable>
   );
 
   if (!onDelete) return rowContent;

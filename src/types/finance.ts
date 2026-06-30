@@ -88,6 +88,10 @@ export interface CategorySpend {
   amount: number;
   /** 0–100, share of total expense for the month. */
   pct: number;
+  /** Budget cap in VND for the month; 0 if no budget set. */
+  budget: number;
+  /** 0–∞ fraction of budget used; >1 means over budget; 0 if no budget. */
+  budgetUsed: number;
 }
 
 /** A transaction joined with its category, ready to render in a row. */
@@ -129,6 +133,7 @@ export interface FinanceState {
     input: Omit<Transaction, 'id' | 'createdAt'>,
   ) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  updateTransaction: (id: string, patch: Partial<Pick<Transaction, 'amount' | 'type' | 'categoryId' | 'note' | 'date'>>) => Promise<void>;
   addCategory: (input: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
   updateCategory: (id: string, input: Partial<Omit<Category, 'id' | 'createdAt' | 'userId'>>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;

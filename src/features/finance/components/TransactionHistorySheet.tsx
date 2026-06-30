@@ -19,6 +19,7 @@ import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
 import { formatTxnDate } from '@/utils/date';
 
+import { EditTransactionSheet } from './EditTransactionSheet';
 import { TransactionRow } from './TransactionRow';
 
 interface TransactionHistorySheetProps {
@@ -50,6 +51,7 @@ export function TransactionHistorySheet({
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
+  const [editTxn, setEditTxn] = useState<TransactionView | null>(null);
 
   // Build TransactionView[] for active month — reactive to store changes
   const allViews = useMemo<TransactionView[]>(() => {
@@ -116,6 +118,7 @@ export function TransactionHistorySheet({
       presentationStyle='pageSheet'
       onRequestClose={handleClose}
     >
+      <EditTransactionSheet txn={editTxn} onClose={() => setEditTxn(null)} />
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         {/* Header */}
         <View style={styles.header}>
@@ -190,6 +193,7 @@ export function TransactionHistorySheet({
                     key={txn.id}
                     txn={txn}
                     onDelete={() => deleteTransaction(txn.id)}
+                    onEdit={() => setEditTxn(txn)}
                   />
                 ))}
               </View>
