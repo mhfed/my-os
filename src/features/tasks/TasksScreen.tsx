@@ -22,6 +22,7 @@ export function TasksScreen() {
   const activeFilter = useTasksStore((s) => s.activeFilter);
   const init = useTasksStore((s) => s.init);
   const toggleTask = useTasksStore((s) => s.toggleTask);
+  const toggleSubtask = useTasksStore((s) => s.toggleSubtask);
   const setFilter = useTasksStore((s) => s.setFilter);
   const sectionOf = useTasksStore((s) => s.sectionOf);
   const todayTasksFn = useTasksStore((s) => s.todayTasks);
@@ -55,7 +56,7 @@ export function TasksScreen() {
           </Text>
         </View>
         <Pressable style={styles.addButton} onPress={() => setAddVisible(true)}>
-          <Icon name="plus" size={22} color={colors.screenBg} />
+          <Icon name='plus' size={22} color={colors.screenBg} />
         </Pressable>
       </View>
 
@@ -67,7 +68,11 @@ export function TasksScreen() {
       >
         {showOverdue && overdueTasks.length > 0 && (
           <View style={styles.overdueSection}>
-            <SectionHeader label="OVERDUE" count={overdueTasks.length} tone="overdue" />
+            <SectionHeader
+              label='OVERDUE'
+              count={overdueTasks.length}
+              tone='overdue'
+            />
             <View style={styles.list}>
               {overdueTasks.map((task) => (
                 <TaskCard
@@ -76,6 +81,7 @@ export function TasksScreen() {
                   timeLabel={taskTimeLabel(task)}
                   overdue
                   onToggle={toggleTask}
+                  onToggleSubtask={toggleSubtask}
                 />
               ))}
             </View>
@@ -83,7 +89,7 @@ export function TasksScreen() {
         )}
 
         <View>
-          <SectionHeader label="TODAY" count={todayTasks.length} tone="today" />
+          <SectionHeader label='TODAY' count={todayTasks.length} tone='today' />
           <View style={styles.list}>
             {todayTasks.map((task) => (
               <TaskCard
@@ -92,6 +98,7 @@ export function TasksScreen() {
                 timeLabel={taskTimeLabel(task)}
                 overdue={false}
                 onToggle={toggleTask}
+                onToggleSubtask={toggleSubtask}
               />
             ))}
           </View>
@@ -105,7 +112,7 @@ export function TasksScreen() {
           end={{ x: 0.83, y: 1 }}
           style={styles.fabGradient}
         >
-          <Icon name="plus" size={28} color={colors.white} />
+          <Icon name='plus' size={28} color={colors.white} />
         </LinearGradient>
       </Pressable>
 

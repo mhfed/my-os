@@ -7,14 +7,10 @@
 
 import { create } from 'zustand';
 
-import {
-  allRows,
-  initDatabase,
-  runSql,
-  tableIsEmpty,
-} from '@/db/database';
+import { allRows, initDatabase, runSql, tableIsEmpty } from '@/db/database';
 import { startOfToday } from '@/utils/day';
 import type {
+  Subtask,
   NewTaskInput,
   Priority,
   Task,
@@ -40,7 +36,15 @@ interface TaskRow {
   completedAt: number | null;
 }
 
-function mapRow(r: TaskRow): Task {
+interface SubtaskRow {
+  id: string;
+  taskId: string;
+  title: string;
+  done: number;
+  createdAt: number;
+}
+
+function mapRow(r: TaskRow, subtasks: SubtaskRow[] = []): Task {
   return {
     id: r.id,
     userId: r.userId ?? undefined,
@@ -51,6 +55,13 @@ function mapRow(r: TaskRow): Task {
     dueDate: r.dueDate ?? undefined,
     createdAt: r.createdAt,
     completedAt: r.completedAt ?? undefined,
+    subtasks: subtasks.map((s) => ({
+      id: s.id,
+      taskId: s.taskId,
+      title: s.title,
+      done: s.done === 1,
+      createdAt: s.createdAt,
+    })),
   };
 }
 
@@ -163,26 +174,59 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
         }
       }
 
-      const rows = await allRows<TaskRow>(
-        'SELECT * FROM tasks ORDER BY dueDate DESC, createdAt DESC;'
+      const subtaskRows = await allRows<SubtaskRow>(
+        'SELECT * FROM task_subtasks ORDER BY createdAt ASC;',
       );
-      set({ tasks: rows.map(mapRow), ready: true });
+
+      const subtasksByTask = subtaskRows.reduce(
+        (acc, row) => {
+          if (!acc[row.taskId]) acc[row.taskId] = [];
+          acc[row.taskId].push(row);
+          return acc;
+        },
+        {} as Record<string, SubtaskRow[]>,
+      );
+
+      const rows = await allRows<TaskRow>(
+        'SELECT * FROM tasks ORDER BY dueDate DESC, createdAt DESC;',
+      );
+      set({
+        tasks: rows.map((r) => mapRow(r, subtasksByTask[r.id])),
+        ready: true,
+      });
     })();
 
     return initPromise;
   },
 
   addTask: async (input: NewTaskInput) => {
+    const taskId = newId();
+    const now = Date.now();
+    const subtasks: Subtask[] = (input.subtasks || []).map((t, i) => ({
+      id: `${taskId}-sub-${i}`,
+      taskId: taskId,
+      title: t,
+      done: false,
+      createdAt: now + i,
+    }));
+
     const task: Task = {
-      id: newId(),
+      id: taskId,
       title: input.title,
       context: input.context,
       priority: input.priority,
       done: false,
       dueDate: input.dueDate,
-      createdAt: Date.now(),
+      createdAt: now,
+      subtasks,
     };
     await insertTask(task);
+    for (const st of subtasks) {
+      await runSql(
+        'INSERT INTO task_subtasks (id, taskId, title, done, createdAt) VALUES (?, ?, ?, ?, ?);',
+        [st.id, st.taskId, st.title, 0, st.createdAt],
+      );
+    }
     set((state) => ({ tasks: [task, ...state.tasks] }));
     return task;
   },
@@ -202,12 +246,39 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
 
     set((state) => ({
       tasks: state.tasks.map((t) =>
-        t.id === id ? { ...t, done, completedAt } : t
+        t.id === id ? { ...t, done, completedAt } : t,
+      ),
+    }));
+  },
+
+  toggleSubtask: async (taskId: string, subtaskId: string) => {
+    const task = get().tasks.find((t) => t.id === taskId);
+    if (!task || !task.subtasks) return;
+    const subtask = task.subtasks.find((s) => s.id === subtaskId);
+    if (!subtask) return;
+
+    const done = !subtask.done;
+    await runSql('UPDATE task_subtasks SET done = ? WHERE id = ?;', [
+      done ? 1 : 0,
+      subtaskId,
+    ]);
+
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              subtasks: t.subtasks!.map((s) =>
+                s.id === subtaskId ? { ...s, done } : s,
+              ),
+            }
+          : t,
       ),
     }));
   },
 
   deleteTask: async (id: string) => {
+    await runSql('DELETE FROM task_subtasks WHERE taskId = ?;', [id]);
     await runSql('DELETE FROM tasks WHERE id = ?;', [id]);
     set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
   },
@@ -254,7 +325,8 @@ export function taskTimeLabel(task: Task): string {
     const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
     if (hasTime) {
       const hh = d.getHours() < 10 ? `0${d.getHours()}` : `${d.getHours()}`;
-      const mm = d.getMinutes() < 10 ? `0${d.getMinutes()}` : `${d.getMinutes()}`;
+      const mm =
+        d.getMinutes() < 10 ? `0${d.getMinutes()}` : `${d.getMinutes()}`;
       return `${hh}:${mm}${task.context ? ` · ${task.context}` : ''}`;
     }
   }

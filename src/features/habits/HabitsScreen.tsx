@@ -1,13 +1,22 @@
-import { useEffect } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { Icon } from '@/theme/icons';
 import { useHabitsStore } from '@/store/habitsStore';
 
 import { HabitCard } from './components/HabitCard';
 import { WeeklyGrid } from './components/WeeklyGrid';
+import { AddHabitModal } from './components/AddHabitModal';
 
 /**
  * Habits tracker screen.
@@ -25,6 +34,8 @@ export function HabitsScreen() {
   // Subscribe to the raw rows so derived selectors re-run on every change.
   useHabitsStore((s) => s.habits);
   useHabitsStore((s) => s.logs);
+
+  const [addVisible, setAddVisible] = useState(false);
 
   useEffect(() => {
     void init();
@@ -52,8 +63,16 @@ export function HabitsScreen() {
             <Text style={styles.subtitle}>June 2025</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.completionValue}>{completion()}%</Text>
-            <Text style={styles.completionLabel}>completion</Text>
+            <Pressable
+              style={styles.addButton}
+              onPress={() => setAddVisible(true)}
+            >
+              <Icon name='plus' size={20} color={colors.screenBg} />
+            </Pressable>
+            <View style={styles.completionBox}>
+              <Text style={styles.completionValue}>{completion()}%</Text>
+              <Text style={styles.completionLabel}>completion</Text>
+            </View>
           </View>
         </View>
 
@@ -65,6 +84,10 @@ export function HabitsScreen() {
           ))}
         </View>
       </ScrollView>
+      <AddHabitModal
+        visible={addVisible}
+        onClose={() => setAddVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -103,6 +126,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   headerRight: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: 16,
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  completionBox: {
     alignItems: 'flex-end',
   },
   completionValue: {

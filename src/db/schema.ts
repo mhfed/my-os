@@ -74,6 +74,15 @@ export const SCHEMA: string[] = [
     completedAt INTEGER
   );`,
 
+  `CREATE TABLE IF NOT EXISTS task_subtasks (
+    id TEXT PRIMARY KEY NOT NULL,
+    taskId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY(taskId) REFERENCES tasks(id) ON DELETE CASCADE
+  );`,
+
   // Habits: definition rows. Per-day completion lives in habit_logs.
   `CREATE TABLE IF NOT EXISTS habits (
     id TEXT PRIMARY KEY NOT NULL,
@@ -116,6 +125,7 @@ export const SCHEMA: string[] = [
   );`,
 
   `CREATE INDEX IF NOT EXISTS idx_tasks_dueDate ON tasks (dueDate);`,
+  `CREATE INDEX IF NOT EXISTS idx_task_subtasks_taskId ON task_subtasks (taskId);`,
   `CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON habit_logs (date);`,
   `CREATE INDEX IF NOT EXISTS idx_inbox_status ON inbox_items (status);`,
 ];

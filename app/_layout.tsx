@@ -23,6 +23,7 @@ import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
+import { GlobalCapture } from '@/components/GlobalCapture';
 
 // Keep the splash screen visible while we bootstrap fonts + every module store.
 SplashScreen.preventAutoHideAsync();
@@ -82,15 +83,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
+        <StatusBar style='light' />
         <Stack
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: colors.screenBg },
           }}
         >
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name='(tabs)' />
         </Stack>
+        <GlobalCapture />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

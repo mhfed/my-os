@@ -5,6 +5,14 @@
 
 export type Priority = 'P0' | 'P1' | 'P2' | 'P3';
 
+export interface Subtask {
+  id: string;
+  taskId: string;
+  title: string;
+  done: boolean;
+  createdAt: number;
+}
+
 export interface Task {
   id: string;
   userId?: string;
@@ -17,6 +25,7 @@ export interface Task {
   dueDate?: number;
   createdAt: number;
   completedAt?: number;
+  subtasks?: Subtask[];
 }
 
 /** Overdue = past-due & not done; Today = due today or undated. */
@@ -30,6 +39,7 @@ export interface NewTaskInput {
   context?: string;
   priority: Priority;
   dueDate?: number;
+  subtasks?: string[]; // Array of titles to create initially
 }
 
 export interface TasksState {
@@ -40,6 +50,7 @@ export interface TasksState {
   init: () => Promise<void>;
   addTask: (input: NewTaskInput) => Promise<Task>;
   toggleTask: (id: string) => Promise<void>;
+  toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   setFilter: (filter: TaskFilter) => void;
 

@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import { Icon } from '@/theme/icons';
 import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { startOfToday } from '@/utils/day';
@@ -56,6 +57,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const [priority, setPriority] = useState<Priority>('P2');
   const [context, setContext] = useState('');
   const [due, setDue] = useState<DueChoice>('Today');
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [newSubtask, setNewSubtask] = useState('');
 
   const canSave = title.trim().length > 0;
 
@@ -64,6 +67,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
     setPriority('P2');
     setContext('');
     setDue('Today');
+    setSubtasks([]);
+    setNewSubtask('');
   }
 
   function handleClose() {
@@ -78,6 +83,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
       context: context.trim() || undefined,
       priority,
       dueDate: dueDateFor(due),
+      subtasks,
     });
     handleClose();
   }
@@ -86,7 +92,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType='slide'
       onRequestClose={handleClose}
     >
       <View style={styles.backdrop}>
@@ -99,10 +105,10 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             style={styles.input}
             value={title}
             onChangeText={setTitle}
-            placeholder="What needs doing?"
+            placeholder='What needs doing?'
             placeholderTextColor={colors.tabInactive}
             autoFocus
-            returnKeyType="done"
+            returnKeyType='done'
           />
 
           <Text style={styles.fieldLabel}>PRIORITY</Text>
@@ -139,10 +145,46 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             style={styles.input}
             value={context}
             onChangeText={setContext}
-            placeholder="e.g. Work, Health (optional)"
+            placeholder='e.g. Work, Health (optional)'
             placeholderTextColor={colors.tabInactive}
-            returnKeyType="done"
+            returnKeyType='done'
           />
+
+          <Text style={styles.fieldLabel}>
+            SUBTASKS {subtasks.length > 0 ? `(${subtasks.length})` : ''}
+          </Text>
+          <View style={styles.subtasksList}>
+            {subtasks.map((st, i) => (
+              <View key={i} style={styles.subtaskItem}>
+                <Icon name='check' size={14} color={colors.muted} />
+                <Text style={styles.subtaskText}>{st}</Text>
+                <Pressable
+                  onPress={() =>
+                    setSubtasks(subtasks.filter((_, idx) => idx !== i))
+                  }
+                >
+                  <Icon name='close' size={14} color={colors.muted} />
+                </Pressable>
+              </View>
+            ))}
+            <View style={styles.subtaskInputRow}>
+              <Icon name='plus' size={14} color={colors.muted} />
+              <TextInput
+                style={styles.subtaskInput}
+                value={newSubtask}
+                onChangeText={setNewSubtask}
+                placeholder='Add subtask...'
+                placeholderTextColor={colors.tabInactive}
+                returnKeyType='done'
+                onSubmitEditing={() => {
+                  if (newSubtask.trim()) {
+                    setSubtasks([...subtasks, newSubtask.trim()]);
+                    setNewSubtask('');
+                  }
+                }}
+              />
+            </View>
+          </View>
 
           <Text style={styles.fieldLabel}>DUE</Text>
           <View style={styles.segments}>
@@ -155,7 +197,10 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                   style={[
                     styles.segment,
                     isActive
-                      ? { backgroundColor: tint(colors.purple), borderColor: colors.purple }
+                      ? {
+                          backgroundColor: tint(colors.purple),
+                          borderColor: colors.purple,
+                        }
                       : styles.segmentInactive,
                   ]}
                 >
@@ -246,6 +291,34 @@ const styles = StyleSheet.create({
   segments: {
     flexDirection: 'row',
     gap: 8,
+  },
+  subtasksList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  subtaskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  subtaskText: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+  },
+  subtaskInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  subtaskInput: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+    paddingVertical: 4,
   },
   segment: {
     flex: 1,
