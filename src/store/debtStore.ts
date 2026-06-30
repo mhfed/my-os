@@ -188,9 +188,10 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     if (!existing) return;
     const updated = { ...existing, ...patch };
     await runSql(
-      `UPDATE debt_entries SET party=?, note=?, due_date=?, interest_type=?, interest_rate=?, interest_period=? WHERE id=?;`,
+      `UPDATE debt_entries SET party=?, original_amount=?, note=?, due_date=?, interest_type=?, interest_rate=?, interest_period=? WHERE id=?;`,
       [
         updated.party,
+        updated.originalAmount,
         updated.note ?? null,
         updated.dueDate ?? null,
         updated.interestType,

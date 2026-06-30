@@ -21,6 +21,7 @@ import { fonts } from '@/theme/typography';
 import { useDebtStore } from '@/store/debtStore';
 import { formatVND, formatCompactVND } from '@/utils/currency';
 import { formatTxnDate } from '@/utils/date';
+import { DatePickerModal } from '@/components/DatePickerModal';
 import type { DebtView } from '@/types/debt';
 
 interface DebtDetailSheetProps {
@@ -77,12 +78,22 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
   const deletePayment = useDebtStore((s) => s.deletePayment);
   const settleDebt = useDebtStore((s) => s.settleDebt);
   const deleteDebt = useDebtStore((s) => s.deleteDebt);
+  const updateDebt = useDebtStore((s) => s.updateDebt);
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [payAmountText, setPayAmountText] = useState('');
   const [payNote, setPayNote] = useState('');
   const [payDate, setPayDate] = useState(todayStart);
   const [linkTxnOnSettle, setLinkTxnOnSettle] = useState(true);
+
+  // Edit panel state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editParty, setEditParty] = useState('');
+  const [editAmountText, setEditAmountText] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [editDueDate, setEditDueDate] = useState<number | undefined>(undefined);
+  const [editHasDueDate, setEditHasDueDate] = useState(false);
+  const [editDueDatePickerOpen, setEditDueDatePickerOpen] = useState(false);
 
   // Cache last valid view so the pageSheet can animate out before unmounting
   const viewRef = useRef<DebtView | null>(null);
@@ -93,8 +104,33 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
   if (!view) return null;
 
   const payAmount = parseAmount(payAmountText);
+  const editAmount = parseAmount(editAmountText);
   const today = todayStart();
   const status = statusLabel(view);
+
+  function handlePencilPress() {
+    if (editOpen) {
+      setEditOpen(false);
+    } else {
+      setEditParty(view!.party);
+      setEditAmountText(String(view!.originalAmount));
+      setEditNote(view!.note ?? '');
+      const hasDue = !!view!.dueDate;
+      setEditHasDueDate(hasDue);
+      setEditDueDate(view!.dueDate ?? todayStart() + 30 * 86_400_000);
+      setEditOpen(true);
+    }
+  }
+
+  async function handleSaveEdit() {
+    await updateDebt(view!.id, {
+      party: editParty.trim(),
+      originalAmount: editAmount,
+      dueDate: editHasDueDate ? editDueDate : undefined,
+      note: editNote.trim() || undefined,
+    });
+    setEditOpen(false);
+  }
 
   async function handleAddPayment() {
     if (payAmount <= 0) return;
@@ -160,12 +196,97 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           <Text style={styles.title} numberOfLines={1}>
             {view.party}
           </Text>
+          <Pressable onPress={handlePencilPress} style={styles.editBtn} hitSlop={8}>
+            <Icon name='pencil' size={16} color={editOpen ? colors.purple : colors.muted} />
+          </Pressable>
           <Pressable onPress={handleDelete} style={styles.deleteBtn} hitSlop={8}>
             <Icon name='delete-outline' size={18} color={colors.red} />
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Inline edit panel */}
+          {editOpen && (
+            <View style={styles.editPanel}>
+              {/* Party */}
+              <Text style={styles.editLabel}>Tên người / tổ chức</Text>
+              <TextInput
+                value={editParty}
+                onChangeText={setEditParty}
+                placeholder='Nguyễn A'
+                placeholderTextColor={colors.tabInactive}
+                style={styles.editInput}
+                autoCapitalize='words'
+              />
+
+              {/* Amount */}
+              <Text style={styles.editLabel}>Số tiền (₫)</Text>
+              <View style={styles.editAmountWrap}>
+                <Text style={styles.editDong}>₫</Text>
+                <TextInput
+                  value={groupDigits(editAmount)}
+                  onChangeText={setEditAmountText}
+                  keyboardType='number-pad'
+                  placeholder='0'
+                  placeholderTextColor={colors.tabInactive}
+                  style={styles.editAmountInput}
+                />
+              </View>
+
+              {/* Due date */}
+              <View style={styles.editDueDateHeader}>
+                <Text style={styles.editLabel}>Ngày đến hạn</Text>
+                <Pressable
+                  onPress={() => setEditHasDueDate((v) => !v)}
+                  style={[styles.toggle, editHasDueDate && styles.toggleOn]}
+                >
+                  <View style={[styles.toggleThumb, editHasDueDate && styles.toggleThumbOn]} />
+                </Pressable>
+              </View>
+              {editHasDueDate && (
+                <Pressable
+                  style={styles.editDateRow}
+                  onPress={() => setEditDueDatePickerOpen(true)}
+                >
+                  <Icon name='calendar-clock' size={16} color={colors.muted} />
+                  <Text style={styles.editDateLabel}>
+                    {editDueDate ? dayLabel(editDueDate) : 'Chọn ngày'}
+                  </Text>
+                  <Icon name='chevron-right' size={14} color={colors.tabInactive} />
+                </Pressable>
+              )}
+
+              {/* Note */}
+              <Text style={styles.editLabel}>Ghi chú</Text>
+              <TextInput
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder='Lý do, điều kiện...'
+                placeholderTextColor={colors.tabInactive}
+                style={[styles.editInput, styles.editNoteInput]}
+                multiline
+                numberOfLines={3}
+              />
+
+              {/* Actions */}
+              <View style={styles.editActions}>
+                <Pressable onPress={() => setEditOpen(false)} style={styles.editCancelBtn}>
+                  <Text style={styles.editCancelText}>Huỷ</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleSaveEdit}
+                  disabled={editParty.trim().length === 0 || editAmount <= 0}
+                  style={[
+                    styles.editSaveBtn,
+                    (editParty.trim().length === 0 || editAmount <= 0) && styles.editSaveBtnDisabled,
+                  ]}
+                >
+                  <Text style={styles.editSaveText}>Lưu</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
           {/* Type badge */}
           <View style={styles.typeBadge}>
             <Icon
@@ -331,6 +452,14 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           </View>
         </Modal>
       </SafeAreaView>
+
+      {/* DatePickerModal for edit due date — sibling to SafeAreaView, inside outer Modal */}
+      <DatePickerModal
+        visible={editDueDatePickerOpen}
+        value={editDueDate ?? todayStart() + 30 * 86_400_000}
+        onSelect={setEditDueDate}
+        onClose={() => setEditDueDatePickerOpen(false)}
+      />
     </Modal>
   );
 }
@@ -360,6 +489,14 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
+  editBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   deleteBtn: {
     width: 32,
     height: 32,
@@ -369,6 +506,135 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: { paddingHorizontal: 20, paddingBottom: 100, gap: 16 },
+  // Edit panel
+  editPanel: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 0,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  editLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.muted,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  editInput: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+    backgroundColor: colors.screenBg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  editNoteInput: {
+    textAlignVertical: 'top',
+    minHeight: 64,
+  },
+  editAmountWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.screenBg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+    gap: 6,
+  },
+  editDong: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 18,
+    color: colors.muted,
+  },
+  editAmountInput: {
+    flex: 1,
+    fontFamily: fonts.monoSemibold,
+    fontSize: 20,
+    color: colors.text,
+    padding: 0,
+  },
+  editDueDateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  editDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.screenBg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 10,
+  },
+  editDateLabel: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.text,
+  },
+  toggle: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.track,
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  toggleOn: { backgroundColor: colors.purple },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.white,
+  },
+  toggleThumbOn: { alignSelf: 'flex-end' },
+  editActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  editCancelBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 11,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  editCancelText: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.muted,
+  },
+  editSaveBtn: {
+    flex: 2,
+    paddingVertical: 11,
+    borderRadius: 11,
+    alignItems: 'center',
+    backgroundColor: colors.purple,
+  },
+  editSaveBtnDisabled: { opacity: 0.4 },
+  editSaveText: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.white,
+  },
+  // —— original styles below ——
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
