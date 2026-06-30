@@ -17,17 +17,31 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
   const summary = getSummary();
   const openCount = entries.filter((e) => e.status !== 'settled').length;
 
+  const hasAlert = summary.overdueCount > 0 || summary.upcomingCount > 0;
+  const isOverdue = summary.overdueCount > 0;
+
+  const alertStrip = hasAlert ? (
+    <View style={styles.alertRow}>
+      <Text style={[styles.alertText, { color: isOverdue ? colors.red : colors.orange }]}>
+        {isOverdue
+          ? `● ${summary.overdueCount} khoản quá hạn`
+          : `⚠ ${summary.upcomingCount} khoản đến hạn trong 7 ngày`}
+      </Text>
+    </View>
+  ) : null;
+
   if (openCount === 0 && summary.totalReceivable === 0 && summary.totalPayable === 0) {
     return (
       <Pressable style={styles.emptyCard} onPress={onPress}>
-        <Icon name='handshake' size={20} color={colors.muted} />
-        <Text style={styles.emptyText}>Thêm khoản nợ / cho vay</Text>
-        <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+        <View style={styles.emptyMain}>
+          <Icon name='handshake' size={20} color={colors.muted} />
+          <Text style={styles.emptyText}>Thêm khoản nợ / cho vay</Text>
+          <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+        </View>
+        {alertStrip}
       </Pressable>
     );
   }
-
-  const hasAlert = summary.overdueCount > 0 || summary.upcomingCount > 0;
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -60,16 +74,7 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
         </View>
       </View>
 
-      {hasAlert && (
-        <View style={styles.alertRow}>
-          <Icon name='alert-circle-outline' size={13} color={colors.orange} />
-          <Text style={styles.alertText}>
-            {summary.overdueCount > 0
-              ? `${summary.overdueCount} khoản quá hạn`
-              : `${summary.upcomingCount} khoản sắp đến hạn`}
-          </Text>
-        </View>
-      )}
+      {alertStrip}
     </Pressable>
   );
 }
@@ -92,6 +97,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
     marginBottom: 24,
+    gap: 10,
+  },
+  emptyMain: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -155,11 +163,9 @@ const styles = StyleSheet.create({
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
   },
   alertText: {
     fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.orange,
   },
 });
