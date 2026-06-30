@@ -5,13 +5,34 @@ import { useRouter } from 'expo-router';
 import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
+import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
+import { exportAllData } from '@/utils/export';
+
+interface SuperAppItemConfig {
+  key: SuperAppItemKey;
+  label: string;
+  icon: IconName;
+  color: string;
+}
+
+const SUPER_APP_ALL: SuperAppItemConfig[] = [
+  { key: 'inbox', label: 'Inbox', icon: 'inbox', color: colors.purple },
+  { key: 'journal', label: 'Journal', icon: 'notebook', color: colors.teal },
+  { key: 'habits', label: 'Habits', icon: 'chart-box', color: colors.purple },
+  { key: 'notes', label: 'Notes', icon: 'brain', color: colors.orange },
+  { key: 'goals', label: 'Goals', icon: 'target', color: colors.red },
+  { key: 'today', label: 'Today', icon: 'view-grid', color: colors.purple },
+  { key: 'tasks', label: 'Tasks', icon: 'checkbox-marked-outline', color: colors.teal },
+  { key: 'health', label: 'Health', icon: 'heart-pulse', color: colors.red },
+  { key: 'finance', label: 'Finance', icon: 'wallet', color: colors.orange },
+];
 
 interface MoreItem {
   label: string;
   sub: string;
   icon: IconName;
   color: string;
-  route?: '/inbox' | '/journal' | '/habits';
+  route?: '/inbox' | '/journal' | '/habits' | '/notes' | '/goals';
 }
 
 const ITEMS: MoreItem[] = [
@@ -54,6 +75,8 @@ const ITEMS: MoreItem[] = [
 
 export default function MoreScreen() {
   const router = useRouter();
+  const pinnedItems = useSettingsStore((s) => s.pinnedItems);
+  const togglePinned = useSettingsStore((s) => s.togglePinnedItem);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
@@ -62,40 +85,124 @@ export default function MoreScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {ITEMS.map((item) => {
-          const enabled = !!item.route;
-          return (
-            <Pressable
-              key={item.label}
-              disabled={!enabled}
-              onPress={() => item.route && router.push(item.route)}
-              style={({ pressed }) => [
-                styles.row,
-                pressed && enabled ? styles.rowPressed : null,
-                !enabled ? styles.rowDisabled : null,
+        {/* Super App settings */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Icon name='view-grid-plus' size={16} color={colors.purple} />
+            <Text style={styles.sectionTitle}>Super App</Text>
+          </View>
+          <Text style={styles.sectionSub}>
+            Choose what appears when you tap the center button
+          </Text>
+          <View style={styles.toggleList}>
+            {SUPER_APP_ALL.map((item) => {
+              const pinned = pinnedItems.includes(item.key);
+              return (
+                <Pressable
+                  key={item.key}
+                  style={({ pressed }) => [
+                    styles.toggleRow,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  onPress={() => togglePinned(item.key)}
+                >
+                  <View
+                    style={[
+                      styles.toggleIcon,
+                      { backgroundColor: tint(item.color) },
+                    ]}
+                  >
+                    <Icon name={item.icon} size={16} color={item.color} />
+                  </View>
+                  <Text style={styles.toggleLabel}>{item.label}</Text>
+                  <View
+                    style={[
+                      styles.toggleCheck,
+                      pinned && styles.toggleCheckActive,
+                    ]}
+                  >
+                    {pinned && (
+                      <Icon name='check' size={14} color='#fff' />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Feature links */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Icon name='apps' size={16} color={colors.muted} />
+            <Text style={styles.sectionTitle}>All Features</Text>
+          </View>
+          {ITEMS.map((item) => {
+            const enabled = !!item.route;
+            return (
+              <Pressable
+                key={item.label}
+                disabled={!enabled}
+                onPress={() => item.route && router.push(item.route)}
+                style={({ pressed }) => [
+                  styles.row,
+                  pressed && enabled ? styles.rowPressed : null,
+                  !enabled ? styles.rowDisabled : null,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.iconChip,
+                    { backgroundColor: tint(item.color) },
+                  ]}
+                >
+                  <Icon name={item.icon} size={20} color={item.color} />
+                </View>
+                <View style={styles.rowText}>
+                  <Text style={styles.rowLabel}>{item.label}</Text>
+                  <Text style={styles.rowSub}>{item.sub}</Text>
+                </View>
+                {enabled ? (
+                  <Icon name='chevron-right' size={20} color={colors.muted} />
+                ) : (
+                  <Icon
+                    name='lock-outline'
+                    size={16}
+                    color={colors.tabInactive}
+                  />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Data */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Icon name='database' size={16} color={colors.muted} />
+            <Text style={styles.sectionTitle}>Data</Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.row,
+              pressed ? styles.rowPressed : null,
+            ]}
+            onPress={exportAllData}
+          >
+            <View
+              style={[
+                styles.iconChip,
+                { backgroundColor: tint(colors.muted) },
               ]}
             >
-              <View
-                style={[styles.iconChip, { backgroundColor: tint(item.color) }]}
-              >
-                <Icon name={item.icon} size={20} color={item.color} />
-              </View>
-              <View style={styles.rowText}>
-                <Text style={styles.rowLabel}>{item.label}</Text>
-                <Text style={styles.rowSub}>{item.sub}</Text>
-              </View>
-              {enabled ? (
-                <Icon name='chevron-right' size={20} color={colors.muted} />
-              ) : (
-                <Icon
-                  name='lock-outline'
-                  size={16}
-                  color={colors.tabInactive}
-                />
-              )}
-            </Pressable>
-          );
-        })}
+              <Icon name='database-export' size={20} color={colors.white} />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>Export Data</Text>
+              <Text style={styles.rowSub}>Backup all SQLite tables as JSON</Text>
+            </View>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -113,13 +220,82 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 22,
     paddingTop: 8,
+    paddingBottom: 4,
   },
   content: {
-    paddingTop: 18,
+    paddingTop: 16,
     paddingHorizontal: 22,
     paddingBottom: 110,
+    gap: 24,
+  },
+
+  /* Sections */
+  section: {
     gap: 10,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  sectionTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.muted,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  sectionSub: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: colors.tabInactive,
+    marginBottom: 4,
+  },
+
+  /* Toggle rows (Super App settings) */
+  toggleList: {
+    gap: 6,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  toggleIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleLabel: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.text,
+  },
+  toggleCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleCheckActive: {
+    backgroundColor: colors.purple,
+    borderColor: colors.purple,
+  },
+
+  /* Feature link rows */
   row: {
     flexDirection: 'row',
     alignItems: 'center',

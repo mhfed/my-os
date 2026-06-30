@@ -25,7 +25,11 @@ import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
 import { useNoteStore } from '@/store/noteStore';
 import { useGoalStore } from '@/store/goalStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useDebtStore } from '@/store/debtStore';
+import { useSavingsStore } from '@/store/savingsStore';
 import { GlobalCapture } from '@/components/GlobalCapture';
+import { SuperAppSheet } from '@/components/SuperAppSheet';
 
 // Keep the splash screen visible while we bootstrap fonts + every module store.
 SplashScreen.preventAutoHideAsync();
@@ -60,6 +64,9 @@ export default function RootLayout() {
         useInboxStore.getState().init(),
         useNoteStore.getState().init(),
         useGoalStore.getState().init(),
+        useSettingsStore.getState().init(),
+        useDebtStore.getState().init(),
+        useSavingsStore.getState().init(),
       ]);
     }
   }, [initStarted]);
@@ -106,6 +113,7 @@ export default function RootLayout() {
           <Stack.Screen name='(tabs)' />
         </Stack>
         <GlobalCapture />
+        <SuperAppSheet />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
