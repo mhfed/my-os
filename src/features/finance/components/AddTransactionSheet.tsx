@@ -46,6 +46,23 @@ function groupDigits(amount: number): string {
   return amount > 0 ? amount.toLocaleString('en-US') : '';
 }
 
+/** Epoch ms of today at midnight (local time). */
+function todayStart(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+/** Human-readable label for a date epoch: "Hôm nay", "Hôm qua", "27/6". */
+function dayLabel(epochMs: number): string {
+  const today = todayStart();
+  const yesterday = today - 86_400_000;
+  if (epochMs >= today) return 'Hôm nay';
+  if (epochMs >= yesterday) return 'Hôm qua';
+  const d = new Date(epochMs);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
+
 /**
  * Slide-up modal to record a transaction in ≤3 taps (PRD §3.2 "Ghi giao dịch
  * nhanh"). Type toggle filters the category chips; an inline "+ New" row creates
@@ -67,6 +84,7 @@ export function AddTransactionSheet({
   const [amountText, setAmountText] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [date, setDate] = useState(todayStart);
 
   // inline add-category state
   const [adding, setAdding] = useState(false);
@@ -85,6 +103,7 @@ export function AddTransactionSheet({
     setAmountText('');
     setCategoryId(null);
     setNote('');
+    setDate(todayStart());
     setAdding(false);
     setNewName('');
     setNewColor(PALETTE[0]);
@@ -123,14 +142,26 @@ export function AddTransactionSheet({
     setNewColor(PALETTE[0]);
   }
 
+  const today = todayStart();
+  const isToday = date >= today;
+
+  function prevDay() {
+    setDate((d) => d - 86_400_000);
+  }
+  function nextDay() {
+    setDate((d) => Math.min(d + 86_400_000, today));
+  }
+
   async function handleSubmit() {
     if (amount <= 0 || !categoryId) return;
+    // Use noon of the selected day so the transaction falls clearly within that day
+    const txnDate = date + 12 * 3_600_000;
     await addTransaction({
       type,
       amount,
       categoryId,
       note: note.trim() || undefined,
-      date: Date.now(),
+      date: txnDate,
     });
     handleClose();
   }
@@ -304,6 +335,27 @@ export function AddTransactionSheet({
                   </Pressable>
                 </View>
               )}
+
+              {/* Date */}
+              <Text style={[styles.label, { marginTop: 18 }]}>Date</Text>
+              <View style={styles.dateRow}>
+                <Pressable onPress={prevDay} style={styles.dateArrow} hitSlop={8}>
+                  <Icon name='chevron-left' size={18} color={colors.muted} />
+                </Pressable>
+                <Text style={styles.dateLabel}>{dayLabel(date)}</Text>
+                <Pressable
+                  onPress={nextDay}
+                  style={styles.dateArrow}
+                  disabled={isToday}
+                  hitSlop={8}
+                >
+                  <Icon
+                    name='chevron-right'
+                    size={18}
+                    color={isToday ? colors.tabInactive : colors.muted}
+                  />
+                </Pressable>
+              </View>
 
               {/* Note */}
               <Text style={styles.label}>Note</Text>
@@ -512,6 +564,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 13,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+    marginBottom: 18,
+    gap: 4,
+  },
+  dateArrow: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateLabel: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.text,
+  },
   noteInput: {
     fontFamily: fonts.regular,
     fontSize: 14,
@@ -522,7 +599,6 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginTop: 20,
     marginBottom: 24,
   },
   submit: {

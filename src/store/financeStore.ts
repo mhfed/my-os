@@ -18,7 +18,7 @@ import {
   loadTransactions,
   upsertBudget as dbUpsertBudget,
 } from '@/db/database';
-import { seedDatabase } from '@/data/seed';
+import { ensureSystemCategories, seedDatabase } from '@/data/seed';
 import { addMonths, currentMonthKey, monthRange } from '@/utils/date';
 import * as FileSystem from 'expo-file-system';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
@@ -55,13 +55,57 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     if (wasEmpty) {
       await seedDatabase();
     }
-    const [categories, transactions, budgets, recurring] = await Promise.all([
+    let [categories, transactions, budgets, recurring] = await Promise.all([
       loadCategories(),
       loadTransactions(),
       loadBudgets(),
       loadRecurring(),
     ]);
-    set({ categories, transactions, budgets, recurring, ready: true });
+
+    // Ensure system categories (Thu nợ, Trả nợ, Tiết kiệm) exist for existing users
+    const existingIds = new Set(categories.map((c) => c.id));
+    const added = await ensureSystemCategories(existingIds);
+    if (added.length > 0) {
+      categories = [...added, ...categories];
+    }
+
+    // Auto-generate recurring transactions that have passed their dayOfMonth
+    // this month and haven't been inserted yet. Idempotent — safe to re-run.
+    const now = new Date();
+    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const monthKey = currentMonthKey();
+    const { start, end } = monthRange(monthKey);
+    const monthTxns = transactions.filter((t) => t.date >= start && t.date < end);
+    const generated: Transaction[] = [];
+
+    for (const rule of recurring) {
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const day = Math.min(rule.dayOfMonth, lastDayOfMonth);
+      const targetMs = new Date(now.getFullYear(), now.getMonth(), day, 12, 0, 0).getTime();
+      if (targetMs > todayMs) continue;
+      if (monthTxns.some((t) => t.recurringId === rule.id)) continue;
+
+      const txn: Transaction = {
+        id: newId(),
+        type: rule.type,
+        amount: rule.amount,
+        categoryId: rule.categoryId,
+        note: rule.note,
+        date: targetMs,
+        recurringId: rule.id,
+        createdAt: Date.now(),
+      };
+      await dbInsertTransaction(txn);
+      generated.push(txn);
+    }
+
+    set({
+      categories,
+      transactions: [...generated, ...transactions],
+      budgets,
+      recurring,
+      ready: true,
+    });
   },
 
   // ----- month navigation -----
@@ -288,5 +332,37 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       });
 
     return typeof limit === 'number' ? views.slice(0, limit) : views;
+  },
+
+  getMonthlyTrends: (numMonths: number): MonthlyOverview[] => {
+    const { activeMonth, transactions, budgets } = get();
+    const result: MonthlyOverview[] = [];
+
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const month = addMonths(activeMonth, -i);
+      const { start, end } = monthRange(month);
+      let income = 0;
+      let spent = 0;
+      for (const t of transactions) {
+        if (t.date < start || t.date >= end) continue;
+        if (t.type === 'income') income += t.amount;
+        else spent += t.amount;
+      }
+      const budget = budgets
+        .filter((b) => b.month === month)
+        .reduce((s, b) => s + b.amount, 0);
+      const budgetUsed = budget > 0 ? Math.min(1, spent / budget) : 0;
+      result.push({
+        month,
+        spent,
+        income,
+        saved: income - spent,
+        budget,
+        budgetUsed,
+        remaining: budget - spent,
+      });
+    }
+
+    return result;
   },
 }));

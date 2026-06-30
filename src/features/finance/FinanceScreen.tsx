@@ -10,11 +10,16 @@ import { monthLabel } from '@/utils/date';
 
 import { AddTransactionSheet } from './components/AddTransactionSheet';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
+import { DebtLedgerSheet } from './components/DebtLedgerSheet';
+import { DebtSummaryWidget } from './components/DebtSummaryWidget';
 import { ManageRecurringModal } from './components/ManageRecurringModal';
 import { MonthSelector } from './components/MonthSelector';
+import { MonthlyTrendChart } from './components/MonthlyTrendChart';
 import { RecentTransactions } from './components/RecentTransactions';
+import { SavingsGoalsSection } from './components/SavingsGoalsSection';
 import { SpendingOverview } from './components/SpendingOverview';
 import { StatCards } from './components/StatCards';
+import { TransactionHistorySheet } from './components/TransactionHistorySheet';
 
 const RECENT_LIMIT = 6;
 
@@ -26,10 +31,13 @@ export function FinanceScreen() {
   const getOverview = useFinanceStore((s) => s.getOverview);
   const getCategorySpend = useFinanceStore((s) => s.getCategorySpend);
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
+  const getMonthlyTrends = useFinanceStore((s) => s.getMonthlyTrends);
   const exportCSV = useFinanceStore((s) => s.exportCSV);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [debtOpen, setDebtOpen] = useState(false);
 
   if (!ready) {
     return <View style={styles.placeholder} />;
@@ -38,6 +46,7 @@ export function FinanceScreen() {
   const overview = getOverview();
   const categories = getCategorySpend();
   const transactions = getTransactionViews(RECENT_LIMIT);
+  const trends = getMonthlyTrends(6);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -63,8 +72,14 @@ export function FinanceScreen() {
           spent={overview.spent}
           saved={overview.saved}
         />
+        <SavingsGoalsSection />
+        <DebtSummaryWidget onPress={() => setDebtOpen(true)} />
+        <MonthlyTrendChart data={trends} />
         <CategoryBreakdown data={categories} />
-        <RecentTransactions transactions={transactions} />
+        <RecentTransactions
+          transactions={transactions}
+          onSeeAll={() => setHistoryOpen(true)}
+        />
       </ScrollView>
 
       <Pressable
@@ -91,6 +106,16 @@ export function FinanceScreen() {
       <ManageRecurringModal
         visible={recurringOpen}
         onClose={() => setRecurringOpen(false)}
+      />
+
+      <TransactionHistorySheet
+        visible={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
+
+      <DebtLedgerSheet
+        visible={debtOpen}
+        onClose={() => setDebtOpen(false)}
       />
     </SafeAreaView>
   );

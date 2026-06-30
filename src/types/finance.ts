@@ -147,4 +147,5 @@ export interface FinanceState {
   getOverview: () => MonthlyOverview;
   getCategorySpend: () => CategorySpend[];
   getTransactionViews: (limit?: number) => TransactionView[];
+  getMonthlyTrends: (numMonths: number) => MonthlyOverview[];
 }

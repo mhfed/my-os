@@ -18,15 +18,23 @@ export function SpendingOverview({
   remaining,
 }: SpendingOverviewProps) {
   const pct = Math.max(0, Math.min(1, budgetUsed));
+  const isOver = budgetUsed >= 1 && spent > 0;
+  const isWarning = !isOver && budgetUsed >= 0.9;
+
+  const gradientColors: [string, string] = isOver
+    ? [colors.red, '#E04545']
+    : isWarning
+      ? [colors.orange, '#D4883A']
+      : [colors.purple, colors.teal];
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isOver && styles.cardOver]}>
       <Text style={styles.label}>SPENT THIS MONTH</Text>
       <Text style={styles.amount}>{formatVND(spent)}</Text>
 
       <View style={styles.track}>
         <LinearGradient
-          colors={[colors.purple, colors.teal]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.fill, { width: `${pct * 100}%` }]}
@@ -34,10 +42,12 @@ export function SpendingOverview({
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerMuted}>
-          {Math.round(pct * 100)}% of budget
+        <Text style={[styles.footerMuted, isOver && { color: colors.red }, isWarning && { color: colors.orange }]}>
+          {isOver ? 'Vượt ngân sách' : isWarning ? 'Sắp đến giới hạn' : `${Math.round(pct * 100)}% of budget`}
         </Text>
-        <Text style={styles.footerLeft}>{formatVND(remaining)} left</Text>
+        <Text style={[styles.footerLeft, isOver && { color: colors.red }]}>
+          {isOver ? `+${formatVND(Math.abs(remaining))}` : `${formatVND(remaining)} left`}
+        </Text>
       </View>
     </View>
   );
@@ -51,6 +61,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     marginBottom: 16,
+  },
+  cardOver: {
+    borderColor: `${colors.red}55`,
   },
   label: {
     fontFamily: fonts.medium,

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 import { colors, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
@@ -9,17 +10,25 @@ import { formatTxnDate } from '@/utils/date';
 
 interface TransactionRowProps {
   txn: TransactionView;
+  onDelete?: () => void;
 }
 
-/** A single transaction row in the "Recent" list. */
-export function TransactionRow({ txn }: TransactionRowProps) {
+function DeleteAction({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable style={styles.deleteAction} onPress={onPress}>
+      <Icon name='delete-outline' size={20} color={colors.white} />
+    </Pressable>
+  );
+}
+
+export function TransactionRow({ txn, onDelete }: TransactionRowProps) {
   const isIncome = txn.type === 'income';
   const amountColor = isIncome ? colors.teal : colors.text;
   const amountText = isIncome
     ? formatSignedVND(txn.amount, 'income')
     : formatVND(txn.amount);
 
-  return (
+  const rowContent = (
     <View style={styles.row}>
       <View style={[styles.chip, { backgroundColor: tint(txn.color) }]}>
         <Icon name={txn.icon as IconName} size={19} color={txn.color} />
@@ -36,6 +45,19 @@ export function TransactionRow({ txn }: TransactionRowProps) {
 
       <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
     </View>
+  );
+
+  if (!onDelete) return rowContent;
+
+  return (
+    <Swipeable
+      renderRightActions={() => <DeleteAction onPress={onDelete} />}
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+    >
+      {rowContent}
+    </Swipeable>
   );
 }
 
@@ -75,5 +97,13 @@ const styles = StyleSheet.create({
   amount: {
     fontFamily: fonts.monoSemibold,
     fontSize: 14,
+  },
+  deleteAction: {
+    width: 68,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.red,
+    borderRadius: 14,
+    marginLeft: 8,
   },
 });
