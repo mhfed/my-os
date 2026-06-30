@@ -15,6 +15,7 @@ import { DebtSummaryWidget } from './components/DebtSummaryWidget';
 import { ManageRecurringModal } from './components/ManageRecurringModal';
 import { MonthSelector } from './components/MonthSelector';
 import { MonthlyTrendChart } from './components/MonthlyTrendChart';
+import { NetWorthWidget } from './components/NetWorthWidget';
 import { RecentTransactions } from './components/RecentTransactions';
 import { SavingsGoalsSection } from './components/SavingsGoalsSection';
 import { SpendingOverview } from './components/SpendingOverview';
@@ -72,6 +73,7 @@ export function FinanceScreen() {
           spent={overview.spent}
           saved={overview.saved}
         />
+        <NetWorthWidget />
         <SavingsGoalsSection />
         <DebtSummaryWidget onPress={() => setDebtOpen(true)} />
         <MonthlyTrendChart data={trends} />
