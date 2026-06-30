@@ -54,7 +54,7 @@ export interface DebtState {
   ready: boolean;
   init: () => Promise<void>;
   addDebt: (input: Omit<DebtEntry, 'id' | 'status' | 'createdAt'>) => Promise<void>;
-  updateDebt: (id: string, patch: Partial<Pick<DebtEntry, 'party' | 'note' | 'dueDate' | 'interestType' | 'interestRate' | 'interestPeriod'>>) => Promise<void>;
+  updateDebt: (id: string, patch: Partial<Pick<DebtEntry, 'party' | 'originalAmount' | 'note' | 'dueDate' | 'interestType' | 'interestRate' | 'interestPeriod'>>) => Promise<void>;
   deleteDebt: (id: string) => Promise<void>;
   addPayment: (debtId: string, amount: number, date: number, note?: string) => Promise<void>;
   deletePayment: (paymentId: string, debtId: string, amount: number) => Promise<void>;
