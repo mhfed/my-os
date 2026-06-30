@@ -1,11 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { AnimatedCard, PressableScale } from '@/components/motion';
+import { EnergyOrb, SkiaBackground } from '@/components/skia';
 import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
@@ -14,7 +16,6 @@ import { todayKey } from '@/utils/day';
 import type { Task } from '@/types/task';
 
 import { HabitPill } from './components/HabitPill';
-import { LifeRing } from './components/LifeRing';
 import { QuickCapture } from './components/QuickCapture';
 import { TaskRow } from './components/TaskRow';
 
@@ -88,17 +89,18 @@ export function TodayScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <SkiaBackground domain="today" intensity={0.42} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <AnimatedCard index={0} style={styles.header}>
           <View>
             <Text style={styles.greeting}>Good morning</Text>
             <Text style={styles.name}>Khoa</Text>
           </View>
-          <Pressable onPress={openInbox} hitSlop={8}>
+          <PressableScale onPress={openInbox} hitSlop={8} haptic="selection">
             <LinearGradient
               colors={[colors.purple, colors.teal]}
               start={{ x: 0.1, y: 0 }}
@@ -112,49 +114,59 @@ export function TodayScreen() {
                 <Text style={styles.badgeText}>{openCount}</Text>
               </View>
             ) : null}
-          </Pressable>
-        </View>
+          </PressableScale>
+        </AnimatedCard>
 
-        {/* Life ring */}
-        <LifeRing score={score} focus={focus} body={bodyVal} mind={mind} />
+        {/* Hero — Skia energy orb (ring sweeps to score on mount) */}
+        <AnimatedCard index={1} style={styles.ringBlock}>
+          <EnergyOrb score={score} focus={focus} body={bodyVal} mind={mind} />
+        </AnimatedCard>
 
         {/* Today's tasks */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today&apos;s tasks</Text>
-          <Text style={styles.count}>
-            {todayDoneTasks}/{todayTotalTasks}
-          </Text>
-        </View>
-        <View style={styles.taskList}>
-          {visibleTasks.map((task) => (
-            <TaskRow key={task.id} task={task} onToggle={toggleTask} />
-          ))}
-        </View>
+        <AnimatedCard index={2}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Today&apos;s tasks</Text>
+            <Text style={styles.count}>
+              {todayDoneTasks}/{todayTotalTasks}
+            </Text>
+          </View>
+          <View style={styles.taskList}>
+            {visibleTasks.map((task, i) => (
+              <AnimatedCard key={task.id} index={3 + i}>
+                <TaskRow task={task} onToggle={toggleTask} />
+              </AnimatedCard>
+            ))}
+          </View>
+        </AnimatedCard>
 
         {/* Habits */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Habits</Text>
-          <Text style={styles.count}>
-            {doneTodayCount}/{totalHabits}
-          </Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.habitRow}
-          style={styles.habitScroll}
-        >
-          {habitViews.map((habit) => (
-            <HabitPill key={habit.id} habit={habit} onToggle={toggleToday} />
-          ))}
-        </ScrollView>
+        <AnimatedCard index={4}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Habits</Text>
+            <Text style={styles.count}>
+              {doneTodayCount}/{totalHabits}
+            </Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.habitRow}
+            style={styles.habitScroll}
+          >
+            {habitViews.map((habit) => (
+              <HabitPill key={habit.id} habit={habit} onToggle={toggleToday} />
+            ))}
+          </ScrollView>
+        </AnimatedCard>
 
         {/* Quick capture */}
-        <QuickCapture
-          onCapture={(text) => useInboxStore.getState().capture(text)}
-          openCount={openCount}
-          onOpenInbox={openInbox}
-        />
+        <AnimatedCard index={5}>
+          <QuickCapture
+            onCapture={(text) => useInboxStore.getState().capture(text)}
+            openCount={openCount}
+            onOpenInbox={openInbox}
+          />
+        </AnimatedCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -179,6 +191,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 26,
+  },
+  ringBlock: {
+    alignItems: 'center',
   },
   greeting: {
     fontFamily: fonts.regular,

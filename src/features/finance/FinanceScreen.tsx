@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
+import { AnimatedCard, PressableScale } from '@/components/motion';
+import { SkiaBackground } from '@/components/skia';
 import { useFinanceStore } from '@/store/financeStore';
 import { monthLabel } from '@/utils/date';
 
@@ -51,6 +53,7 @@ export function FinanceScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <SkiaBackground domain="finance" intensity={0.4} />
       <MonthSelector
         month={monthLabel(activeMonth)}
         onPrev={() => stepMonth(-1)}
@@ -63,30 +66,37 @@ export function FinanceScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <SpendingOverview
-          spent={overview.spent}
-          budgetUsed={overview.budgetUsed}
-          remaining={overview.remaining}
-        />
-        <StatCards
-          income={overview.income}
-          spent={overview.spent}
-          saved={overview.saved}
-        />
-        <NetWorthWidget />
-        <SavingsGoalsSection />
-        <DebtSummaryWidget onPress={() => setDebtOpen(true)} />
-        <MonthlyTrendChart data={trends} />
-        <CategoryBreakdown data={categories} />
-        <RecentTransactions
-          transactions={transactions}
-          onSeeAll={() => setHistoryOpen(true)}
-        />
+        <AnimatedCard index={0}>
+          <SpendingOverview
+            spent={overview.spent}
+            budgetUsed={overview.budgetUsed}
+            remaining={overview.remaining}
+          />
+        </AnimatedCard>
+        <AnimatedCard index={1}>
+          <StatCards
+            income={overview.income}
+            spent={overview.spent}
+            saved={overview.saved}
+          />
+        </AnimatedCard>
+        <AnimatedCard index={2}><NetWorthWidget /></AnimatedCard>
+        <AnimatedCard index={3}><SavingsGoalsSection /></AnimatedCard>
+        <AnimatedCard index={4}><DebtSummaryWidget onPress={() => setDebtOpen(true)} /></AnimatedCard>
+        <AnimatedCard index={5}><MonthlyTrendChart data={trends} /></AnimatedCard>
+        <AnimatedCard index={6}><CategoryBreakdown data={categories} /></AnimatedCard>
+        <AnimatedCard index={7}>
+          <RecentTransactions
+            transactions={transactions}
+            onSeeAll={() => setHistoryOpen(true)}
+          />
+        </AnimatedCard>
       </ScrollView>
 
-      <Pressable
+      <PressableScale
         style={styles.fab}
         onPress={() => setSheetOpen(true)}
+        haptic="medium"
         accessibilityRole='button'
         accessibilityLabel='Add transaction'
       >
@@ -98,7 +108,7 @@ export function FinanceScreen() {
         >
           <Icon name='plus' size={28} color={colors.white} />
         </LinearGradient>
-      </Pressable>
+      </PressableScale>
 
       <AddTransactionSheet
         visible={sheetOpen}

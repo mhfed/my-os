@@ -1,8 +1,20 @@
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Stop } from 'react-native-svg';
+import Animated, {
+  useAnimatedProps,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { timing } from '@/theme/motion';
+import { Counter } from '@/components/motion';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const CIRCUMFERENCE = 527.8;
 
@@ -19,7 +31,22 @@ interface LifeRingProps {
 
 export function LifeRing({ score, focus, body, mind }: LifeRingProps) {
   const clamped = Math.max(0, Math.min(100, score));
-  const dashOffset = CIRCUMFERENCE * (1 - clamped / 100);
+  const reduceMotion = useReducedMotion();
+
+  // Drives the ring fill, 0 → clamped. Starts empty and sweeps in on mount.
+  const progress = useSharedValue(reduceMotion ? clamped : 0);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      progress.value = clamped;
+      return;
+    }
+    progress.value = withDelay(180, withTiming(clamped, timing.reveal));
+  }, [clamped, reduceMotion, progress]);
+
+  const animatedCircleProps = useAnimatedProps(() => ({
+    strokeDashoffset: CIRCUMFERENCE * (1 - progress.value / 100),
+  }));
 
   const legend = [
     { label: 'Focus', value: focus, color: colors.purple },
@@ -39,7 +66,7 @@ export function LifeRing({ score, focus, body, mind }: LifeRingProps) {
           </Defs>
           <Circle cx={100} cy={100} r={84} stroke={colors.track} strokeWidth={14} fill="none" />
           <G rotation={-90} originX={100} originY={100}>
-            <Circle
+            <AnimatedCircle
               cx={100}
               cy={100}
               r={84}
@@ -47,13 +74,13 @@ export function LifeRing({ score, focus, body, mind }: LifeRingProps) {
               strokeWidth={14}
               strokeLinecap="round"
               strokeDasharray={`${CIRCUMFERENCE}`}
-              strokeDashoffset={dashOffset}
+              animatedProps={animatedCircleProps}
               fill="none"
             />
           </G>
         </Svg>
         <View style={styles.center} pointerEvents="none">
-          <Text style={styles.score}>{score}</Text>
+          <Counter value={score} duration={timing.reveal.duration} style={styles.score} />
           <Text style={styles.scoreLabel}>TODAY&apos;S SCORE</Text>
         </View>
       </View>
@@ -91,9 +118,11 @@ const styles = StyleSheet.create({
   score: {
     fontFamily: fonts.monoSemibold,
     fontSize: 62,
-    lineHeight: 62,
+    lineHeight: 70,
     letterSpacing: -2,
     color: colors.text,
+    textAlign: 'center',
+    minWidth: 120,
   },
   scoreLabel: {
     fontFamily: fonts.regular,

@@ -1,8 +1,18 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { colors } from '@/theme/colors';
+import { colors, glow } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { timing } from '@/theme/motion';
+import { Counter } from '@/components/motion';
 import type { MonthlyOverview } from '@/types/finance';
 import { formatVND } from '@/utils/currency';
 
@@ -11,7 +21,7 @@ type SpendingOverviewProps = Pick<
   'spent' | 'budgetUsed' | 'remaining'
 >;
 
-/** Top "SPENT THIS MONTH" card with the budget progress bar. */
+/** Top "SPENT THIS MONTH" hero — glass card, counting amount, animated budget bar. */
 export function SpendingOverview({
   spent,
   budgetUsed,
@@ -27,18 +37,38 @@ export function SpendingOverview({
       ? [colors.orange, '#D4883A']
       : [colors.purple, colors.teal];
 
+  // Amount color tracks budget health, so the number itself signals trouble.
+  const amountColor = isOver ? colors.red : isWarning ? colors.orange : colors.text;
+  const glowColor = isOver ? colors.red : isWarning ? colors.orange : colors.teal;
+
+  const reduce = useReducedMotion();
+  const fill = useSharedValue(reduce ? pct : 0);
+  useEffect(() => {
+    fill.value = reduce ? pct : withDelay(220, withTiming(pct, timing.reveal));
+  }, [pct, reduce, fill]);
+
+  const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
+
   return (
-    <View style={[styles.card, isOver && styles.cardOver]}>
+    <View style={[styles.card, glow(glowColor, isOver || isWarning ? 0.35 : 0.22, 22), isOver && styles.cardOver]}>
       <Text style={styles.label}>SPENT THIS MONTH</Text>
-      <Text style={styles.amount}>{formatVND(spent)}</Text>
+      <Counter
+        value={spent}
+        prefix="₫"
+        separator=","
+        duration={timing.reveal.duration}
+        style={[styles.amount, { color: amountColor }]}
+      />
 
       <View style={styles.track}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.fill, { width: `${pct * 100}%` }]}
-        />
+        <Animated.View style={[styles.fillWrap, fillStyle]}>
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.fill}
+          />
+        </Animated.View>
       </View>
 
       <View style={styles.footer}>
@@ -55,10 +85,10 @@ export function SpendingOverview({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255,255,255,0.045)',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
     padding: 20,
     marginBottom: 16,
   },
@@ -70,7 +100,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
     letterSpacing: 0.3,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   amount: {
     fontFamily: fonts.monoSemibold,
@@ -78,6 +108,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: -1,
     marginBottom: 16,
+    padding: 0,
   },
   track: {
     height: 9,
@@ -86,8 +117,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     overflow: 'hidden',
   },
-  fill: {
+  fillWrap: {
     height: 9,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  fill: {
+    flex: 1,
     borderRadius: 5,
   },
   footer: {

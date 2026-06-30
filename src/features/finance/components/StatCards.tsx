@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, glow, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 import type { MonthlyOverview } from '@/types/finance';
@@ -26,7 +26,10 @@ export function StatCards({ income, spent, saved }: StatCardsProps) {
   return (
     <View style={styles.row}>
       {stats.map((stat) => (
-        <View key={stat.label} style={styles.card}>
+        <View
+          key={stat.label}
+          style={[styles.card, { borderColor: tint(stat.accent, '33') }, glow(stat.accent, 0.16, 14)]}
+        >
           <View style={[styles.chip, { backgroundColor: tint(stat.accent) }]}>
             <Icon name={stat.icon} size={17} color={stat.accent} />
           </View>
@@ -48,7 +51,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 14,
