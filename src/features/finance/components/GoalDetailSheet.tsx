@@ -21,11 +21,19 @@ import { useSavingsStore } from '@/store/savingsStore';
 import { formatVND, formatCompactVND } from '@/utils/currency';
 import { formatTxnDate } from '@/utils/date';
 import type { SavingsGoalView } from '@/types/savings';
+import { DatePickerModal } from '@/components/DatePickerModal';
 
 interface GoalDetailSheetProps {
   goalId: string | null;
   onClose: () => void;
 }
+
+const PALETTE = [colors.purple, colors.teal, colors.orange, colors.red, '#5B8AF0', '#C16EF5'] as const;
+
+const ICONS: IconName[] = [
+  'car', 'airplane', 'home', 'school', 'hospital-box', 'laptop',
+  'phone', 'camera', 'shopping', 'piggy-bank', 'heart', 'star',
+];
 
 function todayStart(): number {
   const d = new Date();
@@ -38,6 +46,11 @@ function dayLabel(epochMs: number): string {
   const yesterday = today - 86_400_000;
   if (epochMs >= today) return 'Hôm nay';
   if (epochMs >= yesterday) return 'Hôm qua';
+  const d = new Date(epochMs);
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+
+function deadlineDayLabel(epochMs: number): string {
   const d = new Date(epochMs);
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 }
@@ -55,12 +68,24 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
   const addContribution = useSavingsStore((s) => s.addContribution);
   const markAchieved = useSavingsStore((s) => s.markAchieved);
   const deleteGoal = useSavingsStore((s) => s.deleteGoal);
+  const updateGoal = useSavingsStore((s) => s.updateGoal);
 
   const [contribOpen, setContribOpen] = useState(false);
   const [contribAmountText, setContribAmountText] = useState('');
   const [contribNote, setContribNote] = useState('');
   const [contribDate, setContribDate] = useState(todayStart);
   const [linkTxn, setLinkTxn] = useState(true);
+
+  // Edit panel state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editAmountText, setEditAmountText] = useState('');
+  const [editHasDeadline, setEditHasDeadline] = useState(false);
+  const [editDeadline, setEditDeadline] = useState(() => todayStart() + 365 * 86_400_000);
+  const [editIcon, setEditIcon] = useState<IconName>('piggy-bank');
+  const [editColor, setEditColor] = useState<string>(PALETTE[0]);
+  const [editNote, setEditNote] = useState('');
+  const [editDeadlinePickerOpen, setEditDeadlinePickerOpen] = useState(false);
 
   // Cache last valid view so the pageSheet can animate out before unmounting
   const viewRef = useRef<SavingsGoalView | null>(null);
@@ -72,12 +97,40 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
 
   const today = todayStart();
   const contribAmount = parseAmount(contribAmountText);
+  const editAmount = parseAmount(editAmountText);
   const progressColor =
     view.status === 'achieved'
       ? colors.teal
       : view.isOverdue
       ? colors.red
       : view.color;
+
+  function handlePencilPress() {
+    if (editOpen) {
+      setEditOpen(false);
+    } else {
+      setEditName(view!.name);
+      setEditAmountText(String(view!.targetAmount));
+      setEditHasDeadline(!!view!.deadline);
+      setEditDeadline(view!.deadline ?? todayStart() + 365 * 86_400_000);
+      setEditIcon(view!.icon as IconName);
+      setEditColor(view!.color);
+      setEditNote(view!.note ?? '');
+      setEditOpen(true);
+    }
+  }
+
+  async function handleSaveEdit() {
+    await updateGoal(view!.id, {
+      name: editName.trim(),
+      targetAmount: editAmount,
+      deadline: editHasDeadline ? editDeadline + 12 * 3_600_000 : undefined,
+      icon: editIcon,
+      color: editColor,
+      note: editNote.trim() || undefined,
+    });
+    setEditOpen(false);
+  }
 
   async function handleAddContribution() {
     if (contribAmount <= 0) return;
@@ -126,12 +179,112 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
             <Icon name='chevron-down' size={20} color={colors.muted} />
           </Pressable>
           <Text style={styles.title} numberOfLines={1}>{view.name}</Text>
+          <Pressable onPress={handlePencilPress} style={[styles.editBtn, editOpen && styles.editBtnActive]} hitSlop={8}>
+            <Icon name='pencil' size={16} color={editOpen ? colors.purple : colors.muted} />
+          </Pressable>
           <Pressable onPress={handleDelete} style={styles.deleteBtn} hitSlop={8}>
             <Icon name='delete-outline' size={18} color={colors.red} />
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Edit panel */}
+          {editOpen && (
+            <View style={styles.editPanel}>
+              {/* Icon picker */}
+              <Text style={styles.editLabel}>Icon</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRow}>
+                {ICONS.map((ic) => (
+                  <Pressable
+                    key={ic}
+                    onPress={() => setEditIcon(ic)}
+                    style={[styles.iconChip, editIcon === ic && { backgroundColor: tint(editColor, '33'), borderColor: editColor }]}
+                  >
+                    <Icon name={ic} size={22} color={editIcon === ic ? editColor : colors.muted} />
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {/* Color picker */}
+              <Text style={styles.editLabel}>Màu</Text>
+              <View style={styles.palette}>
+                {PALETTE.map((c) => (
+                  <Pressable
+                    key={c}
+                    onPress={() => setEditColor(c)}
+                    style={[styles.swatch, { backgroundColor: c }, editColor === c && styles.swatchSelected]}
+                  />
+                ))}
+              </View>
+
+              {/* Name */}
+              <Text style={styles.editLabel}>Tên mục tiêu</Text>
+              <TextInput
+                value={editName}
+                onChangeText={setEditName}
+                placeholder='Tên mục tiêu...'
+                placeholderTextColor={colors.tabInactive}
+                style={styles.editInput}
+              />
+
+              {/* Target amount */}
+              <Text style={styles.editLabel}>Số tiền mục tiêu</Text>
+              <View style={styles.editAmountWrap}>
+                <Text style={styles.editDong}>₫</Text>
+                <TextInput
+                  value={groupDigits(editAmount)}
+                  onChangeText={setEditAmountText}
+                  keyboardType='number-pad'
+                  placeholder='0'
+                  placeholderTextColor={colors.tabInactive}
+                  style={styles.editAmountInput}
+                />
+              </View>
+
+              {/* Deadline */}
+              <View style={styles.deadlineHeader}>
+                <Text style={styles.editLabel}>Ngày mục tiêu</Text>
+                <Pressable
+                  onPress={() => setEditHasDeadline((v) => !v)}
+                  style={[styles.toggle, editHasDeadline && { backgroundColor: editColor }]}
+                >
+                  <View style={[styles.toggleThumb, editHasDeadline && styles.toggleThumbOn]} />
+                </Pressable>
+              </View>
+              {editHasDeadline && (
+                <Pressable style={styles.editDateRow} onPress={() => setEditDeadlinePickerOpen(true)}>
+                  <Icon name='calendar-clock' size={16} color={colors.muted} />
+                  <Text style={styles.editDateLabel}>{deadlineDayLabel(editDeadline)}</Text>
+                  <Icon name='chevron-right' size={14} color={colors.tabInactive} />
+                </Pressable>
+              )}
+
+              {/* Note */}
+              <Text style={styles.editLabel}>Ghi chú</Text>
+              <TextInput
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder='Chi tiết kế hoạch...'
+                placeholderTextColor={colors.tabInactive}
+                style={[styles.editInput, styles.editNoteInput]}
+                multiline
+                numberOfLines={2}
+              />
+
+              {/* Actions */}
+              <Pressable
+                onPress={handleSaveEdit}
+                disabled={editAmount <= 0 || editName.trim().length === 0}
+                style={[styles.editSaveBtn, { backgroundColor: editColor }, (editAmount <= 0 || editName.trim().length === 0) && styles.disabled]}
+              >
+                <Text style={styles.editSaveBtnText}>Lưu</Text>
+              </Pressable>
+              <Pressable onPress={() => setEditOpen(false)} style={styles.editCancelBtn}>
+                <Text style={styles.editCancelText}>Huỷ</Text>
+              </Pressable>
+            </View>
+          )}
+
           {/* Progress card */}
           <View style={[styles.progressCard, { borderColor: tint(progressColor, '44') }]}>
             <View style={styles.iconRow}>
@@ -298,6 +451,15 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
             </KeyboardAvoidingView>
           </View>
         </Modal>
+
+        {/* Edit deadline date picker */}
+        <DatePickerModal
+          visible={editDeadlinePickerOpen}
+          value={editDeadline}
+          onSelect={setEditDeadline}
+          onClose={() => setEditDeadlinePickerOpen(false)}
+          minDate={todayStart()}
+        />
       </SafeAreaView>
     </Modal>
   );
@@ -318,15 +480,76 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center',
   },
   title: { flex: 1, fontFamily: fonts.semibold, fontSize: 18, color: colors.text, textAlign: 'center' },
+  editBtn: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center',
+  },
+  editBtnActive: { backgroundColor: tint(colors.purple, '22') },
   deleteBtn: {
     width: 32, height: 32, borderRadius: 10,
     backgroundColor: tint(colors.red, '22'), alignItems: 'center', justifyContent: 'center',
   },
   content: { paddingHorizontal: 20, paddingBottom: 100, gap: 16 },
+
+  // Edit panel
+  editPanel: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  editLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted, marginBottom: 8 },
+  iconRow: { gap: 8, paddingBottom: 4, marginBottom: 14 },
+  iconChip: {
+    width: 46, height: 46, borderRadius: 14, borderWidth: 1,
+    borderColor: colors.border, backgroundColor: colors.screenBg,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  palette: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  swatch: {
+    width: 30, height: 30, borderRadius: 9, borderWidth: 2, borderColor: 'transparent',
+  },
+  swatchSelected: { borderColor: colors.white, transform: [{ scale: 1.15 }] },
+  editInput: {
+    fontFamily: fonts.regular, fontSize: 14, color: colors.text,
+    backgroundColor: colors.screenBg, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 13, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14,
+  },
+  editNoteInput: { textAlignVertical: 'top', minHeight: 60 },
+  editAmountWrap: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginBottom: 14,
+  },
+  editDong: { fontFamily: fonts.monoMedium, fontSize: 24, color: colors.muted },
+  editAmountInput: {
+    fontFamily: fonts.monoSemibold, fontSize: 32, color: colors.text,
+    minWidth: 60, padding: 0, textAlign: 'center',
+  },
+  deadlineHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
+  },
+  toggle: {
+    width: 44, height: 26, borderRadius: 13, backgroundColor: colors.track,
+    justifyContent: 'center', paddingHorizontal: 3,
+  },
+  toggleThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.white },
+  toggleThumbOn: { alignSelf: 'flex-end' },
+  editDateRow: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.screenBg,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 13,
+    paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14, gap: 10,
+  },
+  editDateLabel: { flex: 1, fontFamily: fonts.medium, fontSize: 14, color: colors.text },
+  editSaveBtn: { borderRadius: 14, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
+  editSaveBtnText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.white },
+  editCancelBtn: { alignItems: 'center', paddingVertical: 10 },
+  editCancelText: { fontFamily: fonts.medium, fontSize: 14, color: colors.muted },
+
+  // Main content
   progressCard: {
     backgroundColor: colors.card, borderWidth: 1, borderRadius: 18, padding: 18, gap: 12,
   },
-  iconRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   iconBox: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   progressAmounts: { flex: 1 },
   progressCurrent: { fontFamily: fonts.monoSemibold, fontSize: 22, color: colors.text },
