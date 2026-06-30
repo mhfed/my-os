@@ -62,7 +62,7 @@ async function seed(): Promise<void> {
     await runSql(
       `INSERT INTO inbox_items (id, userId, text, status, createdAt)
        VALUES (?, ?, ?, ?, ?);`,
-      [newId(), null, SEED_TEXTS[i], 'inbox', now + i]
+      [newId(), null, SEED_TEXTS[i], 'inbox', now + i],
     );
   }
 }
@@ -89,7 +89,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
         await seed();
       }
       const rows = await allRows<InboxItemRow>(
-        'SELECT * FROM inbox_items ORDER BY createdAt DESC;'
+        'SELECT * FROM inbox_items ORDER BY createdAt DESC;',
       );
       set({ items: rows.map(mapRow), ready: true });
     })();
@@ -111,7 +111,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
     await runSql(
       `INSERT INTO inbox_items (id, userId, text, status, createdAt)
        VALUES (?, ?, ?, ?, ?);`,
-      [item.id, null, item.text, item.status, item.createdAt]
+      [item.id, null, item.text, item.status, item.createdAt],
     );
 
     set((s) => ({ items: [item, ...s.items] }));
@@ -124,7 +124,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
     ]);
     set((s) => ({
       items: s.items.map((it) =>
-        it.id === id ? { ...it, status: 'archived' } : it
+        it.id === id ? { ...it, status: 'archived' } : it,
       ),
     }));
   },
@@ -166,8 +166,29 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
           .getState()
           .saveEntry(
             (existing?.text ? existing.text + '\n' : '') + item.text,
-            existing?.mood ?? 3
+            existing?.mood ?? 3,
           );
+        break;
+      }
+      case 'note': {
+        const { useNoteStore } = await import('@/store/noteStore');
+        const notes = useNoteStore.getState();
+        if (!notes.ready) await notes.init();
+        await useNoteStore.getState().saveNote({
+          title: 'Captured Note',
+          content: item.text,
+          isReadingList: false,
+        });
+        break;
+      }
+      case 'goal': {
+        const { useGoalStore } = await import('@/store/goalStore');
+        const goals = useGoalStore.getState();
+        if (!goals.ready) await goals.init();
+        await useGoalStore.getState().createGoal({
+          title: item.text,
+          milestones: [],
+        });
         break;
       }
     }

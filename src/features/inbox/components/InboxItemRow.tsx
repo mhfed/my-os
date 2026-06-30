@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
@@ -27,7 +27,9 @@ interface TriagePill {
 const PILLS: TriagePill[] = [
   { label: '→ Task', target: 'task', color: colors.purple },
   { label: '→ Journal', target: 'journal', color: colors.teal },
-  { label: '→ Habit', target: 'habit', color: colors.orange },
+  { label: '→ Habit', target: 'habit', color: '#f39c12' },
+  { label: '→ Note', target: 'note', color: colors.orange },
+  { label: '→ Goal', target: 'goal', color: colors.red },
 ];
 
 interface Props {
@@ -44,21 +46,27 @@ export function InboxItemRow({ item }: Props) {
       <Text style={styles.time}>captured {capturedLabel(item.createdAt)}</Text>
 
       <View style={styles.actions}>
-        {PILLS.map((pill) => (
-          <Pressable
-            key={pill.target}
-            onPress={() => triage(item.id, pill.target)}
-            style={({ pressed }) => [
-              styles.pill,
-              { borderColor: pill.color },
-              pressed ? styles.pillPressed : null,
-            ]}
-          >
-            <Text style={[styles.pillText, { color: pill.color }]}>
-              {pill.label}
-            </Text>
-          </Pressable>
-        ))}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {PILLS.map((pill) => (
+            <Pressable
+              key={pill.target}
+              onPress={() => triage(item.id, pill.target)}
+              style={({ pressed }) => [
+                styles.pill,
+                { borderColor: pill.color },
+                pressed ? styles.pillPressed : null,
+              ]}
+            >
+              <Text style={[styles.pillText, { color: pill.color }]}>
+                {pill.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
 
         <View style={styles.spacer} />
 
@@ -70,7 +78,7 @@ export function InboxItemRow({ item }: Props) {
             pressed ? styles.pillPressed : null,
           ]}
         >
-          <Icon name="trash-can-outline" size={18} color={colors.muted} />
+          <Icon name='trash-can-outline' size={18} color={colors.muted} />
         </Pressable>
       </View>
     </View>

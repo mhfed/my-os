@@ -97,6 +97,28 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     set((state) => ({ categories: [...state.categories, category] }));
   },
 
+  updateCategory: async (id, input) => {
+    const { runSql } = await import('@/db/database');
+    const existing = get().categories.find((c) => c.id === id);
+    if (!existing) return;
+    const updated = { ...existing, ...input };
+    await runSql(
+      'UPDATE categories SET name = ?, color = ?, icon = ? WHERE id = ?;',
+      [updated.name, updated.color, updated.icon, id],
+    );
+    set((state) => ({
+      categories: state.categories.map((c) => (c.id === id ? updated : c)),
+    }));
+  },
+
+  deleteCategory: async (id) => {
+    const { runSql } = await import('@/db/database');
+    await runSql('DELETE FROM categories WHERE id = ?;', [id]);
+    set((state) => ({
+      categories: state.categories.filter((c) => c.id !== id),
+    }));
+  },
+
   setBudget: async (categoryId, amount, month) => {
     const existing = get().budgets.find(
       (b) => b.categoryId === categoryId && b.month === month,

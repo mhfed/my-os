@@ -51,6 +51,8 @@ function groupDigits(amount: number): string {
  * nhanh"). Type toggle filters the category chips; an inline "+ New" row creates
  * a category on the fly.
  */
+import { ManageCategoriesModal } from './ManageCategoriesModal';
+
 export function AddTransactionSheet({
   visible,
   onClose,
@@ -61,6 +63,7 @@ export function AddTransactionSheet({
   const addCategory = useFinanceStore((s) => s.addCategory);
 
   const [type, setType] = useState<TxnType>('expense');
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
   const [amountText, setAmountText] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -74,7 +77,7 @@ export function AddTransactionSheet({
 
   const categories = useMemo(
     () => allCategories.filter((c) => c.type === type),
-    [allCategories, type]
+    [allCategories, type],
   );
 
   function reset() {
@@ -102,7 +105,9 @@ export function AddTransactionSheet({
   async function handleAddCategory() {
     const name = newName.trim();
     if (!name) return;
-    const before = new Set(useFinanceStore.getState().categories.map((c) => c.id));
+    const before = new Set(
+      useFinanceStore.getState().categories.map((c) => c.id),
+    );
     await addCategory({
       name,
       type,
@@ -136,7 +141,7 @@ export function AddTransactionSheet({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType='slide'
       onRequestClose={handleClose}
       statusBarTranslucent
     >
@@ -157,12 +162,12 @@ export function AddTransactionSheet({
                 onPress={handleClose}
                 style={styles.closeBtn}
               >
-                <Icon name="close" size={18} color={colors.muted} />
+                <Icon name='close' size={18} color={colors.muted} />
               </Pressable>
             </View>
 
             <ScrollView
-              keyboardShouldPersistTaps="handled"
+              keyboardShouldPersistTaps='handled'
               showsVerticalScrollIndicator={false}
             >
               {/* Type toggle */}
@@ -173,7 +178,10 @@ export function AddTransactionSheet({
                     <Pressable
                       key={t}
                       onPress={() => switchType(t)}
-                      style={[styles.segmentBtn, active && styles.segmentBtnActive]}
+                      style={[
+                        styles.segmentBtn,
+                        active && styles.segmentBtnActive,
+                      ]}
                     >
                       <Text
                         style={[
@@ -194,8 +202,8 @@ export function AddTransactionSheet({
                 <TextInput
                   value={groupDigits(amount)}
                   onChangeText={setAmountText}
-                  keyboardType="number-pad"
-                  placeholder="0"
+                  keyboardType='number-pad'
+                  placeholder='0'
                   placeholderTextColor={colors.tabInactive}
                   style={styles.amountInput}
                   autoFocus
@@ -203,12 +211,17 @@ export function AddTransactionSheet({
               </View>
 
               {/* Category */}
-              <Text style={styles.label}>Category</Text>
+              <View style={styles.fieldHeaderRow}>
+                <Text style={styles.label}>Category</Text>
+                <Pressable onPress={() => setManageCategoriesOpen(true)}>
+                  <Text style={styles.manageText}>Manage</Text>
+                </Pressable>
+              </View>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.chips}
-                keyboardShouldPersistTaps="handled"
+                keyboardShouldPersistTaps='handled'
               >
                 {categories.map((cat) => {
                   const selected = cat.id === categoryId;
@@ -248,7 +261,7 @@ export function AddTransactionSheet({
                   onPress={() => setAdding((v) => !v)}
                   style={[styles.chip, styles.newChip]}
                 >
-                  <Icon name="plus" size={16} color={colors.purple} />
+                  <Icon name='plus' size={16} color={colors.purple} />
                   <Text style={[styles.chipText, { color: colors.purple }]}>
                     New
                   </Text>
@@ -261,7 +274,7 @@ export function AddTransactionSheet({
                   <TextInput
                     value={newName}
                     onChangeText={setNewName}
-                    placeholder="New category name"
+                    placeholder='New category name'
                     placeholderTextColor={colors.tabInactive}
                     style={styles.addInput}
                     autoFocus
@@ -285,12 +298,9 @@ export function AddTransactionSheet({
                   <Pressable
                     onPress={handleAddCategory}
                     disabled={!newName.trim()}
-                    style={[
-                      styles.addBtn,
-                      !newName.trim() && styles.disabled,
-                    ]}
+                    style={[styles.addBtn, !newName.trim() && styles.disabled]}
                   >
-                    <Icon name="check" size={18} color={colors.white} />
+                    <Icon name='check' size={18} color={colors.white} />
                   </Pressable>
                 </View>
               )}
@@ -300,7 +310,7 @@ export function AddTransactionSheet({
               <TextInput
                 value={note}
                 onChangeText={setNote}
-                placeholder="Optional"
+                placeholder='Optional'
                 placeholderTextColor={colors.tabInactive}
                 style={styles.noteInput}
               />
@@ -317,11 +327,26 @@ export function AddTransactionSheet({
           </View>
         </KeyboardAvoidingView>
       </View>
+      <ManageCategoriesModal
+        visible={manageCategoriesOpen}
+        onClose={() => setManageCategoriesOpen(false)}
+      />
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  fieldHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  manageText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.purple,
+    marginBottom: 8,
+  },
   root: {
     flex: 1,
     justifyContent: 'flex-end',

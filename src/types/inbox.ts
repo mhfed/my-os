@@ -15,7 +15,7 @@ export interface InboxItem {
 }
 
 /** Targets an inbox item can be converted into during triage. */
-export type TriageTarget = 'task' | 'journal' | 'habit';
+export type TriageTarget = 'task' | 'journal' | 'habit' | 'note' | 'goal';
 
 export interface InboxState {
   items: InboxItem[];

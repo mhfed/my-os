@@ -130,6 +130,8 @@ export interface FinanceState {
   ) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addCategory: (input: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
+  updateCategory: (id: string, input: Partial<Omit<Category, 'id' | 'createdAt' | 'userId'>>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   setBudget: (
     categoryId: string,
     amount: number,

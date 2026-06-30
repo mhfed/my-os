@@ -26,12 +26,12 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ### 2.1 Quick Capture (Inbox)
 
-| Tính năng             | Ưu tiên | Trạng thái                                                            |
-| --------------------- | ------- | --------------------------------------------------------------------- |
-| Global Capture Button | P0      | ✅ Nút nổi góc dưới bên phải trên tất cả các tab                      |
-| Inbox view            | P0      | ✅ Màn Inbox (vào từ More + avatar Today), đếm số item                |
-| Triage từ Inbox       | P0      | ✅ Convert → Task / Journal / Habit (nút; chưa swipe; chưa Note/Goal) |
-| Voice capture         | P1      | ❌                                                                    |
+| Tính năng             | Ưu tiên | Trạng thái                                                                 |
+| --------------------- | ------- | -------------------------------------------------------------------------- |
+| Global Capture Button | P0      | ✅ Nút nổi góc dưới bên phải trên tất cả các tab                           |
+| Inbox view            | P0      | ✅ Màn Inbox (vào từ More + avatar Today), đếm số item                     |
+| Triage từ Inbox       | P0      | ✅ Convert → Task / Journal / Habit / Note / Goal ở dạng Horizontal Scroll |
+| Voice capture         | P1      | ❌                                                                         |
 
 ### 2.2 Task Manager
 
@@ -78,15 +78,15 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ### 3.2 Finance Tracker
 
-| Tính năng                   | Ưu tiên | Trạng thái                                                             |
-| --------------------------- | ------- | ---------------------------------------------------------------------- |
-| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                               |
-| Categories tùy chỉnh        | P0      | ⚠️ Tạo mới được; chưa sửa/xóa                                          |
-| Ngân sách (Budget)          | P0      | ✅ Tính & hiển thị % budget + `setBudget` UI Modal ở Breakdown         |
-| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                                    |
-| Recurring transaction       | P1      | ✅ Modal quản lý và thiết lập                                          |
-| Export CSV                  | P1      | ✅ Nút `export` góc trên phải dùng `expo-file-system` & `expo-sharing` |
-| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)              |
+| Tính năng                   | Ưu tiên | Trạng thái                                                               |
+| --------------------------- | ------- | ------------------------------------------------------------------------ |
+| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                                 |
+| Categories tùy chỉnh        | P0      | ✅ Quản lý hoàn chỉnh thêm/sửa/xoá (tích hợp trong Add Transaction form) |
+| Ngân sách (Budget)          | P0      | ✅ Tính & hiển thị % budget + `setBudget` UI Modal ở Breakdown           |
+| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                                      |
+| Recurring transaction       | P1      | ✅ Modal quản lý và thiết lập                                            |
+| Export CSV                  | P1      | ✅ Nút `export` góc trên phải dùng `expo-file-system` & `expo-sharing`   |
+| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)                |
 
 ---
 
@@ -101,12 +101,12 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ## Xuyên suốt / triết lý PRD
 
-| Mục tiêu                               | Trạng thái                                                 |
-| -------------------------------------- | ---------------------------------------------------------- |
-| Capture nhanh ≤3 giây                  | ⚠️ Có capture ở Today; chưa nút nổi toàn cục + chưa voice  |
-| Today là trung tâm, mọi module kết nối | ✅ Today tổng hợp Task+Habit+Journal, tự tính score        |
-| Data export bất cứ lúc nào             | ❌ (chỉ có schema; chưa có export thật)                    |
-| Multi-user (về sau)                    | ⚠️ Data model sẵn sàng (`userId`); chưa có auth/multi-user |
+| Mục tiêu                               | Trạng thái                                                     |
+| -------------------------------------- | -------------------------------------------------------------- |
+| Capture nhanh ≤3 giây                  | ✅ Đã có capture nổi Global ở mọi màn hình                     |
+| Today là trung tâm, mọi module kết nối | ✅ Today tổng hợp Task+Habit+Journal, tự tính score            |
+| Data export bất cứ lúc nào             | ✅ Đã có `Backup All Data` sang JSON & Share ở màn tĩnh `More` |
+| Multi-user (về sau)                    | ⚠️ Data model sẵn sàng (`userId`); chưa có auth/multi-user     |
 
 ---
 
