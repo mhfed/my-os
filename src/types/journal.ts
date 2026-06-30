@@ -33,4 +33,9 @@ export interface JournalState {
   streak: () => number;
   /** Set of "YYYY-MM-DD" that have an entry (for the calendar dots). */
   writtenDates: () => Set<string>;
+
+  /** Return an entry from exactly 1 week, 1 month, or 1 year ago, or null */
+  getTimeCapsule: () => JournalEntry | null;
+  /** Searches historical entries by text (case-insensitive) */
+  searchEntries: (query: string) => JournalEntry[];
 }

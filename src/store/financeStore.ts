@@ -20,6 +20,8 @@ import {
 } from '@/db/database';
 import { seedDatabase } from '@/data/seed';
 import { addMonths, currentMonthKey, monthRange } from '@/utils/date';
+import * as FileSystem from 'expo-file-system';
+import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import type {
   Budget,
   Category,
@@ -144,6 +146,39 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     const { runSql } = await import('@/db/database');
     await runSql('DELETE FROM recurring WHERE id = ?;', [id]);
     set((state) => ({ recurring: state.recurring.filter((r) => r.id !== id) }));
+  },
+
+  exportCSV: async () => {
+    const { transactions, categories } = get();
+
+    // Sort transactions by date descending
+    const sorted = [...transactions].sort((a, b) => b.date - a.date);
+    const catMap = new Map(categories.map((c) => [c.id, c.name]));
+
+    const lines = ['Date,Type,Category,Amount,Note'];
+    for (const t of sorted) {
+      const d = new Date(t.date);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const catName = catMap.get(t.categoryId) || 'Unknown';
+      // Escape note just in case it has commas
+      const note = t.note ? `"${t.note.replace(/"/g, '""')}"` : '';
+      lines.push(`${dateStr},${t.type},${catName},${t.amount},${note}`);
+    }
+
+    const csvContent = lines.join('\n');
+    const fileName = `PersonalOS_Finance_${Date.now()}.csv`;
+    // @ts-ignore
+    const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+
+    // @ts-ignore
+    await FileSystem.writeAsStringAsync(fileUri, csvContent);
+
+    if (await isAvailableAsync()) {
+      await shareAsync(fileUri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Export Finance Data',
+      });
+    }
   },
 
   // ----- selectors (active month only) -----

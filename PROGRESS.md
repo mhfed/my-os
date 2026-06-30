@@ -46,14 +46,14 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ### 2.3 Daily Journal
 
-| Tính năng      | Ưu tiên | Trạng thái                                                     |
-| -------------- | ------- | -------------------------------------------------------------- |
-| Daily entry    | P0      | ✅ 1 entry/ngày, lưu SQLite (upsert)                           |
-| Mood check-in  | P0      | ✅                                                             |
-| Time Capsule   | P0      | ⚠️ Card UI tĩnh — chưa lookup entry cũ thật, chưa notification |
-| Search         | P1      | ❌                                                             |
-| Streak         | P1      | ✅ tính từ dữ liệu thật                                        |
-| Photo đính kèm | P2      | ❌                                                             |
+| Tính năng      | Ưu tiên | Trạng thái                                                              |
+| -------------- | ------- | ----------------------------------------------------------------------- |
+| Daily entry    | P0      | ✅ 1 entry/ngày, lưu SQLite (upsert)                                    |
+| Mood check-in  | P0      | ✅                                                                      |
+| Time Capsule   | P0      | ✅ Tự động lookup entry 1 tuần / 1 tháng / 1 năm trước (hoặc random cũ) |
+| Search         | P1      | ✅ Search bar lọc text từ past entries ngay trên màn Journal            |
+| Streak         | P1      | ✅ tính từ dữ liệu thật                                                 |
+| Photo đính kèm | P2      | ❌                                                                      |
 
 ### 2.4 Habit Tracker
 
@@ -78,15 +78,15 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ### 3.2 Finance Tracker
 
-| Tính năng                   | Ưu tiên | Trạng thái                                                     |
-| --------------------------- | ------- | -------------------------------------------------------------- |
-| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                       |
-| Categories tùy chỉnh        | P0      | ⚠️ Tạo mới được; chưa sửa/xóa                                  |
-| Ngân sách (Budget)          | P0      | ✅ Tính & hiển thị % budget + `setBudget` UI Modal ở Breakdown |
-| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                            |
-| Recurring transaction       | P1      | ✅ Modal quản lý và thiết lập                                  |
-| Export CSV                  | P1      | ❌                                                             |
-| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)      |
+| Tính năng                   | Ưu tiên | Trạng thái                                                             |
+| --------------------------- | ------- | ---------------------------------------------------------------------- |
+| Ghi giao dịch nhanh         | P0      | ✅ Form Add Transaction (persist SQLite)                               |
+| Categories tùy chỉnh        | P0      | ⚠️ Tạo mới được; chưa sửa/xóa                                          |
+| Ngân sách (Budget)          | P0      | ✅ Tính & hiển thị % budget + `setBudget` UI Modal ở Breakdown         |
+| Tổng quan tháng + breakdown | P0      | ✅ (overview + donut theo category)                                    |
+| Recurring transaction       | P1      | ✅ Modal quản lý và thiết lập                                          |
+| Export CSV                  | P1      | ✅ Nút `export` góc trên phải dùng `expo-file-system` & `expo-sharing` |
+| Biểu đồ xu hướng 6–12 tháng | P1      | ❌ (mới có donut theo category, chưa có trend theo tháng)              |
 
 ---
 
@@ -112,8 +112,8 @@ Chú thích: ✅ xong · ⚠️ làm một phần · ❌ chưa làm
 
 ## Gợi ý việc tiếp theo
 
-1. **Gym persistence** — lưu workout đã xong + màn lịch sử tập; Run tracker.
-2. **Finance hoàn thiện** — UI đặt budget + cảnh báo, recurring UI, export CSV, biểu đồ xu hướng tháng.
-3. **Quick Capture đầy đủ** — nút capture nổi toàn cục + voice; swipe để triage.
+1. **Gym persistence** — lưu workout đã xong + màn lịch sử tập; Run tracker. ✅
+2. **Finance hoàn thiện** — UI đặt budget, recurring UI, export CSV. ✅
+3. **Quick Capture đầy đủ** — nút capture nổi toàn cục ✅; voice; swipe để triage.
 4. **Test trên iPhone + polish** — chạy thật, fix runtime, haptics, animation.
 5. **Phase 3** — Notes/Second Brain, Goals.

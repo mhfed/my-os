@@ -1,16 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { Icon } from '@/theme/icons';
 import { useJournalStore } from '@/store/journalStore';
+import { formatTxnDate } from '@/utils/date';
 
 import { CalendarStrip } from './components/CalendarStrip';
 import { EntryCard } from './components/EntryCard';
@@ -23,6 +27,13 @@ export function JournalScreen() {
   const streak = useJournalStore((s) => s.streak);
   // Re-render the streak pill whenever entries change.
   useJournalStore((s) => s.entries);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const searchEntries = useJournalStore((s) => s.searchEntries);
+
+  const searchResults =
+    isSearching && searchQuery.length > 0 ? searchEntries(searchQuery) : [];
 
   useEffect(() => {
     void init();
@@ -49,14 +60,67 @@ export function JournalScreen() {
         </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <CalendarStrip />
-        <EntryCard />
-        <TimeCapsule />
-      </ScrollView>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Icon name='magnify' size={18} color={colors.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder='Search entries...'
+            placeholderTextColor={colors.tabInactive}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() => setIsSearching(true)}
+            onBlur={() => {
+              if (!searchQuery) setIsSearching(false);
+            }}
+            returnKeyType='search'
+          />
+          {isSearching && (
+            <Pressable
+              onPress={() => {
+                setSearchQuery('');
+                setIsSearching(false);
+              }}
+              hitSlop={8}
+            >
+              <Icon name='close' size={18} color={colors.muted} />
+            </Pressable>
+          )}
+        </View>
+      </View>
+
+      {isSearching ? (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          {searchQuery.length > 0 ? (
+            searchResults.length > 0 ? (
+              searchResults.map((entry) => (
+                <View key={entry.id} style={styles.searchResultCard}>
+                  <Text style={styles.resultDate}>
+                    {formatTxnDate(new Date(entry.date).getTime())}
+                  </Text>
+                  <Text style={styles.resultText} numberOfLines={4}>
+                    {entry.text}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noResults}>No entries found.</Text>
+            )
+          ) : null}
+        </ScrollView>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          <CalendarStrip />
+          <EntryCard />
+          <TimeCapsule />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -112,5 +176,54 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 22,
     paddingBottom: 110,
+  },
+  searchContainer: {
+    paddingHorizontal: 22,
+    marginTop: 20,
+    marginBottom: 0,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: colors.text,
+  },
+  noResults: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: 40,
+  },
+  searchResultCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  resultDate: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.muted,
+    marginBottom: 8,
+  },
+  resultText: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
   },
 });

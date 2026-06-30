@@ -139,6 +139,7 @@ export interface FinanceState {
     input: Omit<RecurringRule, 'id' | 'createdAt'>,
   ) => Promise<void>;
   deleteRecurring: (id: string) => Promise<void>;
+  exportCSV: () => Promise<void>;
 
   // selectors (derived view-models for the active month)
   getOverview: () => MonthlyOverview;

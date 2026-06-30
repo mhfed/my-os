@@ -8,12 +8,7 @@
 
 import { create } from 'zustand';
 
-import {
-  allRows,
-  initDatabase,
-  runSql,
-  tableIsEmpty,
-} from '@/db/database';
+import { allRows, initDatabase, runSql, tableIsEmpty } from '@/db/database';
 import { addDays, todayKey } from '@/utils/day';
 import type { JournalEntry, JournalState, Mood } from '@/types/journal';
 
@@ -85,7 +80,7 @@ async function seed(): Promise<void> {
   await runSql(
     `INSERT INTO journal_entries (id, userId, date, mood, text, createdAt, updatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?);`,
-    [newId(), null, today, 3, SEED_TODAY_TEXT, now, now]
+    [newId(), null, today, 3, SEED_TODAY_TEXT, now, now],
   );
 
   for (let k = 1; k <= SEED_PAST.length; k += 1) {
@@ -94,7 +89,7 @@ async function seed(): Promise<void> {
     await runSql(
       `INSERT INTO journal_entries (id, userId, date, mood, text, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?);`,
-      [newId(), null, date, mood, text, now, now]
+      [newId(), null, date, mood, text, now, now],
     );
   }
 }
@@ -116,7 +111,7 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
       await seed();
     }
     const rows = await allRows<JournalEntryRow>(
-      'SELECT * FROM journal_entries ORDER BY date DESC;'
+      'SELECT * FROM journal_entries ORDER BY date DESC;',
     );
     set({ entries: rows.map(mapEntry), ready: true });
   },
@@ -139,7 +134,7 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
          mood = excluded.mood,
          text = excluded.text,
          updatedAt = excluded.updatedAt;`,
-      [id, null, date, mood, text, createdAt, now]
+      [id, null, date, mood, text, createdAt, now],
     );
 
     const saved: JournalEntry = {
@@ -172,4 +167,46 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
   },
 
   writtenDates: () => new Set(get().entries.map((e) => e.date)),
+
+  getTimeCapsule: () => {
+    const today = todayKey();
+    const map = new Map(get().entries.map((e) => [e.date, e]));
+
+    // Order of preference: 1 year, 1 month, 1 week
+    // Since dates are YYYY-MM-DD, we can roughly compute them
+
+    // 1 year ago
+    const oneYearDate = new Date();
+    oneYearDate.setFullYear(oneYearDate.getFullYear() - 1);
+    const yKey = oneYearDate.toISOString().split('T')[0];
+    if (map.has(yKey)) return map.get(yKey)!;
+
+    // 1 month ago
+    const oneMonthDate = new Date();
+    oneMonthDate.setMonth(oneMonthDate.getMonth() - 1);
+    const mKey = oneMonthDate.toISOString().split('T')[0];
+    if (map.has(mKey)) return map.get(mKey)!;
+
+    // 1 week ago
+    const wKey = addDays(today, -7);
+    if (map.has(wKey)) return map.get(wKey)!;
+
+    // Fallback: Just return a random old entry that isn't today (for the sake of the UX if others don't exist)
+    const oldEntries = get().entries.filter(
+      (e) => e.date !== today && e.text.length > 10,
+    );
+    if (oldEntries.length > 0) {
+      // Pick one randomly based on today's day to be pseudo-stable for the day
+      const now = new Date();
+      return oldEntries[(now.getDate() + now.getMonth()) % oldEntries.length];
+    }
+
+    return null;
+  },
+
+  searchEntries: (query: string) => {
+    if (!query || query.trim().length === 0) return [];
+    const q = query.toLowerCase();
+    return get().entries.filter((e) => e.text.toLowerCase().includes(q));
+  },
 }));

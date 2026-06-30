@@ -26,6 +26,7 @@ export function FinanceScreen() {
   const getOverview = useFinanceStore((s) => s.getOverview);
   const getCategorySpend = useFinanceStore((s) => s.getCategorySpend);
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
+  const exportCSV = useFinanceStore((s) => s.exportCSV);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
@@ -45,6 +46,7 @@ export function FinanceScreen() {
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
         onManageRecurring={() => setRecurringOpen(true)}
+        onExportCSV={exportCSV}
       />
 
       <ScrollView

@@ -10,6 +10,7 @@ interface MonthSelectorProps {
   onPrev: () => void;
   onNext: () => void;
   onManageRecurring?: () => void;
+  onExportCSV?: () => void;
 }
 
 /** Screen header: "Finance" title + the month stepper control. */
@@ -18,12 +19,23 @@ export function MonthSelector({
   onPrev,
   onNext,
   onManageRecurring,
+  onExportCSV,
 }: MonthSelectorProps) {
   return (
     <View style={styles.header}>
       <Text style={styles.title}>Finance</Text>
 
       <View style={styles.rightGroup}>
+        {onExportCSV && (
+          <TouchableOpacity
+            onPress={onExportCSV}
+            hitSlop={8}
+            style={styles.iconBtn}
+          >
+            <Icon name='export' size={18} color={colors.text} />
+          </TouchableOpacity>
+        )}
+
         {onManageRecurring && (
           <TouchableOpacity
             onPress={onManageRecurring}
