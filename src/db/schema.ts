@@ -187,6 +187,60 @@ export const SCHEMA: string[] = [
     createdAt INTEGER NOT NULL
   );`,
 
+  // ----- Finance: Debt Ledger --------------------------------------------
+  `CREATE TABLE IF NOT EXISTS debt_entries (
+    id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT,
+    type TEXT NOT NULL,
+    party TEXT NOT NULL,
+    original_amount INTEGER NOT NULL,
+    note TEXT,
+    start_date INTEGER NOT NULL,
+    due_date INTEGER,
+    interest_type TEXT NOT NULL DEFAULT 'none',
+    interest_rate REAL,
+    interest_period TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    linked_transaction_id TEXT,
+    created_at INTEGER NOT NULL
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS debt_payments (
+    id TEXT PRIMARY KEY NOT NULL,
+    debt_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    date INTEGER NOT NULL,
+    note TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY(debt_id) REFERENCES debt_entries(id) ON DELETE CASCADE
+  );`,
+
+  // ----- Finance: Savings Goals ------------------------------------------
+  `CREATE TABLE IF NOT EXISTS savings_goals (
+    id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT,
+    name TEXT NOT NULL,
+    target_amount INTEGER NOT NULL,
+    current_amount INTEGER NOT NULL DEFAULT 0,
+    deadline INTEGER,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL,
+    note TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at INTEGER NOT NULL
+  );`,
+
+  `CREATE TABLE IF NOT EXISTS savings_contributions (
+    id TEXT PRIMARY KEY NOT NULL,
+    goal_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    date INTEGER NOT NULL,
+    note TEXT,
+    linked_transaction_id TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY(goal_id) REFERENCES savings_goals(id) ON DELETE CASCADE
+  );`,
+
   `CREATE INDEX IF NOT EXISTS idx_tasks_dueDate ON tasks (dueDate);`,
   `CREATE INDEX IF NOT EXISTS idx_task_subtasks_taskId ON task_subtasks (taskId);`,
   `CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON habit_logs (date);`,
@@ -196,4 +250,9 @@ export const SCHEMA: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_notes_updatedAt ON notes (updatedAt);`,
   `CREATE INDEX IF NOT EXISTS idx_goals_status ON goals (status);`,
   `CREATE INDEX IF NOT EXISTS idx_milestones_goalId ON milestones (goalId);`,
+
+  `CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+  );`,
 ];

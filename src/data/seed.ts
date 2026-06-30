@@ -30,6 +30,41 @@ const CAT = {
   salary: 'seed-cat-salary',
 } as const;
 
+/** System category IDs used by debt & savings stores — stable across installs. */
+export const SYS_CAT = {
+  debtIncome: 'sys-cat-debt-income',
+  debtExpense: 'sys-cat-debt-expense',
+  savings: 'sys-cat-savings',
+} as const;
+
+/** System categories always present — inserted via ensureSystemCategories() in financeStore.init(). */
+export const SYSTEM_CATEGORIES: Category[] = [
+  {
+    id: SYS_CAT.debtIncome,
+    name: 'Thu nợ',
+    type: 'income',
+    color: '#4ECDC4',
+    icon: 'cash-plus',
+    createdAt: SEED_CREATED_AT - 3,
+  },
+  {
+    id: SYS_CAT.debtExpense,
+    name: 'Trả nợ',
+    type: 'expense',
+    color: '#F5B16E',
+    icon: 'cash-minus',
+    createdAt: SEED_CREATED_AT - 2,
+  },
+  {
+    id: SYS_CAT.savings,
+    name: 'Tiết kiệm',
+    type: 'expense',
+    color: '#7C6EF5',
+    icon: 'piggy-bank',
+    createdAt: SEED_CREATED_AT - 1,
+  },
+];
+
 export const SEED_CATEGORIES: Category[] = [
   {
     id: CAT.rent,
@@ -152,6 +187,9 @@ export const SEED_BUDGETS: Budget[] = SEED_BUDGET_AMOUNTS.map((b, i) => ({
 
 /** Writes all seed rows into SQLite via the db helpers. */
 export async function seedDatabase(): Promise<void> {
+  for (const category of SYSTEM_CATEGORIES) {
+    await insertCategory(category);
+  }
   for (const category of SEED_CATEGORIES) {
     await insertCategory(category);
   }
@@ -161,4 +199,16 @@ export async function seedDatabase(): Promise<void> {
   for (const budget of SEED_BUDGETS) {
     await upsertBudget(budget);
   }
+}
+
+/** Idempotent: inserts system categories if they don't exist yet (existing users). */
+export async function ensureSystemCategories(existingIds: Set<string>): Promise<Category[]> {
+  const added: Category[] = [];
+  for (const cat of SYSTEM_CATEGORIES) {
+    if (!existingIds.has(cat.id)) {
+      await insertCategory(cat);
+      added.push(cat);
+    }
+  }
+  return added;
 }
