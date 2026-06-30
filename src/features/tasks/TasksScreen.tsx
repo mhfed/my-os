@@ -64,6 +64,7 @@ export function TasksScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
       >
         {showOverdue && overdueTasks.length > 0 && (
@@ -152,6 +153,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.purple,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     paddingTop: 18,

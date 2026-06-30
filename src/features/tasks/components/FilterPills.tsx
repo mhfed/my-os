@@ -17,6 +17,7 @@ export function FilterPills({ active, onSelect }: FilterPillsProps) {
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={styles.scrollView}
     >
       {FILTERS.map((filter) => {
         const isActive = filter === active;
@@ -42,6 +43,10 @@ export function FilterPills({ active, onSelect }: FilterPillsProps) {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   container: {
     paddingTop: 18,
     paddingHorizontal: 22,

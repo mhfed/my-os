@@ -11,17 +11,27 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSegments } from 'expo-router';
 
 import { colors } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 import { useInboxStore } from '@/store/inboxStore';
 
+// Tabs that render their own context-specific FAB — hide the global one there.
+const TABS_WITH_OWN_FAB = new Set(['tasks', 'finance', 'notes', 'goals']);
+
 export function GlobalCapture() {
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
   const [isOpen, setIsOpen] = useState(false);
   const [text, setText] = useState('');
   const capture = useInboxStore((s) => s.capture);
+  const inputRef = useRef<TextInput>(null);
+
+  // segments looks like ['(tabs)', 'tasks'] when inside a tab
+  const currentTab = segments[1] ?? '';
+  const hidden = TABS_WITH_OWN_FAB.has(currentTab);
 
   const submit = () => {
     if (text.trim().length > 0) {
@@ -36,8 +46,6 @@ export function GlobalCapture() {
     setText('');
   };
 
-  const inputRef = useRef<TextInput>(null);
-
   // Auto focus when opened
   useEffect(() => {
     if (isOpen) {
@@ -46,6 +54,8 @@ export function GlobalCapture() {
       }, 100);
     }
   }, [isOpen]);
+
+  if (hidden) return null;
 
   return (
     <>
