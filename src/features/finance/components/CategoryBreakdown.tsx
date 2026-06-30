@@ -5,6 +5,7 @@ import { colors } from '@/theme/colors';
 import { SetBudgetModal } from './SetBudgetModal';
 import { fonts } from '@/theme/typography';
 import type { CategorySpend } from '@/types/finance';
+import { formatCompactVND } from '@/utils/currency';
 
 import { CategoryDonut } from './CategoryDonut';
 
@@ -29,15 +30,51 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
         <CategoryDonut data={data} />
 
         <View style={styles.legend}>
-          {data.map((slice) => (
-            <View key={slice.categoryId} style={styles.legendRow}>
-              <View style={[styles.dot, { backgroundColor: slice.color }]} />
-              <Text style={styles.name} numberOfLines={1}>
-                {slice.name}
-              </Text>
-              <Text style={styles.pct}>{Math.round(slice.pct)}%</Text>
-            </View>
-          ))}
+          {data.map((slice) => {
+            const hasBudget = slice.budget > 0;
+            const isOver = slice.budgetUsed >= 1;
+            const barFill = Math.min(1, slice.budgetUsed) * 56;
+            const barColor =
+              slice.budgetUsed > 1
+                ? colors.red
+                : slice.budgetUsed >= 0.8
+                  ? colors.orange
+                  : colors.teal;
+
+            return (
+              <View key={slice.categoryId} style={styles.legendRow}>
+                <View style={[styles.dot, { backgroundColor: slice.color }]} />
+                <Text style={styles.name} numberOfLines={1}>
+                  {slice.name}
+                </Text>
+                {hasBudget ? (
+                  <View style={styles.budgetRight}>
+                    <View style={styles.miniBarTrack}>
+                      <View
+                        style={[
+                          styles.miniBarFill,
+                          { width: barFill, backgroundColor: barColor },
+                        ]}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.budgetText,
+                        { color: isOver ? colors.red : colors.muted },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {formatCompactVND(slice.amount)} / {formatCompactVND(slice.budget)}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.pct}>
+                    {formatCompactVND(slice.amount)} · {Math.round(slice.pct)}%
+                  </Text>
+                )}
+              </View>
+            );
+          })}
         </View>
       </View>
 
@@ -105,5 +142,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.monoMedium,
     fontSize: 12,
     color: colors.muted,
+  },
+  budgetRight: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  miniBarTrack: {
+    width: 56,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+  },
+  miniBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  budgetText: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 11,
   },
 });
