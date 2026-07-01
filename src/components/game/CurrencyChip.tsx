@@ -13,9 +13,9 @@ interface KindSpec {
 }
 
 const KINDS: Record<CurrencyKind, KindSpec> = {
-  coins: { icon: 'star-four-points', iconColor: '#FFE27A' },
-  gems: { icon: 'diamond-stone', iconColor: '#7DE9F7' },
-  xp: { icon: 'lightning-bolt', iconColor: '#FFE27A' },
+  coins: { icon: 'star-four-points', iconColor: '#FFD978' },
+  gems: { icon: 'diamond-stone', iconColor: '#72E4EA' },
+  xp: { icon: 'lightning-bolt', iconColor: '#FFD978' },
 };
 
 interface CurrencyChipProps {
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 12,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(74,46,18,0.85)',
+    backgroundColor: 'rgba(24,32,51,0.82)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.18)',
     zIndex: 1,

@@ -1,47 +1,47 @@
 /**
  * Personal OS color tokens — "Magic Academy" mobile-game design language.
  *
- * The visual target: a bright, candy-coloured casual game UI. High-saturation
- * accents, jelly/glossy buttons with a hard coloured "base" shadow for a 3D
- * pressable feel, warm playful surfaces, and a dreamy purple backdrop.
+ * The visual target: a modern, polished game UI. Saturated accents, glossy
+ * buttons with a hard coloured "base" shadow for a 3D pressable feel, cooler
+ * glassy surfaces, and a soft sky-to-slate backdrop.
  *
  * See `.claude/skills/design-system/SKILL.md` for the full design system.
  */
 export const colors = {
   // ---- surfaces ----------------------------------------------------------
-  appBg: '#7C4DFF', // outermost dreamy purple backdrop
-  screenBg: '#FBEFD8', // warm cream screen background
-  card: '#FFFFFF', // card / panel surface (bright)
-  cardAlt: '#FFF6E6', // alternate warm panel
-  track: '#EAD9B8', // progress track / inset wells
-  border: '#E7C690', // soft warm hairline / panel edge
+  appBg: '#93A7D9', // outermost cool sky backdrop
+  screenBg: '#EEF3FF', // light blue-white screen background
+  card: '#FCFDFF', // card / panel surface (bright)
+  cardAlt: '#F4F8FF', // alternate cool panel
+  track: '#DCE5F6', // progress track / inset wells
+  border: '#C8D5EE', // soft cool hairline / panel edge
 
   // ---- text --------------------------------------------------------------
-  text: '#4A2E12', // primary text (warm dark brown — reads on cream)
+  text: '#182033', // primary text (deep slate)
   textOnDark: '#FFFFFF', // text on coloured/3D buttons
-  muted: '#A6814E', // secondary / muted warm text
-  tabInactive: '#C9A876', // inactive tab tint
+  muted: '#6E7A96', // secondary / muted cool text
+  tabInactive: '#93A0BD', // inactive tab tint
 
   // ---- accents (candy game palette) --------------------------------------
-  purple: '#7C5BE6', // primary magic accent
-  purpleDeep: '#5B3FC4', // 3D base / pressed shade for purple
-  teal: '#3FD4E8', // gems / info
-  tealDeep: '#1FA9BE',
-  green: '#6FD03A', // success / primary CTA (Play green)
-  greenDeep: '#4DA61F', // CTA 3D base shade
-  orange: '#FFA726', // coins / warning
-  orangeDeep: '#E07E12',
-  yellow: '#FFD23F', // XP / stars
-  yellowDeep: '#E0A800',
-  red: '#FF5A6E', // danger / close / expense
-  redDeep: '#D63A52',
-  blue: '#5B8DEF', // secondary info
-  blueDeep: '#3D6BC4',
-  pink: '#FF7EB6',
-  pinkDeep: '#E0568F',
+  purple: '#6D5EF7', // primary magic accent
+  purpleDeep: '#4B3FD0', // 3D base / pressed shade for purple
+  teal: '#1ECAD3', // gems / info
+  tealDeep: '#1296A3',
+  green: '#57C96B', // success / primary CTA
+  greenDeep: '#31964B',
+  orange: '#FF9B55', // coins / warning
+  orangeDeep: '#D7722F',
+  yellow: '#FFC94A', // XP / stars
+  yellowDeep: '#D99A1C',
+  red: '#FF647C', // danger / close / expense
+  redDeep: '#D6455D',
+  blue: '#4F8CFF', // secondary info
+  blueDeep: '#3265D6',
+  pink: '#FF78AE',
+  pinkDeep: '#D9568A',
 
   white: '#FFFFFF',
-  black: '#2A1A0A',
+  black: '#101522',
 } as const;
 
 /** Add an alpha suffix to a hex (e.g. tint('#3FD4E8') -> '#3FD4E81A'). */
@@ -52,24 +52,24 @@ export const tint = (hex: string, alpha = '1A') => `${hex}${alpha}`;
  * gradients (light top -> rich bottom) plus the signature gloss highlight.
  */
 export const gradients = {
-  // screen backdrop (dreamy purple)
-  backdrop: ['#9B6DFF', '#7C4DFF'] as const,
-  // warm interior wash
-  warm: ['#FFE9C2', '#FBEFD8'] as const,
+  // screen backdrop (soft sky)
+  backdrop: ['#C4D4FF', '#93A7D9'] as const,
+  // cool interior wash
+  warm: ['#F8FBFF', '#EEF3FF'] as const,
   // CTA candy green
-  green: ['#8FE34A', '#5BC02E'] as const,
+  green: ['#7CDE8E', '#57C96B'] as const,
   // magic purple
-  purple: ['#9B7BFF', '#7C5BE6'] as const,
+  purple: ['#9A8CFF', '#6D5EF7'] as const,
   // coins / gold
-  gold: ['#FFE27A', '#FFB23F'] as const,
+  gold: ['#FFD978', '#FF9B55'] as const,
   // gems / cyan
-  gem: ['#7DE9F7', '#3FD4E8'] as const,
+  gem: ['#72E4EA', '#1ECAD3'] as const,
   // danger
-  red: ['#FF8A9B', '#FF5A6E'] as const,
+  red: ['#FF94A7', '#FF647C'] as const,
   // sky / tasks
-  blue: ['#7DA8FF', '#5B8DEF'] as const,
+  blue: ['#7DAFFF', '#4F8CFF'] as const,
   // candy pink
-  pink: ['#FF9ECB', '#FF7EB6'] as const,
+  pink: ['#FFA1C7', '#FF78AE'] as const,
   // glossy highlight overlay (top sheen on jelly buttons)
   gloss: ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.0)'] as const,
   // progress fill
@@ -251,14 +251,14 @@ export function gradientFor(face: string): readonly [string, string] {
 /** Neutral soft elevation for floating panels/cards. */
 export const elevation = {
   card: {
-    shadowColor: '#7A4A12',
+    shadowColor: '#4B5D86',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 6,
   },
   panel: {
-    shadowColor: '#5A3A12',
+    shadowColor: '#40527A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 14,

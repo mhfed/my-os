@@ -32,7 +32,7 @@ const VARIANTS: Record<GameButtonVariant, VariantSpec> = {
   gold: { gradient: gradients.gold, base: colors.orangeDeep },
   gem: { gradient: gradients.gem, base: colors.tealDeep },
   red: { gradient: gradients.red, base: colors.redDeep },
-  blue: { gradient: ['#7DA8FF', '#5B8DEF'] as const, base: colors.blueDeep },
+  blue: { gradient: gradients.blue, base: colors.blueDeep },
 };
 
 interface GameIconButtonProps extends Omit<

@@ -153,7 +153,7 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   tabBarTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(251,239,216,0.92)',
+    backgroundColor: 'rgba(244,248,255,0.88)',
   },
 
   /* Magic float button — 3D glossy purple slab */

@@ -19,7 +19,7 @@ interface GamePanelProps {
 
 /**
  * The base playful surface of the game UI: a bright, heavily-rounded panel with
- * a soft warm drop shadow and a 2px light inner edge that reads as a beveled
+ * a soft cool drop shadow and a 2px light inner edge that reads as a beveled
  * rim. Everything sits on these — sections, cards, lists.
  */
 export function GamePanel({
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   panel: {
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderColor: 'rgba(255,255,255,0.95)',
     ...elevation.panel,
   },
   padded: {
