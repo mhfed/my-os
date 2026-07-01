@@ -11,6 +11,43 @@ import { timing } from '@/theme/motion';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
+/** Formats a raw number the same way on the JS thread (defaultValue) and the UI thread (animated worklet). */
+function formatCount(
+  raw: number,
+  decimals: number,
+  separator: string,
+  prefix: string,
+  suffix: string,
+) {
+  'worklet';
+  const pow = 10 ** decimals;
+  const rounded = Math.round(raw * pow) / pow;
+  const neg = rounded < 0;
+  const abs = Math.abs(rounded);
+  const intPart = Math.floor(abs);
+  let intStr = String(intPart);
+
+  if (separator) {
+    // Insert the group separator every three digits, right to left.
+    let out = '';
+    let count = 0;
+    for (let i = intStr.length - 1; i >= 0; i--) {
+      out = intStr[i] + out;
+      count++;
+      if (count % 3 === 0 && i > 0) out = separator + out;
+    }
+    intStr = out;
+  }
+
+  let text = intStr;
+  if (decimals > 0) {
+    const frac = Math.round((abs - intPart) * pow);
+    text += '.' + String(frac).padStart(decimals, '0');
+  }
+
+  return `${prefix}${neg ? '-' : ''}${text}${suffix}`;
+}
+
 interface CounterProps {
   /** Target value to count up (or down) to. */
   value: number;
@@ -55,38 +92,15 @@ export function Counter({
 
   const animatedProps = useAnimatedProps(() => {
     'worklet';
-    const pow = 10 ** decimals;
-    const rounded = Math.round(progress.value * pow) / pow;
-    const neg = rounded < 0;
-    const abs = Math.abs(rounded);
-    const intPart = Math.floor(abs);
-    let intStr = String(intPart);
-
-    if (separator) {
-      // Insert the group separator every three digits, right to left.
-      let out = '';
-      let count = 0;
-      for (let i = intStr.length - 1; i >= 0; i--) {
-        out = intStr[i] + out;
-        count++;
-        if (count % 3 === 0 && i > 0) out = separator + out;
-      }
-      intStr = out;
-    }
-
-    let text = intStr;
-    if (decimals > 0) {
-      const frac = Math.round((abs - intPart) * pow);
-      text += '.' + String(frac).padStart(decimals, '0');
-    }
-
-    return { text: `${prefix}${neg ? '-' : ''}${text}${suffix}` } as object;
+    return {
+      text: formatCount(progress.value, decimals, separator, prefix, suffix),
+    } as object;
   }, [decimals, separator, prefix, suffix]);
 
   return (
     <AnimatedTextInput
       editable={false}
-      defaultValue={`${prefix}${value}${suffix}`}
+      defaultValue={formatCount(value, decimals, separator, prefix, suffix)}
       animatedProps={animatedProps}
       style={[styles.base, style]}
       // The input is display-only; stop it from ever grabbing focus.
