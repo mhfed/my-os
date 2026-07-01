@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, tint, base3D } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
-import { GameButton } from '@/components/game';
+import { GameButton, IconBadge } from '@/components/game';
 import { useDebtStore } from '@/store/debtStore';
 import { formatCompactVND } from '@/utils/currency';
 
@@ -69,11 +69,7 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
       {/* Amounts */}
       <View style={styles.amountsRow}>
         <View style={styles.amountCol}>
-          <View style={[styles.amountIconWrap, base3D(colors.greenDeep, 2)]}>
-            <View style={[styles.amountIcon, { backgroundColor: colors.green }]}>
-              <Icon name='arrow-bottom-left' size={16} color={colors.white} />
-            </View>
-          </View>
+          <IconBadge icon='arrow-bottom-left' color={colors.green} size={36} iconSize={16} style={styles.amountIconWrap} />
           <Text style={styles.amountLabel}>Thu về</Text>
           <Text style={[styles.amountValue, { color: colors.greenDeep }]}>
             +{formatCompactVND(summary.totalReceivable)}
@@ -83,11 +79,7 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
         <View style={styles.amountDivider} />
 
         <View style={styles.amountCol}>
-          <View style={[styles.amountIconWrap, base3D(colors.redDeep, 2)]}>
-            <View style={[styles.amountIcon, { backgroundColor: colors.red }]}>
-              <Icon name='arrow-top-right' size={16} color={colors.white} />
-            </View>
-          </View>
+          <IconBadge icon='arrow-top-right' color={colors.red} size={36} iconSize={16} style={styles.amountIconWrap} />
           <Text style={styles.amountLabel}>Phải trả</Text>
           <Text style={[styles.amountValue, { color: colors.redDeep }]}>
             -{formatCompactVND(summary.totalPayable)}
@@ -150,17 +142,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   amountIconWrap: {
-    borderRadius: radius.sm,
     marginBottom: 4,
-  },
-  amountIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
   },
   amountLabel: {
     fontFamily: fonts.regular,

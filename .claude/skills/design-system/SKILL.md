@@ -166,6 +166,21 @@ Square glossy 3D icon button.
 - `variant` same set as GameButton; `size` (default 46); `iconSize?`; `haptic?`.
 - For HUD actions (notifications, add) — keep `size` 44–48.
 
+### IconBadge
+
+Glossy 3D "clay chip" for a single icon (3dicons.co style) — a deep base wall,
+gradient cap, top gloss + top-left highlight spot, white glyph. Use it anywhere
+a category / stat / directional icon needs to read as a dimensional candy object
+instead of a flat tinted circle.
+
+```tsx
+<IconBadge icon='piggy-bank' color={colors.green} size={38} />
+```
+
+- `color` is any category/domain hex; it resolves to the nearest theme accent
+  (`resolveAccent`) for the base + gradient pairing — never pass a raw deep shade.
+- `size` (default 36); `iconSize?` overrides the glyph size.
+
 ### GamePanel
 
 Cream/white raised container with optional title + header action.

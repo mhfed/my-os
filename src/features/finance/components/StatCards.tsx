@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, elevation, glow, tint } from '@/theme/colors';
-import { Icon, type IconName } from '@/theme/icons';
+import type { IconName } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
+import { IconBadge } from '@/components/game';
 import type { MonthlyOverview } from '@/types/finance';
 import { formatCompactVND } from '@/utils/currency';
 
@@ -44,9 +45,13 @@ export function StatCards({ income, spent, saved }: StatCardsProps) {
             glow(stat.accent, 0.16, 14),
           ]}
         >
-          <View style={[styles.chip, { backgroundColor: tint(stat.accent) }]}>
-            <Icon name={stat.icon} size={17} color={stat.accent} />
-          </View>
+          <IconBadge
+            icon={stat.icon}
+            color={stat.accent}
+            size={32}
+            iconSize={17}
+            style={styles.chip}
+          />
           <Text style={styles.label}>{stat.label}</Text>
           <Text style={[styles.value, { color: stat.accent }]}>
             {formatCompactVND(stat.value)}
@@ -73,11 +78,6 @@ const styles = StyleSheet.create({
     ...elevation.card,
   },
   chip: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 10,
   },
   label: {

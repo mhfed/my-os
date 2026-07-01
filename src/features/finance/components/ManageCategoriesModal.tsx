@@ -11,11 +11,11 @@ import {
   Platform,
 } from 'react-native';
 
-import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
+import { colors, elevation, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { PressableScale } from '@/components/motion';
-import { GameButton, GameIconButton } from '@/components/game';
+import { GameButton, GameIconButton, IconBadge } from '@/components/game';
 import { useFinanceStore } from '@/store/financeStore';
 import type { Category } from '@/types/finance';
 
@@ -178,16 +178,7 @@ export function ManageCategoriesModal({
               <ScrollView style={styles.list}>
                 {categories.map((c) => (
                   <View key={c.id} style={styles.row}>
-                    <View style={styles.iconBoxWrap}>
-                      <View
-                        style={[
-                          styles.iconBox,
-                          { backgroundColor: tint(c.color, '26') },
-                        ]}
-                      >
-                        <Icon name={c.icon as any} size={18} color={c.color} />
-                      </View>
-                    </View>
+                    <IconBadge icon={c.icon as any} color={c.color} size={36} iconSize={18} />
                     <Text style={styles.rowText} numberOfLines={1}>
                       {c.name}
                     </Text>
@@ -273,17 +264,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     ...elevation.card,
-  },
-  iconBoxWrap: {
-    ...base3D(colors.purpleDeep, 2),
-    borderRadius: radius.sm,
-  },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowText: {
     flex: 1,

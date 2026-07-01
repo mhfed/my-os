@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
-import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
+import { base3D, colors, elevation, radius } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
+import { IconBadge } from '@/components/game';
 import type { TransactionView } from '@/types/finance';
 import { formatSignedVND, formatVND } from '@/utils/currency';
 import { formatTxnDate } from '@/utils/date';
@@ -32,11 +33,7 @@ export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
 
   const rowContent = (
     <PressableScale style={styles.row} onPress={onEdit} haptic='light'>
-      <View style={styles.chipWrap}>
-        <View style={[styles.chip, { backgroundColor: tint(txn.color, '26') }]}>
-          <Icon name={txn.icon as IconName} size={19} color={txn.color} />
-        </View>
-      </View>
+      <IconBadge icon={txn.icon as IconName} color={txn.color} size={40} iconSize={19} />
 
       <View style={styles.middle}>
         <Text style={styles.name} numberOfLines={1}>
@@ -77,17 +74,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     ...elevation.card,
-  },
-  chipWrap: {
-    ...base3D(colors.tealDeep, 2),
-    borderRadius: radius.sm,
-  },
-  chip: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   middle: {
     flex: 1,

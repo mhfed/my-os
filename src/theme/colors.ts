@@ -176,6 +176,78 @@ export const base3D = (deepHex: string, height = 5) =>
     elevation: height + 2,
   }) as const;
 
+const ACCENT_FACES: readonly string[] = [
+  colors.purple,
+  colors.teal,
+  colors.green,
+  colors.orange,
+  colors.yellow,
+  colors.red,
+  colors.blue,
+  colors.pink,
+];
+
+const ACCENT_DEEP: Record<string, string> = {
+  [colors.purple]: colors.purpleDeep,
+  [colors.teal]: colors.tealDeep,
+  [colors.green]: colors.greenDeep,
+  [colors.orange]: colors.orangeDeep,
+  [colors.yellow]: colors.yellowDeep,
+  [colors.red]: colors.redDeep,
+  [colors.blue]: colors.blueDeep,
+  [colors.pink]: colors.pinkDeep,
+};
+
+const ACCENT_GRADIENT: Record<string, readonly [string, string]> = {
+  [colors.purple]: gradients.purple,
+  [colors.teal]: gradients.gem,
+  [colors.green]: gradients.green,
+  [colors.orange]: gradients.gold,
+  [colors.yellow]: gradients.gold,
+  [colors.red]: gradients.red,
+  [colors.blue]: gradients.blue,
+  [colors.pink]: gradients.pink,
+};
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return null;
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
+
+/**
+ * Map an arbitrary hex color to the nearest theme accent face, so any
+ * category/domain color always resolves to a real `deep` 3D-base pairing —
+ * even for legacy/custom hexes that aren't an exact palette match.
+ */
+export function resolveAccent(hex: string): { face: string; deep: string } {
+  if (ACCENT_DEEP[hex]) return { face: hex, deep: ACCENT_DEEP[hex] };
+
+  const rgb = hexToRgb(hex);
+  if (!rgb) return { face: colors.purple, deep: colors.purpleDeep };
+
+  let best = ACCENT_FACES[0];
+  let bestDist = Infinity;
+  for (const face of ACCENT_FACES) {
+    const frgb = hexToRgb(face);
+    if (!frgb) continue;
+    const dist =
+      (rgb[0] - frgb[0]) ** 2 +
+      (rgb[1] - frgb[1]) ** 2 +
+      (rgb[2] - frgb[2]) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = face;
+    }
+  }
+  return { face: best, deep: ACCENT_DEEP[best] };
+}
+
+/** Glossy 2-stop gradient matched to a resolved accent face. */
+export function gradientFor(face: string): readonly [string, string] {
+  return ACCENT_GRADIENT[face] ?? gradients.gem;
+}
+
 /** Neutral soft elevation for floating panels/cards. */
 export const elevation = {
   card: {

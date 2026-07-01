@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, gradients, radius, tint } from '@/theme/colors';
+import { colors, gradients, radius } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
+import { IconBadge } from '@/components/game';
 import { useSavingsStore } from '@/store/savingsStore';
 import { formatCompactVND } from '@/utils/currency';
 import type { SavingsGoalView } from '@/types/savings';
@@ -49,11 +50,7 @@ function GoalBar({
 
   return (
     <PressableScale style={styles.goalRow} onPress={onPress} haptic='light'>
-      <View
-        style={[styles.goalIcon, { backgroundColor: tint(view.color, '22') }]}
-      >
-        <Icon name={view.icon as IconName} size={18} color={view.color} />
-      </View>
+      <IconBadge icon={view.icon as IconName} color={view.color} size={38} iconSize={18} />
       <View style={styles.goalMid}>
         <View style={styles.goalTopRow}>
           <Text style={styles.goalName} numberOfLines={1}>
@@ -114,9 +111,7 @@ export function SavingsGoalsSection() {
           onPress={() => setAddOpen(true)}
           haptic='light'
         >
-          <View style={styles.emptyIcon}>
-            <Icon name='piggy-bank' size={20} color={colors.purple} />
-          </View>
+          <IconBadge icon='piggy-bank' color={colors.purple} size={38} iconSize={20} />
           <Text style={styles.emptyText}>Tạo mục tiêu tiết kiệm đầu tiên</Text>
           <Icon name='chevron-right' size={14} color={colors.tabInactive} />
         </PressableScale>
@@ -163,14 +158,6 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 18,
   },
-  emptyIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tint(colors.purple, '1A'),
-  },
   emptyText: {
     flex: 1,
     fontFamily: fonts.medium,
@@ -187,13 +174,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 14,
-  },
-  goalIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   goalMid: {
     flex: 1,
