@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, radius, tint, base3D, elevation } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
+import { PressableScale, AnimatedCard } from '@/components/motion';
+import { GameIconButton } from '@/components/game';
 import { useDebtStore } from '@/store/debtStore';
 import { formatCompactVND, formatVND } from '@/utils/currency';
 import type { DebtType, DebtView } from '@/types/debt';
@@ -26,63 +28,104 @@ interface DebtLedgerSheetProps {
 
 type DebtFilter = 'open' | 'settled';
 
-function DebtRow({ view, onPress }: { view: DebtView; onPress: () => void }) {
+function DebtRow({
+  view,
+  onPress,
+  index,
+}: {
+  view: DebtView;
+  onPress: () => void;
+  index: number;
+}) {
+  // Red for debts I owe (borrow), green for debts owed to me (lend).
+  const isLend = view.type === 'lend';
+  const accent = isLend ? colors.green : colors.red;
+  const accentDeep = isLend ? colors.greenDeep : colors.redDeep;
+
   const progressColor =
     view.status === 'settled'
       ? colors.teal
       : view.isOverdue
-      ? colors.red
-      : (view.daysUntilDue ?? Infinity) <= 7
-      ? colors.orange
-      : colors.purple;
+        ? colors.red
+        : (view.daysUntilDue ?? Infinity) <= 7
+          ? colors.orange
+          : accent;
 
-  const statusLabel = view.status === 'settled'
-    ? { text: 'Tất toán', color: colors.teal }
-    : view.isOverdue
-    ? { text: `Quá hạn ${Math.abs(view.daysUntilDue ?? 0)} ngày`, color: colors.red }
-    : view.dueDate
-    ? (view.daysUntilDue ?? Infinity) <= 7
-      ? { text: `Còn ${view.daysUntilDue} ngày`, color: colors.orange }
-      : (() => {
-          const d = new Date(view.dueDate);
-          return { text: `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`, color: colors.muted };
-        })()
-    : { text: view.status === 'partial' ? 'Một phần' : 'Đang mở', color: colors.muted };
+  const statusLabel =
+    view.status === 'settled'
+      ? { text: 'Tất toán ✅', color: colors.tealDeep }
+      : view.isOverdue
+        ? {
+            text: `Quá hạn ${Math.abs(view.daysUntilDue ?? 0)} ngày`,
+            color: colors.redDeep,
+          }
+        : view.dueDate
+          ? (view.daysUntilDue ?? Infinity) <= 7
+            ? { text: `Còn ${view.daysUntilDue} ngày`, color: colors.orangeDeep }
+            : (() => {
+                const d = new Date(view.dueDate);
+                return {
+                  text: `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`,
+                  color: colors.muted,
+                };
+              })()
+          : {
+              text: view.status === 'partial' ? 'Một phần' : 'Đang mở',
+              color: colors.muted,
+            };
 
   const pct = Math.min(1, view.progressPct);
 
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      {/* Avatar */}
-      <View style={[styles.avatar, { backgroundColor: tint(progressColor, '22') }]}>
-        <Text style={[styles.avatarText, { color: progressColor }]}>
-          {view.party.charAt(0).toUpperCase()}
-        </Text>
-      </View>
-
-      <View style={styles.rowMid}>
-        <View style={styles.rowTop}>
-          <Text style={styles.party} numberOfLines={1}>{view.party}</Text>
-          <Text style={[styles.statusBadge, { color: statusLabel.color }]}>{statusLabel.text}</Text>
+    <AnimatedCard index={index}>
+      <PressableScale style={styles.row} onPress={onPress} haptic='light'>
+        {/* Icon badge */}
+        <View style={[styles.avatarWrap, base3D(accentDeep, 3)]}>
+          <View style={[styles.avatar, { backgroundColor: accent }]}>
+            <Icon
+              name={isLend ? 'hand-coin' : 'bank-outline'}
+              size={18}
+              color={colors.white}
+            />
+          </View>
         </View>
 
-        {/* Mini progress bar */}
-        <View style={styles.miniTrack}>
-          <View style={[styles.miniFill, { width: `${pct * 100}%`, backgroundColor: progressColor }]} />
+        <View style={styles.rowMid}>
+          <View style={styles.rowTop}>
+            <Text style={styles.party} numberOfLines={1}>
+              {view.party}
+            </Text>
+            <Text style={[styles.statusBadge, { color: statusLabel.color }]}>
+              {statusLabel.text}
+            </Text>
+          </View>
+
+          {/* Mini progress bar */}
+          <View style={styles.miniTrack}>
+            <View
+              style={[
+                styles.miniFill,
+                { width: `${pct * 100}%`, backgroundColor: progressColor },
+              ]}
+            />
+          </View>
+
+          <View style={styles.rowBottom}>
+            <Text style={styles.paidText}>
+              {formatCompactVND(view.paidAmount)} /{' '}
+              {formatCompactVND(view.originalAmount)}
+            </Text>
+            <Text style={[styles.remainText, { color: accentDeep }]}>
+              {view.status === 'settled'
+                ? '✓'
+                : `còn ${formatCompactVND(view.totalOwed)}`}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.rowBottom}>
-          <Text style={styles.paidText}>
-            {formatCompactVND(view.paidAmount)} / {formatCompactVND(view.originalAmount)}
-          </Text>
-          <Text style={[styles.remainText, { color: progressColor }]}>
-            {view.status === 'settled' ? '✓' : `còn ${formatCompactVND(view.totalOwed)}`}
-          </Text>
-        </View>
-      </View>
-
-      <Icon name='chevron-right' size={15} color={colors.tabInactive} />
-    </Pressable>
+        <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+      </PressableScale>
+    </AnimatedCard>
   );
 }
 
@@ -128,23 +171,27 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Sổ nợ</Text>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={8}>
+          <PressableScale
+            onPress={onClose}
+            haptic='light'
+            style={styles.closeBtn}
+          >
             <Icon name='close' size={18} color={colors.muted} />
-          </Pressable>
+          </PressableScale>
         </View>
 
         {/* Summary bar */}
         <View style={styles.summaryBar}>
           <View style={styles.summaryCol}>
             <Text style={styles.summaryLabel}>Thu về</Text>
-            <Text style={[styles.summaryValue, { color: colors.teal }]}>
+            <Text style={[styles.summaryValue, { color: colors.greenDeep }]}>
               +{formatCompactVND(summary.totalReceivable)}
             </Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryCol}>
             <Text style={styles.summaryLabel}>Phải trả</Text>
-            <Text style={[styles.summaryValue, { color: colors.red }]}>
+            <Text style={[styles.summaryValue, { color: colors.redDeep }]}>
               -{formatCompactVND(summary.totalPayable)}
             </Text>
           </View>
@@ -153,7 +200,12 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
               <View style={styles.summaryDivider} />
               <View style={styles.summaryCol}>
                 <Text style={styles.summaryLabel}>Cảnh báo</Text>
-                <Text style={[styles.summaryValue, { color: colors.orange, fontSize: 13 }]}>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    { color: colors.orangeDeep, fontSize: 13 },
+                  ]}
+                >
                   {summary.overdueCount > 0
                     ? `${summary.overdueCount} quá hạn`
                     : `${summary.upcomingCount} sắp hạn`}
@@ -165,37 +217,45 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
 
         {/* Tab: Lend / Borrow */}
         <View style={styles.tabs}>
-          {(['lend', 'borrow'] as const).map((t) => (
-            <Pressable
-              key={t}
-              onPress={() => setTab(t)}
-              style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-            >
-              <Icon
-                name={t === 'lend' ? 'hand-coin' : 'bank-outline'}
-                size={14}
-                color={tab === t ? colors.purple : colors.muted}
-              />
-              <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                {t === 'lend' ? 'Tôi cho vay' : 'Tôi đang nợ'}
-              </Text>
-            </Pressable>
-          ))}
+          {(['lend', 'borrow'] as const).map((t) => {
+            const active = tab === t;
+            return (
+              <Pressable
+                key={t}
+                onPress={() => setTab(t)}
+                style={[styles.tabBtn, active && styles.tabBtnActive]}
+              >
+                <Icon
+                  name={t === 'lend' ? 'hand-coin' : 'bank-outline'}
+                  size={14}
+                  color={active ? colors.white : colors.muted}
+                />
+                <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                  {t === 'lend' ? 'Tôi cho vay' : 'Tôi đang nợ'}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* Status filter chips */}
         <View style={styles.filterRow}>
-          {(['open', 'settled'] as const).map((f) => (
-            <Pressable
-              key={f}
-              onPress={() => setStatusFilter(f)}
-              style={[styles.chip, statusFilter === f && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, statusFilter === f && styles.chipTextActive]}>
-                {f === 'open' ? 'Đang mở' : 'Đã tất toán'}
-              </Text>
-            </Pressable>
-          ))}
+          {(['open', 'settled'] as const).map((f) => {
+            const active = statusFilter === f;
+            return (
+              <Pressable
+                key={f}
+                onPress={() => setStatusFilter(f)}
+                style={[styles.chip, active && styles.chipActive]}
+              >
+                <Text
+                  style={[styles.chipText, active && styles.chipTextActive]}
+                >
+                  {f === 'open' ? 'Đang mở' : 'Đã tất toán'}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* List */}
@@ -208,20 +268,30 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
             <View style={styles.empty}>
               <Icon name='handshake' size={36} color={colors.tabInactive} />
               <Text style={styles.emptyText}>
-                {statusFilter === 'open' ? 'Không có khoản đang mở' : 'Không có khoản đã tất toán'}
+                {statusFilter === 'open'
+                  ? 'Không có khoản đang mở'
+                  : 'Không có khoản đã tất toán'}
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <DebtRow view={item} onPress={() => setSelectedId(item.id)} />
+          renderItem={({ item, index }) => (
+            <DebtRow
+              view={item}
+              index={index}
+              onPress={() => setSelectedId(item.id)}
+            />
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
 
         {/* FAB */}
-        <Pressable style={styles.fab} onPress={() => setAddOpen(true)}>
-          <Icon name='plus' size={24} color={colors.white} />
-        </Pressable>
+        <GameIconButton
+          icon='plus'
+          variant='purple'
+          size={56}
+          style={styles.fab}
+          onPress={() => setAddOpen(true)}
+        />
       </SafeAreaView>
 
       {/* Sub-sheets must be inside the pageSheet Modal to appear on top of it */}
@@ -241,36 +311,49 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  title: { fontFamily: fonts.semibold, fontSize: 18, color: colors.text },
+  title: {
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    color: colors.text,
+    ...textShadow.emboss,
+  },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.card,
   },
   summaryBar: {
     flexDirection: 'row',
     marginHorizontal: 20,
     marginBottom: 16,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.lg,
     paddingVertical: 14,
+    ...elevation.card,
   },
   summaryCol: { flex: 1, alignItems: 'center', gap: 3 },
-  summaryLabel: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
+  summaryLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+  },
   summaryValue: { fontFamily: fonts.monoSemibold, fontSize: 15 },
   summaryDivider: { width: 1, backgroundColor: colors.border },
   tabs: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: colors.card,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.cardAlt,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: colors.track,
     padding: 4,
     gap: 4,
     marginBottom: 12,
@@ -282,68 +365,96 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: radius.sm,
   },
-  tabBtnActive: { backgroundColor: tint(colors.purple, '22') },
-  tabText: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
-  tabTextActive: { color: colors.purple },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
+  tabBtnActive: {
+    backgroundColor: colors.purple,
+    ...base3D(colors.purpleDeep, 2),
+  },
+  tabText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
+  tabTextActive: { color: colors.white, ...textShadow.button },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
     backgroundColor: colors.card,
   },
-  chipActive: { backgroundColor: tint(colors.purple, '2E'), borderColor: colors.purple },
+  chipActive: {
+    backgroundColor: tint(colors.purple, '22'),
+    borderColor: colors.purple,
+  },
   chipText: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
-  chipTextActive: { color: colors.purple },
-  list: { paddingHorizontal: 20, paddingBottom: 100, paddingTop: 4 },
+  chipTextActive: { color: colors.purple, fontFamily: fonts.semibold },
+  list: { paddingHorizontal: 20, paddingBottom: 110, paddingTop: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.lg,
     padding: 14,
+    ...elevation.card,
+  },
+  avatarWrap: {
+    borderRadius: radius.sm,
   },
   avatar: {
     width: 42,
     height: 42,
-    borderRadius: 13,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
-  avatarText: { fontFamily: fonts.semibold, fontSize: 18 },
   rowMid: { flex: 1, gap: 6 },
-  rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  party: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text, flex: 1 },
+  rowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  party: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.text,
+    flex: 1,
+  },
   statusBadge: { fontFamily: fonts.medium, fontSize: 11 },
-  miniTrack: { height: 4, backgroundColor: colors.track, borderRadius: 2, overflow: 'hidden' },
-  miniFill: { height: '100%', borderRadius: 2 },
+  miniTrack: {
+    height: 5,
+    backgroundColor: colors.track,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  miniFill: { height: '100%', borderRadius: 3 },
   rowBottom: { flexDirection: 'row', justifyContent: 'space-between' },
   paidText: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
-  remainText: { fontFamily: fonts.monoMedium, fontSize: 11 },
+  remainText: { fontFamily: fonts.monoSemibold, fontSize: 11 },
   separator: { height: 10 },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 12 },
-  emptyText: { fontFamily: fonts.regular, fontSize: 14, color: colors.tabInactive },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+    gap: 12,
+  },
+  emptyText: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.tabInactive,
+  },
   fab: {
     position: 'absolute',
     right: 22,
     bottom: 28,
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: colors.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.purple,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
   },
 });

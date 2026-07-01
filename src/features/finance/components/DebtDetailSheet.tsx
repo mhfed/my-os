@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import {
   Alert,
-  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,9 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, radius, tint, base3D, elevation } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
+import { PressableScale, AnimatedCard } from '@/components/motion';
+import { GameButton } from '@/components/game';
 import { useDebtStore } from '@/store/debtStore';
 import { formatVND, formatCompactVND } from '@/utils/currency';
 import { formatTxnDate } from '@/utils/date';
@@ -58,18 +59,26 @@ function groupDigits(n: number): string {
 }
 
 function statusLabel(view: DebtView): { text: string; color: string } {
-  if (view.status === 'settled') return { text: 'Đã tất toán', color: colors.teal };
+  if (view.status === 'settled')
+    return { text: 'Đã tất toán ✅', color: colors.tealDeep };
   if (view.isOverdue) {
     const days = Math.abs(view.daysUntilDue ?? 0);
-    return { text: `Quá hạn ${days} ngày`, color: colors.red };
+    return { text: `Quá hạn ${days} ngày`, color: colors.redDeep };
   }
   if (view.dueDate) {
     const days = view.daysUntilDue ?? 0;
-    if (days <= 7) return { text: `Còn ${days} ngày`, color: colors.orange };
+    if (days <= 7)
+      return { text: `Còn ${days} ngày`, color: colors.orangeDeep };
     const d = new Date(view.dueDate);
-    return { text: `Đến hạn ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`, color: colors.muted };
+    return {
+      text: `Đến hạn ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`,
+      color: colors.muted,
+    };
   }
-  return { text: view.status === 'partial' ? 'Đã thanh toán một phần' : 'Đang mở', color: colors.muted };
+  return {
+    text: view.status === 'partial' ? 'Đã thanh toán một phần' : 'Đang mở',
+    color: colors.muted,
+  };
 }
 
 export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
@@ -107,6 +116,9 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
   const editAmount = parseAmount(editAmountText);
   const today = todayStart();
   const status = statusLabel(view);
+  const isLend = view.type === 'lend';
+  const typeAccent = isLend ? colors.green : colors.red;
+  const typeAccentDeep = isLend ? colors.greenDeep : colors.redDeep;
 
   function handlePencilPress() {
     if (editOpen) {
@@ -134,7 +146,12 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
 
   async function handleAddPayment() {
     if (payAmount <= 0) return;
-    await addPayment(view!.id, payAmount, payDate + 12 * 3_600_000, payNote.trim() || undefined);
+    await addPayment(
+      view!.id,
+      payAmount,
+      payDate + 12 * 3_600_000,
+      payNote.trim() || undefined,
+    );
     setPaymentOpen(false);
     setPayAmountText('');
     setPayNote('');
@@ -177,8 +194,14 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
     view.status === 'settled'
       ? colors.teal
       : view.isOverdue
-      ? colors.red
-      : colors.purple;
+        ? colors.red
+        : typeAccent;
+  const progressColorDeep =
+    view.status === 'settled'
+      ? colors.tealDeep
+      : view.isOverdue
+        ? colors.redDeep
+        : typeAccentDeep;
 
   return (
     <Modal
@@ -190,21 +213,40 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={8}>
+          <PressableScale
+            onPress={onClose}
+            haptic='light'
+            style={styles.closeBtn}
+          >
             <Icon name='chevron-down' size={20} color={colors.muted} />
-          </Pressable>
+          </PressableScale>
           <Text style={styles.title} numberOfLines={1}>
             {view.party}
           </Text>
-          <Pressable onPress={handlePencilPress} style={styles.editBtn} hitSlop={8}>
-            <Icon name='pencil' size={16} color={editOpen ? colors.purple : colors.muted} />
-          </Pressable>
-          <Pressable onPress={handleDelete} style={styles.deleteBtn} hitSlop={8}>
-            <Icon name='delete-outline' size={18} color={colors.red} />
-          </Pressable>
+          <PressableScale
+            onPress={handlePencilPress}
+            haptic='light'
+            style={styles.editBtn}
+          >
+            <Icon
+              name='pencil'
+              size={16}
+              color={editOpen ? colors.purple : colors.muted}
+            />
+          </PressableScale>
+          <PressableScale
+            onPress={handleDelete}
+            haptic='light'
+            style={styles.deleteBtn}
+          >
+            <Icon name='delete-outline' size={18} color={colors.redDeep} />
+          </PressableScale>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Inline edit panel */}
           {editOpen && (
             <View style={styles.editPanel}>
@@ -240,7 +282,12 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   onPress={() => setEditHasDueDate((v) => !v)}
                   style={[styles.toggle, editHasDueDate && styles.toggleOn]}
                 >
-                  <View style={[styles.toggleThumb, editHasDueDate && styles.toggleThumbOn]} />
+                  <View
+                    style={[
+                      styles.toggleThumb,
+                      editHasDueDate && styles.toggleThumbOn,
+                    ]}
+                  />
                 </Pressable>
               </View>
               {editHasDueDate && (
@@ -252,7 +299,11 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   <Text style={styles.editDateLabel}>
                     {editDueDate ? dayLabel(editDueDate) : 'Chọn ngày'}
                   </Text>
-                  <Icon name='chevron-right' size={14} color={colors.tabInactive} />
+                  <Icon
+                    name='chevron-right'
+                    size={14}
+                    color={colors.tabInactive}
+                  />
                 </Pressable>
               )}
 
@@ -270,19 +321,24 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
 
               {/* Actions */}
               <View style={styles.editActions}>
-                <Pressable onPress={() => setEditOpen(false)} style={styles.editCancelBtn}>
+                <Pressable
+                  onPress={() => setEditOpen(false)}
+                  style={styles.editCancelBtn}
+                >
                   <Text style={styles.editCancelText}>Huỷ</Text>
                 </Pressable>
-                <Pressable
-                  onPress={handleSaveEdit}
+                <GameButton
+                  label='Lưu'
+                  variant='purple'
+                  size='sm'
                   disabled={editParty.trim().length === 0 || editAmount <= 0}
-                  style={[
-                    styles.editSaveBtn,
-                    (editParty.trim().length === 0 || editAmount <= 0) && styles.editSaveBtnDisabled,
-                  ]}
-                >
-                  <Text style={styles.editSaveText}>Lưu</Text>
-                </Pressable>
+                  style={
+                    editParty.trim().length === 0 || editAmount <= 0
+                      ? styles.disabled
+                      : undefined
+                  }
+                  onPress={handleSaveEdit}
+                />
               </View>
             </View>
           )}
@@ -290,15 +346,22 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           {/* Type badge */}
           <View style={styles.typeBadge}>
             <Icon
-              name={view.type === 'lend' ? 'hand-coin' : 'bank-outline'}
+              name={isLend ? 'hand-coin' : 'bank-outline'}
               size={13}
-              color={view.type === 'lend' ? colors.teal : colors.orange}
+              color={isLend ? colors.greenDeep : colors.orangeDeep}
             />
-            <Text style={[styles.typeText, { color: view.type === 'lend' ? colors.teal : colors.orange }]}>
-              {view.type === 'lend' ? 'Tôi cho vay' : 'Tôi đi vay'}
+            <Text
+              style={[
+                styles.typeText,
+                { color: isLend ? colors.greenDeep : colors.orangeDeep },
+              ]}
+            >
+              {isLend ? 'Tôi cho vay' : 'Tôi đi vay'}
             </Text>
             <View style={styles.dot} />
-            <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
+            <Text style={[styles.statusText, { color: status.color }]}>
+              {status.text}
+            </Text>
           </View>
 
           {/* Progress card */}
@@ -306,11 +369,18 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
             <View style={styles.progressAmounts}>
               <View>
                 <Text style={styles.progressLabel}>Số tiền gốc</Text>
-                <Text style={styles.progressOriginal}>{formatVND(view.originalAmount)}</Text>
+                <Text style={styles.progressOriginal}>
+                  {formatVND(view.originalAmount)}
+                </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.progressLabel}>Còn lại</Text>
-                <Text style={[styles.progressRemaining, { color: progressColor }]}>
+                <Text
+                  style={[
+                    styles.progressRemaining,
+                    { color: progressColorDeep },
+                  ]}
+                >
                   {formatVND(view.totalOwed)}
                 </Text>
               </View>
@@ -318,15 +388,23 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
 
             {/* Progress bar */}
             <View style={styles.track}>
-              <View style={[styles.fill, { width: `${progressW * 100}%`, backgroundColor: progressColor }]} />
+              <View
+                style={[
+                  styles.fill,
+                  { width: `${progressW * 100}%`, backgroundColor: progressColor },
+                ]}
+              />
             </View>
 
             <View style={styles.progressMeta}>
               <Text style={styles.progressMetaText}>
-                Đã trả: {formatCompactVND(view.paidAmount)} ({Math.round(view.progressPct * 100)}%)
+                Đã trả: {formatCompactVND(view.paidAmount)} (
+                {Math.round(view.progressPct * 100)}%)
               </Text>
               {view.accruedInterest > 0 && (
-                <Text style={[styles.progressMetaText, { color: colors.orange }]}>
+                <Text
+                  style={[styles.progressMetaText, { color: colors.orangeDeep }]}
+                >
                   Lãi: +{formatCompactVND(view.accruedInterest)}
                 </Text>
               )}
@@ -344,7 +422,9 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           {/* Settle link toggle (only when not yet settled) */}
           {view.status !== 'settled' && (
             <View style={styles.settleLinkRow}>
-              <Text style={styles.settleLinkLabel}>Ghi vào giao dịch khi tất toán</Text>
+              <Text style={styles.settleLinkLabel}>
+                Ghi vào giao dịch khi tất toán
+              </Text>
               <Switch
                 value={linkTxnOnSettle}
                 onValueChange={setLinkTxnOnSettle}
@@ -359,22 +439,31 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           {view.payments.length === 0 ? (
             <Text style={styles.emptyPayments}>Chưa có lần thanh toán nào</Text>
           ) : (
-            view.payments.map((p) => (
-              <View key={p.id} style={styles.paymentRow}>
-                <View style={styles.paymentLeft}>
-                  <Text style={styles.paymentDate}>{formatTxnDate(p.date)}</Text>
-                  {p.note && <Text style={styles.paymentNote}>{p.note}</Text>}
+            view.payments.map((p, i) => (
+              <AnimatedCard key={p.id} index={i}>
+                <View style={styles.paymentRow}>
+                  <View style={[styles.paymentIconWrap, base3D(colors.tealDeep, 2)]}>
+                    <View style={styles.paymentIcon}>
+                      <Icon name='cash-check' size={16} color={colors.white} />
+                    </View>
+                  </View>
+                  <View style={styles.paymentLeft}>
+                    <Text style={styles.paymentDate}>{formatTxnDate(p.date)}</Text>
+                    {p.note && (
+                      <Text style={styles.paymentNote}>{p.note}</Text>
+                    )}
+                  </View>
+                  <Text style={[styles.paymentAmount, { color: colors.tealDeep }]}>
+                    +{formatCompactVND(p.amount)}
+                  </Text>
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() => deletePayment(p.id, view!.id, p.amount)}
+                  >
+                    <Icon name='close' size={14} color={colors.tabInactive} />
+                  </Pressable>
                 </View>
-                <Text style={[styles.paymentAmount, { color: colors.teal }]}>
-                  +{formatCompactVND(p.amount)}
-                </Text>
-                <Pressable
-                  hitSlop={8}
-                  onPress={() => deletePayment(p.id, view!.id, p.amount)}
-                >
-                  <Icon name='close' size={14} color={colors.tabInactive} />
-                </Pressable>
-              </View>
+              </AnimatedCard>
             ))
           )}
         </ScrollView>
@@ -386,18 +475,33 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
               <Icon name='plus' size={18} color={colors.purple} />
               <Text style={styles.addPayText}>Ghi nhận thanh toán</Text>
             </Pressable>
-            <Pressable style={styles.settleBtn} onPress={handleSettle}>
-              <Icon name='check-circle-outline' size={18} color={colors.white} />
-              <Text style={styles.settleBtnText}>Tất toán</Text>
-            </Pressable>
+            <GameButton
+              label='Tất toán'
+              variant='gem'
+              size='md'
+              icon='check-circle-outline'
+              onPress={handleSettle}
+              style={styles.settleBtn}
+            />
           </View>
         )}
 
         {/* Add payment inline modal */}
-        <Modal visible={paymentOpen} transparent animationType='slide' onRequestClose={() => setPaymentOpen(false)}>
+        <Modal
+          visible={paymentOpen}
+          transparent
+          animationType='slide'
+          onRequestClose={() => setPaymentOpen(false)}
+        >
           <View style={styles.payRoot}>
-            <Pressable style={styles.backdrop} onPress={() => setPaymentOpen(false)} />
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kav}>
+            <Pressable
+              style={styles.backdrop}
+              onPress={() => setPaymentOpen(false)}
+            />
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={styles.kav}
+            >
               <View style={styles.paySheet}>
                 <View style={styles.handle} />
                 <Text style={styles.payTitle}>Ghi nhận thanh toán</Text>
@@ -417,17 +521,27 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
 
                 <Text style={styles.label}>Ngày</Text>
                 <View style={styles.dateRow}>
-                  <Pressable onPress={() => setPayDate((d) => d - 86_400_000)} style={styles.dateArrow} hitSlop={8}>
+                  <Pressable
+                    onPress={() => setPayDate((d) => d - 86_400_000)}
+                    style={styles.dateArrow}
+                    hitSlop={8}
+                  >
                     <Icon name='chevron-left' size={18} color={colors.muted} />
                   </Pressable>
                   <Text style={styles.dateLabel}>{dayLabel(payDate)}</Text>
                   <Pressable
-                    onPress={() => setPayDate((d) => Math.min(d + 86_400_000, today))}
+                    onPress={() =>
+                      setPayDate((d) => Math.min(d + 86_400_000, today))
+                    }
                     style={styles.dateArrow}
                     disabled={payDate >= today}
                     hitSlop={8}
                   >
-                    <Icon name='chevron-right' size={18} color={payDate >= today ? colors.tabInactive : colors.muted} />
+                    <Icon
+                      name='chevron-right'
+                      size={18}
+                      color={payDate >= today ? colors.tabInactive : colors.muted}
+                    />
                   </Pressable>
                 </View>
 
@@ -440,13 +554,15 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   style={styles.noteInput}
                 />
 
-                <Pressable
-                  onPress={handleAddPayment}
+                <GameButton
+                  label='Lưu'
+                  variant='gem'
+                  size='md'
+                  fullWidth
                   disabled={payAmount <= 0}
-                  style={[styles.submit, payAmount <= 0 && styles.disabled]}
-                >
-                  <Text style={styles.submitText}>Lưu</Text>
-                </Pressable>
+                  style={payAmount <= 0 ? styles.disabled : undefined}
+                  onPress={handleAddPayment}
+                />
               </View>
             </KeyboardAvoidingView>
           </View>
@@ -475,48 +591,59 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.card,
   },
   title: {
     flex: 1,
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 18,
     color: colors.text,
     textAlign: 'center',
+    ...textShadow.emboss,
   },
   editBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.card,
   },
   deleteBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     backgroundColor: tint(colors.red, '22'),
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.card,
   },
   content: { paddingHorizontal: 20, paddingBottom: 100, gap: 16 },
   // Edit panel
   editPanel: {
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderRadius: radius.md,
     padding: 14,
     marginBottom: 0,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    ...elevation.card,
   },
   editLabel: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 12,
     color: colors.muted,
     marginBottom: 6,
@@ -526,10 +653,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 11,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
@@ -537,14 +664,15 @@ const styles = StyleSheet.create({
   editNoteInput: {
     textAlignVertical: 'top',
     minHeight: 64,
+    borderRadius: radius.md,
   },
   editAmountWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 11,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 12,
@@ -572,10 +700,10 @@ const styles = StyleSheet.create({
   editDateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 11,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
@@ -590,7 +718,7 @@ const styles = StyleSheet.create({
   toggle: {
     width: 44,
     height: 26,
-    borderRadius: 13,
+    borderRadius: radius.pill,
     backgroundColor: colors.track,
     justifyContent: 'center',
     paddingHorizontal: 3,
@@ -605,51 +733,41 @@ const styles = StyleSheet.create({
   toggleThumbOn: { alignSelf: 'flex-end' },
   editActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     marginTop: 4,
   },
   editCancelBtn: {
     flex: 1,
-    paddingVertical: 11,
-    borderRadius: 11,
+    paddingVertical: 13,
+    borderRadius: radius.pill,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: colors.track,
   },
   editCancelText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 14,
     color: colors.muted,
   },
-  editSaveBtn: {
-    flex: 2,
-    paddingVertical: 11,
-    borderRadius: 11,
-    alignItems: 'center',
-    backgroundColor: colors.purple,
-  },
-  editSaveBtnDisabled: { opacity: 0.4 },
-  editSaveText: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    color: colors.white,
-  },
+  disabled: { opacity: 0.4 },
   // —— original styles below ——
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  typeText: { fontFamily: fonts.medium, fontSize: 12 },
+  typeText: { fontFamily: fonts.semibold, fontSize: 12 },
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.tabInactive },
-  statusText: { fontFamily: fonts.medium, fontSize: 12 },
+  statusText: { fontFamily: fonts.semibold, fontSize: 12 },
   progressCard: {
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.lg,
     padding: 18,
     gap: 12,
+    ...elevation.card,
   },
   progressAmounts: { flexDirection: 'row', justifyContent: 'space-between' },
   progressLabel: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, marginBottom: 2 },
@@ -668,9 +786,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: 12,
     alignItems: 'flex-start',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
   },
   noteText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
   settleLinkRow: {
@@ -678,33 +798,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.pill,
     paddingHorizontal: 14,
     paddingVertical: 10,
+    ...elevation.card,
   },
   settleLinkLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
-  sectionTitle: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
-  emptyPayments: { fontFamily: fonts.regular, fontSize: 13, color: colors.tabInactive, textAlign: 'center', paddingVertical: 16 },
+  sectionTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    ...textShadow.emboss,
+  },
+  emptyPayments: { fontFamily: fonts.medium, fontSize: 13, color: colors.tabInactive, textAlign: 'center', paddingVertical: 16 },
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    ...elevation.card,
+  },
+  paymentIconWrap: {
+    borderRadius: radius.sm,
+  },
+  paymentIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   paymentLeft: { flex: 1 },
-  paymentDate: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
+  paymentDate: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
   paymentNote: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, marginTop: 2 },
   paymentAmount: { fontFamily: fonts.monoSemibold, fontSize: 14 },
   actions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderTopWidth: 1,
+    borderTopWidth: 2,
     borderColor: colors.border,
     backgroundColor: colors.screenBg,
   },
@@ -715,52 +860,54 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 13,
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: radius.pill,
+    borderWidth: 2,
     borderColor: colors.purple,
     backgroundColor: tint(colors.purple, '1A'),
   },
   addPayText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.purple },
-  settleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 13,
-    borderRadius: 14,
-    backgroundColor: colors.teal,
-  },
-  settleBtnText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.white },
+  settleBtn: { flex: 1 },
   // Payment modal
   payRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(74,46,18,0.72)' },
   kav: { width: '100%' },
   paySheet: {
-    backgroundColor: colors.screenBg,
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 40,
+    ...elevation.panel,
   },
   handle: {
     alignSelf: 'center',
-    width: 38,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
     marginBottom: 14,
   },
-  payTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text, marginBottom: 16 },
+  payTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 18,
+    color: colors.text,
+    marginBottom: 16,
+    ...textShadow.emboss,
+  },
   amountWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     marginBottom: 22,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.lg,
+    paddingVertical: 14,
   },
   dong: { fontFamily: fonts.monoMedium, fontSize: 28, color: colors.muted },
   amountInput: {
@@ -771,14 +918,14 @@ const styles = StyleSheet.create({
     padding: 0,
     textAlign: 'center',
   },
-  label: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted, marginBottom: 8 },
+  label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginBottom: 8 },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 6,
     paddingVertical: 8,
     marginBottom: 18,
@@ -795,20 +942,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 20,
   },
-  submit: {
-    backgroundColor: colors.purple,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  submitText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.white },
-  disabled: { opacity: 0.4 },
 });

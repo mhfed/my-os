@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, radius, tint, base3D } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
+import { GameButton } from '@/components/game';
 import { useDebtStore } from '@/store/debtStore';
 import { formatCompactVND } from '@/utils/currency';
 
@@ -29,8 +30,10 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
   ) {
     return (
       <PressableScale style={styles.emptyRow} onPress={onPress} haptic='light'>
-        <Icon name='handshake' size={20} color={colors.muted} />
-        <Text style={styles.emptyText}>Thêm khoản nợ / cho vay</Text>
+        <View style={styles.emptyIconWrap}>
+          <Icon name='handshake' size={20} color={colors.muted} />
+        </View>
+        <Text style={styles.emptyText}>Thêm khoản nợ / cho vay ✨</Text>
         <Icon name='chevron-right' size={16} color={colors.tabInactive} />
       </PressableScale>
     );
@@ -40,16 +43,25 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
     <>
       {/* Alert strip */}
       {hasAlert && (
-        <View style={[styles.alertRow, isOverdue && styles.alertRowOverdue]}>
+        <View
+          style={[
+            styles.alertRow,
+            {
+              backgroundColor: isOverdue
+                ? tint(colors.red, '1F')
+                : tint(colors.orange, '1F'),
+            },
+          ]}
+        >
           <Text
             style={[
               styles.alertText,
-              { color: isOverdue ? colors.red : colors.orange },
+              { color: isOverdue ? colors.redDeep : colors.orangeDeep },
             ]}
           >
             {isOverdue
               ? `● ${summary.overdueCount} khoản quá hạn`
-              : `⚠ ${summary.upcomingCount} khoản đến hạn trong 7 ngày`}
+              : `⚡ ${summary.upcomingCount} khoản đến hạn trong 7 ngày`}
           </Text>
         </View>
       )}
@@ -57,16 +69,13 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
       {/* Amounts */}
       <View style={styles.amountsRow}>
         <View style={styles.amountCol}>
-          <View
-            style={[
-              styles.amountIcon,
-              { backgroundColor: 'rgba(63,212,232,0.15)' },
-            ]}
-          >
-            <Icon name='arrow-bottom-left' size={16} color={colors.teal} />
+          <View style={[styles.amountIconWrap, base3D(colors.greenDeep, 2)]}>
+            <View style={[styles.amountIcon, { backgroundColor: colors.green }]}>
+              <Icon name='arrow-bottom-left' size={16} color={colors.white} />
+            </View>
           </View>
           <Text style={styles.amountLabel}>Thu về</Text>
-          <Text style={[styles.amountValue, { color: colors.teal }]}>
+          <Text style={[styles.amountValue, { color: colors.greenDeep }]}>
             +{formatCompactVND(summary.totalReceivable)}
           </Text>
         </View>
@@ -74,30 +83,27 @@ export function DebtSummaryWidget({ onPress }: DebtSummaryWidgetProps) {
         <View style={styles.amountDivider} />
 
         <View style={styles.amountCol}>
-          <View
-            style={[
-              styles.amountIcon,
-              { backgroundColor: 'rgba(255,90,110,0.15)' },
-            ]}
-          >
-            <Icon name='arrow-top-right' size={16} color={colors.red} />
+          <View style={[styles.amountIconWrap, base3D(colors.redDeep, 2)]}>
+            <View style={[styles.amountIcon, { backgroundColor: colors.red }]}>
+              <Icon name='arrow-top-right' size={16} color={colors.white} />
+            </View>
           </View>
           <Text style={styles.amountLabel}>Phải trả</Text>
-          <Text style={[styles.amountValue, { color: colors.red }]}>
+          <Text style={[styles.amountValue, { color: colors.redDeep }]}>
             -{formatCompactVND(summary.totalPayable)}
           </Text>
         </View>
       </View>
 
       {/* View details button */}
-      <PressableScale
-        style={styles.detailsBtn}
+      <GameButton
+        label='View details'
+        variant='gem'
+        size='sm'
+        icon='chevron-right'
+        fullWidth
         onPress={onPress}
-        haptic='light'
-      >
-        <Text style={styles.detailsBtnText}>View details</Text>
-        <Icon name='chevron-right' size={14} color={colors.teal} />
-      </PressableScale>
+      />
     </>
   );
 }
@@ -109,21 +115,25 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 8,
   },
+  emptyIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    backgroundColor: colors.cardAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptyText: {
     flex: 1,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.muted,
   },
   alertRow: {
-    backgroundColor: 'rgba(255,167,38,0.12)',
-    borderRadius: 10,
+    borderRadius: radius.sm,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 12,
-  },
-  alertRowOverdue: {
-    backgroundColor: 'rgba(255,90,110,0.12)',
   },
   alertText: {
     fontFamily: fonts.displayBold,
@@ -132,20 +142,25 @@ const styles = StyleSheet.create({
   amountsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   amountCol: {
     flex: 1,
     alignItems: 'center',
     gap: 4,
   },
+  amountIconWrap: {
+    borderRadius: radius.sm,
+    marginBottom: 4,
+  },
   amountIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   amountLabel: {
     fontFamily: fonts.regular,
@@ -160,19 +175,5 @@ const styles = StyleSheet.create({
     width: 1,
     height: 50,
     backgroundColor: colors.border,
-  },
-  detailsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: colors.track,
-  },
-  detailsBtnText: {
-    fontFamily: fonts.displayBold,
-    fontSize: 13,
-    color: colors.teal,
   },
 });
