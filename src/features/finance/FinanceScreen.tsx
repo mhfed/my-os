@@ -7,7 +7,7 @@ import { colors, gradients, glow, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { AnimatedCard, PressableScale, ShimmerView } from '@/components/motion';
-import { CurrencyChip, GameIconButton, GamePanel } from '@/components/game';
+import { CurrencyChip, GameIconButton, GamePanel, Unicon3D } from '@/components/game';
 import { SkiaBackground } from '@/components/skia';
 import { useFinanceStore } from '@/store/financeStore';
 import { useDebtStore } from '@/store/debtStore';
@@ -150,6 +150,7 @@ export function FinanceScreen() {
         <AnimatedCard index={3} style={styles.section}>
           <GamePanel
             title='Savings Goals'
+            headerLeft={<Unicon3D name="diamond" color={colors.teal} size={28} />}
             headerRight={
               <View style={styles.countChip}>
                 <Text style={styles.countText}>
@@ -167,6 +168,7 @@ export function FinanceScreen() {
         <AnimatedCard index={4} style={styles.section}>
           <GamePanel
             title='Debt Ledger'
+            headerLeft={<Unicon3D name="shield" color={colors.red} size={28} />}
             headerRight={
               <View style={styles.countChip}>
                 <Text style={styles.countText}>

@@ -17,6 +17,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 export const Icon = MaterialCommunityIcons;
 export type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
+// Re-export the Unicon system so all features can use both icon families.
+export { Ucon } from './ucons';
+export type { UconName } from './ucons';
+
 /** Bottom tab bar definition — order matches the design (Today → More). */
 export const TABS: { route: string; label: string; icon: IconName }[] = [
   { route: 'index', label: 'Today', icon: 'view-grid' },

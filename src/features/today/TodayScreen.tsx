@@ -12,6 +12,7 @@ import {
   CurrencyChip,
   GameIconButton,
   GamePanel,
+  Unicon3D,
   StarRating,
 } from '@/components/game';
 import { useTasksStore } from '@/store/tasksStore';
@@ -210,6 +211,7 @@ export function TodayScreen() {
         <AnimatedCard index={2} style={styles.section}>
           <GamePanel
             title="Today's quests"
+            headerLeft={<Unicon3D name="clipboard-notes" color={colors.blue} size={28} />}
             headerRight={
               <View style={styles.countChip}>
                 <Text style={styles.countText}>
@@ -232,6 +234,7 @@ export function TodayScreen() {
         <AnimatedCard index={4} style={styles.section}>
           <GamePanel
             title='Daily rituals'
+            headerLeft={<Unicon3D name="check-circle" color={colors.orange} size={28} />}
             headerRight={
               <View style={styles.countChip}>
                 <Text style={styles.countText}>

@@ -9,6 +9,8 @@ interface GamePanelProps {
   children: ReactNode;
   /** Optional chunky title rendered in the rounded display font. */
   title?: string;
+  /** Left-aligned slot in the header row (e.g. a 3D icon badge). */
+  headerLeft?: ReactNode;
   /** Right-aligned slot in the header row (e.g. a count chip). */
   headerRight?: ReactNode;
   /** Use the warm alternate surface instead of white. */
@@ -22,10 +24,14 @@ interface GamePanelProps {
  * The base playful surface of the game UI: a bright, glassy panel with a soft
  * cool drop shadow, beveled rim, and top sheen. It keeps the playful rounded
  * shape while feeling closer to premium iOS game chrome.
+ *
+ * Pass a `headerLeft` {@link Unicon3D} to give each section a glossy 3D icon
+ * badge that makes the UI feel richer and more game-like.
  */
 export function GamePanel({
   children,
   title,
+  headerLeft,
   headerRight,
   alt = false,
   flush = false,
@@ -59,13 +65,17 @@ export function GamePanel({
       />
       {title ? (
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
-          {headerRight}
+          {headerLeft ? (
+            <View style={styles.headerLeft}>{headerLeft}</View>
+          ) : null}
+          <Text style={[styles.title, headerLeft ? styles.titleWithLeft : undefined]}>
+            {title}
+          </Text>
+          {headerRight ? (
+            <View style={styles.headerRight}>{headerRight}</View>
+          ) : null}
         </View>
       ) : null}
-      {/* The header is always inset by INSET; only the body follows `flush`, so
-          edge-to-edge scrollers bleed to the edges while headers stay aligned.
-          A titled body skips its own top inset (the header supplies the gap). */}
       <View style={flush ? undefined : title ? styles.body : styles.padded}>
         {children}
       </View>
@@ -109,11 +119,22 @@ const styles = StyleSheet.create({
     paddingTop: INSET,
     paddingHorizontal: INSET,
     marginBottom: 12,
+    gap: 10,
+  },
+  headerLeft: {
+    flexShrink: 0,
+  },
+  headerRight: {
+    flexShrink: 0,
   },
   title: {
     fontFamily: fonts.displayBold,
     fontSize: 18,
     color: colors.text,
     ...textShadow.emboss,
+    flex: 1,
+  },
+  titleWithLeft: {
+    flex: 0,
   },
 });

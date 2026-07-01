@@ -10,12 +10,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, gradients, radius, elevation, base3D, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts, textShadow } from '@/theme/typography';
-import { GameButton } from '@/components/game';
+import { GameButton, GameIconButton } from '@/components/game';
 import { useSavingsStore } from '@/store/savingsStore';
 import { DatePickerModal } from '@/components/DatePickerModal';
 
@@ -123,12 +124,17 @@ export function AddGoalSheet({ visible, onClose }: AddGoalSheetProps) {
           style={styles.kav}
         >
           <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
+            <BlurView tint="light" intensity={46} style={StyleSheet.absoluteFill} />
             <View style={styles.handle} />
             <View style={styles.headerRow}>
               <Text style={styles.title}>Mục tiêu tiết kiệm</Text>
-              <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={10}>
-                <Icon name='close' size={18} color={colors.muted} />
-              </Pressable>
+              <GameIconButton
+                icon='close'
+                variant='red'
+                size={36}
+                iconSize={16}
+                onPress={handleClose}
+              />
             </View>
 
             <ScrollView keyboardShouldPersistTaps='handled' showsVerticalScrollIndicator={false}>
@@ -242,10 +248,10 @@ export function AddGoalSheet({ visible, onClose }: AddGoalSheetProps) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(74,46,18,0.72)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(24,32,51,0.72)' },
   kav: { width: '100%' },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.92)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,

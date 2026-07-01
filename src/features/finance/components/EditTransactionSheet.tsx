@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BlurView } from 'expo-blur';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -126,6 +127,7 @@ export function EditTransactionSheet({ txn, onClose }: EditTransactionSheetProps
           style={styles.kav}
         >
           <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
+            <BlurView tint="light" intensity={46} style={StyleSheet.absoluteFill} />
             <View style={styles.handle} />
 
             <View style={styles.headerRow}>
@@ -288,13 +290,13 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: "rgba(24,32,51,0.72)",
   },
   kav: {
     width: '100%',
   },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: "rgba(244,248,255,0.92)",
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,

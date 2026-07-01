@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { base3D, colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { Icon } from '@/theme/icons';
+import { Icon, Ucon } from '@/theme/icons';
 import { useGymStore } from '@/store/gymStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -64,11 +64,11 @@ function MagicTabButton() {
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <Icon
-          name={isOpen ? 'close' : 'view-grid-plus'}
-          size={24}
-          color='#fff'
-        />
+        {isOpen ? (
+          <Ucon name="times" size={24} color="#fff" />
+        ) : (
+          <Ucon name="apps" size={24} color="#fff" />
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -109,7 +109,7 @@ export default function TabsLayout() {
         options={{
           title: 'Today',
           tabBarIcon: ({ color }) => (
-            <Icon name='view-grid' size={23} color={color} />
+            <Ucon name="grid" size={23} color={color} />
           ),
         }}
       />
@@ -118,7 +118,7 @@ export default function TabsLayout() {
         options={{
           title: 'Tasks',
           tabBarIcon: ({ color }) => (
-            <Icon name='checkbox-marked-outline' size={23} color={color} />
+            <Ucon name="clipboard-notes" size={23} color={color} />
           ),
         }}
       />
@@ -134,7 +134,7 @@ export default function TabsLayout() {
         options={{
           title: 'Health',
           tabBarIcon: ({ color }) => (
-            <Icon name='heart-pulse' size={23} color={color} />
+            <Ucon name="heartbeat" size={23} color={color} />
           ),
           ...(isWorkoutActive
             ? { tabBarStyle: { display: 'none' as const } }
@@ -146,7 +146,7 @@ export default function TabsLayout() {
         options={{
           title: 'Finance',
           tabBarIcon: ({ color }) => (
-            <Icon name='wallet' size={23} color={color} />
+            <Ucon name="wallet" size={23} color={color} />
           ),
         }}
       />

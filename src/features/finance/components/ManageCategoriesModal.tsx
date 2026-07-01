@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 
+import { BlurView } from 'expo-blur';
 import { colors, elevation, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -90,6 +91,7 @@ export function ManageCategoriesModal({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.sheet}>
+            <BlurView tint="light" intensity={46} style={StyleSheet.absoluteFill} />
             <View style={styles.handle} />
             <View style={styles.headerRow}>
               <Text style={styles.heading}>Manage Categories</Text>
@@ -213,13 +215,13 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: 'rgba(24,32,51,0.72)',
   },
   backdropFill: {
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.92)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,

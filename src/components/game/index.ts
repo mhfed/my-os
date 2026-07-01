@@ -12,3 +12,4 @@ export { GamePanel } from './GamePanel';
 export { CurrencyChip } from './CurrencyChip';
 export type { CurrencyKind } from './CurrencyChip';
 export { StarRating } from './StarRating';
+export { Unicon3D } from './Unicon3D';

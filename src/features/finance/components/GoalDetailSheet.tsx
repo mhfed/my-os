@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 import { colors, gradients, radius, elevation, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
@@ -182,6 +183,13 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
       onRequestClose={onClose}
     >
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
         {/* Header */}
         <View style={styles.header}>
           <GameIconButton icon='chevron-down' variant='purple' size={36} iconSize={18} onPress={onClose} />
@@ -426,6 +434,7 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
             <Pressable style={styles.backdrop} onPress={() => setContribOpen(false)} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kav}>
               <View style={styles.paySheet}>
+            <BlurView tint="light" intensity={46} style={StyleSheet.absoluteFill} />
                 <View style={styles.handle} />
                 <Text style={styles.payTitle}>{`Đóng góp cho "${view.name}"`}</Text>
 
@@ -625,11 +634,12 @@ const styles = StyleSheet.create({
   },
   actionBtn: { flex: 1 },
   // Contribution modal
+  screenGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 180 },
   payRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(74,46,18,0.72)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(24,32,51,0.72)' },
   kav: { width: '100%' },
   paySheet: {
-    backgroundColor: colors.cardAlt, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl,
+    backgroundColor: 'rgba(244,248,255,0.92)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl,
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40,
     ...elevation.panel,
   },

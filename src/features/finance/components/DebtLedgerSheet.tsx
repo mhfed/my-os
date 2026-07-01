@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, radius, tint, base3D, elevation } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
@@ -168,6 +169,13 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
       onRequestClose={onClose}
     >
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Sổ nợ</Text>
@@ -303,6 +311,7 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenBg },
+  screenGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 180 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
