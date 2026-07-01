@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import { Blur, Canvas, Circle, Group } from '@shopify/react-native-skia';
+import {
+  Blur,
+  Canvas,
+  Circle,
+  Group,
+  LinearGradient as SkiaLinearGradient,
+  Rect,
+  vec,
+} from '@shopify/react-native-skia';
 import {
   Easing,
   useDerivedValue,
@@ -28,7 +36,10 @@ const TWO_PI = Math.PI * 2;
  * Reanimated shared values so it shares the app's motion clock and honors the OS
  * reduce-motion setting (static when reduced).
  */
-export function SkiaBackground({ domain = 'today', intensity = 0.5 }: SkiaBackgroundProps) {
+export function SkiaBackground({
+  domain = 'today',
+  intensity = 0.5,
+}: SkiaBackgroundProps) {
   const { width, height } = useWindowDimensions();
   const reduce = useReducedMotion();
   const palette = domains[domain];
@@ -37,33 +48,70 @@ export function SkiaBackground({ domain = 'today', intensity = 0.5 }: SkiaBackgr
   const t = useSharedValue(0);
   useEffect(() => {
     if (reduce) return;
-    t.value = withRepeat(withTiming(1, { duration: 16000, easing: Easing.linear }), -1, false);
+    t.value = withRepeat(
+      withTiming(1, { duration: 16000, easing: Easing.linear }),
+      -1,
+      false,
+    );
   }, [reduce, t]);
 
   const r = Math.max(width, height) * 0.42;
 
-  const c1x = useDerivedValue(() => width * 0.2 + Math.sin(t.value * TWO_PI) * width * 0.16);
-  const c1y = useDerivedValue(() => height * 0.16 + Math.cos(t.value * TWO_PI) * height * 0.06);
+  const c1x = useDerivedValue(
+    () => width * 0.2 + Math.sin(t.value * TWO_PI) * width * 0.16,
+  );
+  const c1y = useDerivedValue(
+    () => height * 0.16 + Math.cos(t.value * TWO_PI) * height * 0.06,
+  );
 
   const c2x = useDerivedValue(
-    () => width * 0.88 + Math.sin(t.value * TWO_PI + 2.1) * width * 0.14
+    () => width * 0.88 + Math.sin(t.value * TWO_PI + 2.1) * width * 0.14,
   );
   const c2y = useDerivedValue(
-    () => height * 0.34 + Math.cos(t.value * TWO_PI + 2.1) * height * 0.08
+    () => height * 0.34 + Math.cos(t.value * TWO_PI + 2.1) * height * 0.08,
   );
 
-  const c3x = useDerivedValue(() => width * 0.4 + Math.sin(t.value * TWO_PI + 4.2) * width * 0.2);
+  const c3x = useDerivedValue(
+    () => width * 0.4 + Math.sin(t.value * TWO_PI + 4.2) * width * 0.2,
+  );
   const c3y = useDerivedValue(
-    () => height * 0.82 + Math.cos(t.value * TWO_PI + 4.2) * height * 0.07
+    () => height * 0.82 + Math.cos(t.value * TWO_PI + 4.2) * height * 0.07,
   );
 
   return (
-    <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+    <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
+      {/* Warm vertical wash — the bright cream "stage" of the game UI. */}
+      <Rect x={0} y={0} width={width} height={height}>
+        <SkiaLinearGradient
+          start={vec(0, 0)}
+          end={vec(0, height)}
+          colors={['#FFE9C2', '#FBEFD8', '#F6E2C0']}
+        />
+      </Rect>
+      {/* Soft drifting colour orbs for depth (kept light so the stage stays bright). */}
       <Group>
-        <Blur blur={70} />
-        <Circle cx={c1x} cy={c1y} r={r} color={palette.gradient[0]} opacity={intensity} />
-        <Circle cx={c2x} cy={c2y} r={r * 0.92} color={palette.gradient[1]} opacity={intensity * 0.8} />
-        <Circle cx={c3x} cy={c3y} r={r * 0.85} color={colors.purple} opacity={intensity * 0.55} />
+        <Blur blur={90} />
+        <Circle
+          cx={c1x}
+          cy={c1y}
+          r={r}
+          color={palette.gradient[0]}
+          opacity={intensity * 0.45}
+        />
+        <Circle
+          cx={c2x}
+          cy={c2y}
+          r={r * 0.92}
+          color={palette.gradient[1]}
+          opacity={intensity * 0.4}
+        />
+        <Circle
+          cx={c3x}
+          cy={c3y}
+          r={r * 0.85}
+          color={colors.yellow}
+          opacity={intensity * 0.35}
+        />
       </Group>
     </Canvas>
   );

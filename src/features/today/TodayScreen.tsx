@@ -1,13 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { colors, gradients, radius } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
 import { AnimatedCard, PressableScale } from '@/components/motion';
 import { EnergyOrb, SkiaBackground } from '@/components/skia';
+import {
+  CurrencyChip,
+  GameIconButton,
+  GamePanel,
+  StarRating,
+} from '@/components/game';
 import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
@@ -75,7 +81,7 @@ export function TodayScreen() {
   const taskRatio = todayDoneTasks / Math.max(1, todayTotalTasks);
   const habitRatio = doneTodayCount / Math.max(1, totalHabits);
   const score = Math.round(
-    100 * (0.5 * taskRatio + 0.4 * habitRatio + 0.1 * journalToday)
+    100 * (0.5 * taskRatio + 0.4 * habitRatio + 0.1 * journalToday),
   );
 
   const focus = Math.round(taskRatio * 100);
@@ -87,85 +93,136 @@ export function TodayScreen() {
 
   const openInbox = () => router.push('/inbox');
 
+  // Playful "level" derived from today's score so the HUD always feels alive.
+  const level = Math.max(1, Math.ceil(score / 20));
+  const starsFilled = Math.min(3, Math.max(0, Math.round(score / 34)));
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <SkiaBackground domain="today" intensity={0.42} />
+      <SkiaBackground domain='today' intensity={0.42} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Header */}
-        <AnimatedCard index={0} style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good morning</Text>
-            <Text style={styles.name}>Khoa</Text>
-          </View>
-          <PressableScale onPress={openInbox} hitSlop={8} haptic="selection">
-            <LinearGradient
-              colors={[colors.purple, colors.teal]}
-              start={{ x: 0.1, y: 0 }}
-              end={{ x: 0.9, y: 1 }}
-              style={styles.avatar}
-            >
-              <Text style={styles.avatarLetter}>K</Text>
-            </LinearGradient>
-            {openCount > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{openCount}</Text>
+        {/* HUD bar — avatar + level, resource chips, inbox affordance */}
+        <AnimatedCard index={0} style={styles.hud}>
+          <PressableScale onPress={openInbox} hitSlop={8} haptic='selection'>
+            <View style={styles.avatarWrap}>
+              <LinearGradient
+                colors={gradients.purple}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={styles.avatar}
+              >
+                <Text style={styles.avatarLetter}>K</Text>
+              </LinearGradient>
+              <View style={styles.levelBadge}>
+                <Text style={styles.levelText}>{level}</Text>
               </View>
-            ) : null}
+            </View>
           </PressableScale>
+
+          <View style={styles.hudResources}>
+            <CurrencyChip kind='coins' value={score} />
+            <CurrencyChip kind='gems' value={doneTodayCount} />
+          </View>
+
+          <GameIconButton
+            icon='bell-outline'
+            variant='gold'
+            size={44}
+            onPress={openInbox}
+          />
         </AnimatedCard>
 
-        {/* Hero — Skia energy orb (ring sweeps to score on mount) */}
-        <AnimatedCard index={1} style={styles.ringBlock}>
-          <EnergyOrb score={score} focus={focus} body={bodyVal} mind={mind} />
+        {/* Hero — Skia energy orb inside a glossy panel */}
+        <AnimatedCard index={1}>
+          <GamePanel style={styles.heroPanel}>
+            <LinearGradient
+              colors={gradients.gloss}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 0.7 }}
+              style={styles.heroGloss}
+              pointerEvents='none'
+            />
+            <View style={styles.heroTop}>
+              <View>
+                <Text style={styles.heroGreeting}>Good morning</Text>
+                <Text style={styles.heroName}>Khoa</Text>
+              </View>
+              <StarRating filled={starsFilled} count={3} size={20} />
+            </View>
+            <View style={styles.ringBlock}>
+              <EnergyOrb
+                score={score}
+                focus={focus}
+                body={bodyVal}
+                mind={mind}
+              />
+            </View>
+          </GamePanel>
         </AnimatedCard>
 
         {/* Today's tasks */}
-        <AnimatedCard index={2}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today&apos;s tasks</Text>
-            <Text style={styles.count}>
-              {todayDoneTasks}/{todayTotalTasks}
-            </Text>
-          </View>
-          <View style={styles.taskList}>
-            {visibleTasks.map((task, i) => (
-              <AnimatedCard key={task.id} index={3 + i}>
-                <TaskRow task={task} onToggle={toggleTask} />
-              </AnimatedCard>
-            ))}
-          </View>
+        <AnimatedCard index={2} style={styles.section}>
+          <GamePanel
+            title="Today's quests"
+            headerRight={
+              <View style={styles.countChip}>
+                <Text style={styles.countText}>
+                  {todayDoneTasks}/{todayTotalTasks}
+                </Text>
+              </View>
+            }
+          >
+            <View style={styles.taskList}>
+              {visibleTasks.map((task, i) => (
+                <AnimatedCard key={task.id} index={3 + i}>
+                  <TaskRow task={task} onToggle={toggleTask} />
+                </AnimatedCard>
+              ))}
+            </View>
+          </GamePanel>
         </AnimatedCard>
 
         {/* Habits */}
-        <AnimatedCard index={4}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Habits</Text>
-            <Text style={styles.count}>
-              {doneTodayCount}/{totalHabits}
-            </Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.habitRow}
-            style={styles.habitScroll}
+        <AnimatedCard index={4} style={styles.section}>
+          <GamePanel
+            title='Daily rituals'
+            headerRight={
+              <View style={styles.countChip}>
+                <Text style={styles.countText}>
+                  {doneTodayCount}/{totalHabits}
+                </Text>
+              </View>
+            }
+            flush
           >
-            {habitViews.map((habit) => (
-              <HabitPill key={habit.id} habit={habit} onToggle={toggleToday} />
-            ))}
-          </ScrollView>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.habitRow}
+            >
+              {habitViews.map((habit) => (
+                <HabitPill
+                  key={habit.id}
+                  habit={habit}
+                  onToggle={toggleToday}
+                />
+              ))}
+            </ScrollView>
+          </GamePanel>
         </AnimatedCard>
 
         {/* Quick capture */}
-        <AnimatedCard index={5}>
-          <QuickCapture
-            onCapture={(text) => useInboxStore.getState().capture(text)}
-            openCount={openCount}
-            onOpenInbox={openInbox}
-          />
+        <AnimatedCard index={5} style={styles.section}>
+          <GamePanel alt>
+            <QuickCapture
+              onCapture={(text) => useInboxStore.getState().capture(text)}
+              openCount={openCount}
+              onOpenInbox={openInbox}
+            />
+          </GamePanel>
         </AnimatedCard>
       </ScrollView>
     </SafeAreaView>
@@ -183,85 +240,116 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: 8,
-    paddingHorizontal: 22,
-    paddingBottom: 110,
+    paddingHorizontal: 18,
+    paddingBottom: 120,
   },
-  header: {
+
+  // --- HUD bar ---
+  hud: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 26,
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  avatarWrap: {
+    width: 50,
+    height: 50,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: colors.white,
+  },
+  avatarLetter: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 20,
+    color: colors.white,
+    ...textShadow.button,
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -4,
+    alignSelf: 'center',
+    minWidth: 24,
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.yellow,
+    borderWidth: 2,
+    borderColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelText: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 10,
+    color: colors.text,
+  },
+  hudResources: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+
+  // --- Hero panel ---
+  heroPanel: {
+    overflow: 'hidden',
+    paddingBottom: 8,
+  },
+  heroGloss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 70,
+  },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  heroGreeting: {
+    fontFamily: fonts.displayMedium,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  heroName: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 26,
+    color: colors.text,
+    ...textShadow.emboss,
   },
   ringBlock: {
     alignItems: 'center',
   },
-  greeting: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: colors.muted,
-    marginBottom: 3,
+
+  // --- sections ---
+  section: {
+    marginTop: 16,
   },
-  name: {
-    fontFamily: fonts.semibold,
-    fontSize: 24,
-    color: colors.text,
-    letterSpacing: -0.3,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+  countChip: {
+    paddingHorizontal: 12,
+    height: 26,
+    borderRadius: radius.pill,
+    backgroundColor: colors.track,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarLetter: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 16,
-    color: '#0A0A0F',
-  },
-  badge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    backgroundColor: colors.purple,
-    borderWidth: 2,
-    borderColor: colors.screenBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 10,
-    color: colors.white,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.text,
-  },
-  count: {
-    fontFamily: fonts.monoRegular,
+  countText: {
+    fontFamily: fonts.displayBold,
     fontSize: 13,
-    color: colors.muted,
+    color: colors.text,
   },
   taskList: {
     gap: 10,
-    marginBottom: 30,
-  },
-  habitScroll: {
-    marginBottom: 30,
   },
   habitRow: {
     gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
   },
 });

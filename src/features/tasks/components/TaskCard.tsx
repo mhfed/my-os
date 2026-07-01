@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import type { Priority, Task } from '@/types/task';
@@ -53,7 +53,9 @@ export function TaskCard({
             task.done ? styles.checkboxDone : styles.checkboxUndone,
           ]}
         >
-          {task.done && <Icon name='check' size={13} color={colors.screenBg} />}
+          {task.done && (
+            <Icon name='check-bold' size={15} color={colors.white} />
+          )}
         </View>
 
         <View style={styles.body}>
@@ -94,7 +96,7 @@ export function TaskCard({
                 ]}
               >
                 {sub.done && (
-                  <Icon name='check' size={10} color={colors.screenBg} />
+                  <Icon name='check-bold' size={11} color={colors.white} />
                 )}
               </View>
               <Text style={[styles.subtaskTitle, sub.done && styles.titleDone]}>
@@ -110,16 +112,16 @@ export function TaskCard({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
+    backgroundColor: colors.cardAlt,
+    borderWidth: 2,
+    borderColor: colors.white,
+    borderRadius: radius.md,
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
@@ -129,32 +131,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   cardOverdue: {
-    borderLeftWidth: 3,
+    borderLeftWidth: 4,
     borderLeftColor: colors.red,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 7,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxDone: {
-    backgroundColor: colors.purple,
-    borderWidth: 1,
-    borderColor: colors.purple,
+    backgroundColor: colors.green,
+    borderWidth: 2,
+    borderColor: colors.greenDeep,
   },
   checkboxUndone: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    backgroundColor: colors.white,
+    borderWidth: 2.5,
+    borderColor: colors.track,
   },
   body: {
     flex: 1,
   },
   title: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
+    fontFamily: fonts.display,
+    fontSize: 15,
     color: colors.text,
   },
   titleDone: {
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   time: {
-    fontFamily: fonts.monoRegular,
+    fontFamily: fonts.monoMedium,
     fontSize: 11,
     marginTop: 3,
   },
@@ -173,24 +175,24 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   badge: {
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+    borderRadius: radius.pill,
   },
   badgeText: {
-    fontFamily: fonts.monoSemibold,
+    fontFamily: fonts.displayBold,
     fontSize: 11,
   },
   subtasksContainer: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
+    backgroundColor: colors.cardAlt,
+    borderWidth: 2,
     borderTopWidth: 0,
-    borderColor: colors.border,
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
+    borderColor: colors.white,
+    borderBottomLeftRadius: radius.md,
+    borderBottomRightRadius: radius.md,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    paddingLeft: 46,
+    paddingLeft: 48,
     gap: 8,
   },
   subtaskRow: {
@@ -199,14 +201,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   subtaskCheckbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   subtaskTitle: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.text,
   },

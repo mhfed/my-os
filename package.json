@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo-google-fonts/baloo-2": "^0.4.2",
     "@expo-google-fonts/ibm-plex-mono": "^0.2.3",
     "@expo-google-fonts/ibm-plex-sans": "^0.2.3",
     "@expo/vector-icons": "^15.0.3",

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, radius } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 
@@ -12,7 +12,11 @@ interface QuickCaptureProps {
   onOpenInbox: () => void;
 }
 
-export function QuickCapture({ onCapture, openCount, onOpenInbox }: QuickCaptureProps) {
+export function QuickCapture({
+  onCapture,
+  openCount,
+  onOpenInbox,
+}: QuickCaptureProps) {
   const [text, setText] = useState('');
 
   const submit = () => {
@@ -26,25 +30,25 @@ export function QuickCapture({ onCapture, openCount, onOpenInbox }: QuickCapture
   return (
     <View>
       <View style={styles.row}>
-        <Icon name="star-four-points" size={18} color={colors.purple} />
+        <Icon name='star-four-points' size={18} color={colors.purple} />
         <TextInput
           style={styles.input}
           value={text}
           onChangeText={setText}
-          placeholder="Capture anything..."
+          placeholder='Capture anything...'
           placeholderTextColor={colors.muted}
           onSubmitEditing={submit}
-          returnKeyType="done"
+          returnKeyType='done'
         />
         <Pressable style={styles.button} onPress={submit}>
-          <Icon name="arrow-up" size={18} color="#0A0A0F" />
+          <Icon name='arrow-up-bold' size={18} color={colors.white} />
         </Pressable>
       </View>
 
       {openCount > 0 ? (
         <Pressable style={styles.inboxLink} onPress={onOpenInbox}>
           <Text style={styles.inboxText}>{openCount} in inbox</Text>
-          <Icon name="arrow-right" size={13} color={colors.muted} />
+          <Icon name='arrow-right' size={13} color={colors.muted} />
         </Pressable>
       ) : null}
     </View>
@@ -56,29 +60,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    paddingTop: 4,
-    paddingBottom: 4,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
+    paddingTop: 5,
+    paddingBottom: 5,
     paddingLeft: 16,
     paddingRight: 6,
   },
   input: {
     flex: 1,
     color: colors.text,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 14,
     paddingVertical: 0,
   },
   button: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.purple,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   inboxLink: {
     flexDirection: 'row',
@@ -89,7 +95,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   inboxText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.display,
     fontSize: 12,
     color: colors.muted,
   },

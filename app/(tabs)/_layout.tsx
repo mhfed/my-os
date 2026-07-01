@@ -3,7 +3,7 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 
-import { colors } from '@/theme/colors';
+import { base3D, colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { useGymStore } from '@/store/gymStore';
@@ -12,7 +12,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 function TabBarBackground() {
   return (
     <View style={StyleSheet.absoluteFill}>
-      <BlurView tint='dark' intensity={30} style={StyleSheet.absoluteFill} />
+      <BlurView tint='light' intensity={40} style={StyleSheet.absoluteFill} />
       <View style={styles.tabBarTint} />
     </View>
   );
@@ -79,13 +79,13 @@ export default function TabsLayout() {
       height: 88,
       paddingTop: 12,
       paddingBottom: 26,
-      borderTopWidth: 1,
-      borderTopColor: colors.track,
+      borderTopWidth: 2,
+      borderTopColor: colors.white,
       backgroundColor: 'transparent',
     },
     tabBarItemStyle: { gap: 5 },
     tabBarLabelStyle: {
-      fontFamily: fonts.semibold,
+      fontFamily: fonts.displayBold,
       fontSize: 10,
     },
   };
@@ -153,10 +153,10 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   tabBarTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,10,15,0.88)',
+    backgroundColor: 'rgba(251,239,216,0.92)',
   },
 
-  /* Magic float button */
+  /* Magic float button — 3D glossy purple slab */
   magicContainer: {
     flex: 1,
     alignItems: 'center',
@@ -165,33 +165,31 @@ const styles = StyleSheet.create({
   },
   magicGlow: {
     position: 'absolute',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: colors.purple,
-    opacity: 0.18,
+    opacity: 0.22,
   },
   magicGlowActive: {
-    opacity: 0.32,
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    opacity: 0.36,
+    width: 78,
+    height: 78,
+    borderRadius: 39,
   },
   magicButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.purple,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.purple,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 14,
-    elevation: 10,
+    borderWidth: 3,
+    borderColor: colors.white,
+    ...base3D(colors.purpleDeep, 5),
     marginBottom: 4,
   },
   magicButtonActive: {
-    backgroundColor: '#5a4db8',
+    backgroundColor: colors.purpleDeep,
   },
 });

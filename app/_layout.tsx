@@ -14,6 +14,12 @@ import {
   IBMPlexMono_500Medium,
   IBMPlexMono_600SemiBold,
 } from '@expo-google-fonts/ibm-plex-mono';
+import {
+  Baloo2_500Medium,
+  Baloo2_600SemiBold,
+  Baloo2_700Bold,
+  Baloo2_800ExtraBold,
+} from '@expo-google-fonts/baloo-2';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -43,6 +49,10 @@ export default function RootLayout() {
     IBMPlexMono_400Regular,
     IBMPlexMono_500Medium,
     IBMPlexMono_600SemiBold,
+    Baloo2_500Medium,
+    Baloo2_600SemiBold,
+    Baloo2_700Bold,
+    Baloo2_800ExtraBold,
   });
 
   const financeReady = useFinanceStore((s) => s.ready);
@@ -103,7 +113,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
-        <StatusBar style='light' />
+        <StatusBar style='dark' />
         <Stack
           screenOptions={{
             headerShown: false,
