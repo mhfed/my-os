@@ -2,17 +2,19 @@ import { useState } from 'react';
 import {
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  ScrollView,
 } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
 import { useFinanceStore } from '@/store/financeStore';
 import { Icon } from '@/theme/icons';
+import { GameButton, GameIconButton } from '@/components/game';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 
 interface ManageRecurringModalProps {
   visible: boolean;
@@ -52,6 +54,11 @@ export function ManageRecurringModal({
     setMode('list');
   }
 
+  function handleClose() {
+    setMode('list');
+    onClose();
+  }
+
   async function handleSave() {
     if (!canSave) return;
     const cat = categories.find((c) => c.id === selectedCategoryId);
@@ -71,128 +78,157 @@ export function ManageRecurringModal({
       visible={visible}
       transparent
       animationType='slide'
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.backdrop}>
-        <Pressable style={styles.backdropFill} onPress={onClose} />
+        <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
-          <View style={styles.grabber} />
+          <View style={styles.handle} />
 
           <View style={styles.header}>
-            {mode === 'add' && (
+            {mode === 'add' ? (
               <Pressable
                 onPress={() => setMode('list')}
-                style={{ position: 'absolute', left: 0 }}
+                style={styles.backBtn}
+                hitSlop={8}
               >
                 <Icon name='arrow-left' size={20} color={colors.text} />
               </Pressable>
+            ) : (
+              <View style={styles.backBtnSpacer} />
             )}
-            <Text style={styles.heading}>
-              {mode === 'list' ? 'Recurring Transactions' : 'Add Recurring'}
+            <Text style={styles.title}>
+              {mode === 'list' ? 'Recurring' : 'Add Recurring'}
             </Text>
+            <GameIconButton
+              icon='close'
+              variant='red'
+              size={36}
+              iconSize={17}
+              onPress={handleClose}
+            />
           </View>
 
           {mode === 'list' && (
-            <View style={{ flex: 1 }}>
+            <View style={styles.listWrap}>
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
+                contentContainerStyle={styles.listContent}
               >
                 {recurring.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    No recurring transactions configured.
-                  </Text>
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyEmoji}>🔁</Text>
+                    <Text style={styles.emptyText}>
+                      No recurring transactions configured.
+                    </Text>
+                  </View>
                 ) : (
-                  recurring.map((item) => {
+                  recurring.map((item, index) => {
                     const cat = categories.find(
                       (c) => c.id === item.categoryId,
                     );
                     if (!cat) return null;
                     return (
-                      <View key={item.id} style={styles.itemRow}>
-                        <View
-                          style={[
-                            styles.itemIcon,
-                            { backgroundColor: tint(cat.color) },
-                          ]}
-                        >
-                          <Icon
-                            name={cat.icon as any}
-                            size={16}
-                            color={cat.color}
+                      <AnimatedCard key={item.id} index={index}>
+                        <View style={styles.itemRow}>
+                          <View
+                            style={[
+                              styles.itemIconWrap,
+                              base3D(colors.purpleDeep, 2),
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.itemIcon,
+                                { backgroundColor: tint(cat.color, '33') },
+                              ]}
+                            >
+                              <Icon
+                                name={cat.icon as any}
+                                size={17}
+                                color={cat.color}
+                              />
+                            </View>
+                          </View>
+                          <View style={styles.itemInfo}>
+                            <Text style={styles.itemTitle} numberOfLines={1}>
+                              {item.note || cat.name}
+                            </Text>
+                            <Text style={styles.itemSub}>
+                              Day {item.dayOfMonth} ·{' '}
+                              {item.type === 'income' ? '+' : '-'}
+                              {item.amount.toLocaleString()}đ
+                            </Text>
+                          </View>
+                          <GameIconButton
+                            icon='trash-can-outline'
+                            variant='red'
+                            size={34}
+                            iconSize={16}
+                            onPress={() => deleteRecurring(item.id)}
                           />
                         </View>
-                        <View style={styles.itemInfo}>
-                          <Text style={styles.itemTitle}>
-                            {item.note || cat.name}
-                          </Text>
-                          <Text style={styles.itemSub}>
-                            Day {item.dayOfMonth} ·{' '}
-                            {item.type === 'income' ? '+' : '-'}
-                            {item.amount.toLocaleString()}đ
-                          </Text>
-                        </View>
-                        <Pressable onPress={() => deleteRecurring(item.id)}>
-                          <Icon
-                            name='trash-can-outline'
-                            size={18}
-                            color={colors.red}
-                          />
-                        </Pressable>
-                      </View>
+                      </AnimatedCard>
                     );
                   })
                 )}
               </ScrollView>
-              <Pressable
-                style={styles.addButton}
+              <GameButton
+                label='Add recurring'
+                variant='purple'
+                size='md'
+                icon='plus'
+                fullWidth
                 onPress={() => setMode('add')}
-              >
-                <Text style={styles.addButtonText}>Add new</Text>
-              </Pressable>
+                style={styles.addButton}
+              />
             </View>
           )}
 
           {mode === 'add' && (
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 40 }}
+              contentContainerStyle={styles.formContent}
             >
               <Text style={styles.fieldLabel}>CATEGORY</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8 }}
-                style={{ maxHeight: 40 }}
+                contentContainerStyle={styles.categoryScroll}
+                style={styles.categoryScrollWrap}
               >
                 {categories.map((c) => {
                   const isActive = c.id === selectedCategoryId;
                   return (
-                    <Pressable
+                    <PressableScale
                       key={c.id}
                       onPress={() => setSelectedCategoryId(c.id)}
-                      style={[
-                        styles.categoryPill,
-                        isActive && {
-                          backgroundColor: tint(c.color),
-                          borderColor: c.color,
-                        },
-                      ]}
+                      haptic='selection'
                     >
-                      <Icon
-                        name={c.icon as any}
-                        size={14}
-                        color={isActive ? c.color : colors.text}
-                      />
-                      <Text
+                      <View
                         style={[
-                          styles.categoryText,
-                          isActive && { color: c.color },
+                          styles.categoryPill,
+                          isActive && {
+                            backgroundColor: tint(c.color, '33'),
+                            borderColor: c.color,
+                          },
                         ]}
                       >
-                        {c.name}
-                      </Text>
-                    </Pressable>
+                        <Icon
+                          name={c.icon as any}
+                          size={14}
+                          color={isActive ? c.color : colors.text}
+                        />
+                        <Text
+                          style={[
+                            styles.categoryText,
+                            isActive && { color: c.color },
+                          ]}
+                        >
+                          {c.name}
+                        </Text>
+                      </View>
+                    </PressableScale>
                   );
                 })}
               </ScrollView>
@@ -209,10 +245,7 @@ export function ManageRecurringModal({
 
               <Text style={styles.fieldLabel}>NOTE (OPTIONAL)</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  { fontFamily: fonts.regular, color: colors.text },
-                ]}
+                style={[styles.input, styles.inputText]}
                 value={note}
                 onChangeText={setNote}
                 placeholder='e.g. Netflix Subscription'
@@ -221,27 +254,26 @@ export function ManageRecurringModal({
 
               <Text style={styles.fieldLabel}>DAY OF MONTH (1-28)</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  { fontFamily: fonts.regular, color: colors.text },
-                ]}
+                style={[styles.input, styles.inputText]}
                 value={dayOfMonthStr}
                 onChangeText={setDayOfMonthStr}
                 keyboardType='number-pad'
                 maxLength={2}
               />
 
-              <Pressable
-                style={[
-                  styles.saveButton,
-                  !canSave && styles.saveButtonDisabled,
-                  { marginTop: 24 },
-                ]}
-                onPress={handleSave}
+              <GameButton
+                label='Save template'
+                variant='green'
+                size='md'
+                icon='check-bold'
+                fullWidth
                 disabled={!canSave}
-              >
-                <Text style={styles.saveText}>Save Template</Text>
-              </Pressable>
+                onPress={handleSave}
+                style={{
+                  ...styles.saveButton,
+                  ...(canSave ? null : styles.saveButtonDisabled),
+                }}
+              />
             </ScrollView>
           )}
         </View>
@@ -254,98 +286,132 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(74,46,18,0.72)',
   },
   backdropFill: {
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: colors.card,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    height: '65%',
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
+    ...elevation.panel,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    height: '68%',
   },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+  handle: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
-    marginBottom: 16,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    position: 'relative',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.border,
   },
-  heading: {
-    fontFamily: fonts.semibold,
-    fontSize: 18,
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backBtnSpacer: {
+    width: 36,
+    height: 36,
+  },
+  title: {
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
     color: colors.text,
+    ...textShadow.emboss,
+  },
+  listWrap: {
+    flex: 1,
+  },
+  listContent: {
+    gap: 10,
+    paddingBottom: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 10,
+  },
+  emptyEmoji: {
+    fontSize: 30,
   },
   emptyText: {
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.muted,
     textAlign: 'center',
-    marginTop: 20,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.screenBg,
+    gap: 12,
+    backgroundColor: colors.card,
     padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    ...elevation.card,
+  },
+  itemIconWrap: {
+    borderRadius: radius.sm,
   },
   itemIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   itemInfo: {
     flex: 1,
   },
   itemTitle: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
+    fontFamily: fonts.display,
+    fontSize: 15,
     color: colors.text,
   },
   itemSub: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.monoRegular,
     fontSize: 12,
     color: colors.muted,
     marginTop: 2,
   },
   addButton: {
-    backgroundColor: tint(colors.purple),
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 34,
+    marginTop: 12,
+    marginBottom: 8,
+    alignSelf: 'stretch',
   },
-  addButtonText: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.purple,
+  formContent: {
+    paddingBottom: 40,
   },
   fieldLabel: {
-    fontFamily: fonts.monoSemibold,
+    fontFamily: fonts.displayBold,
     fontSize: 11,
     color: colors.muted,
     letterSpacing: 0.5,
     marginTop: 16,
     marginBottom: 8,
+  },
+  categoryScrollWrap: {
+    maxHeight: 40,
+  },
+  categoryScroll: {
+    gap: 8,
   },
   categoryPill: {
     flexDirection: 'row',
@@ -353,10 +419,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: radius.pill,
+    borderWidth: 2,
     borderColor: colors.border,
-    backgroundColor: colors.screenBg,
+    backgroundColor: colors.card,
   },
   categoryText: {
     fontFamily: fonts.medium,
@@ -364,28 +430,26 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   input: {
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
+    backgroundColor: colors.card,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: radius.md,
     paddingVertical: 13,
     paddingHorizontal: 14,
     fontFamily: fonts.monoSemibold,
     fontSize: 18,
     color: colors.purple,
   },
+  inputText: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: colors.text,
+  },
   saveButton: {
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: colors.purple,
+    marginTop: 24,
+    alignSelf: 'stretch',
   },
   saveButtonDisabled: {
     opacity: 0.4,
-  },
-  saveText: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.white,
   },
 });

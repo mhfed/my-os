@@ -2,8 +2,9 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
-import { colors } from '@/theme/colors';
+import { base3D, colors, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
+import { Icon } from '@/theme/icons';
 import { formatCompactVND } from '@/utils/currency';
 
 /** Net worth summary - designed to sit inside a GamePanel */
@@ -23,36 +24,52 @@ export function NetWorthWidget() {
   if (totalSavings === 0 && totalReceivable === 0 && totalPayable === 0) {
     return (
       <View style={styles.emptyState}>
+        <Text style={styles.emptyEmoji}>🪙</Text>
         <Text style={styles.emptyText}>No assets or debts recorded yet</Text>
       </View>
     );
   }
 
   const netWorth = totalSavings + totalReceivable - totalPayable;
-  const netWorthColor = netWorth >= 0 ? colors.teal : colors.red;
+  const isPositive = netWorth >= 0;
+  const netWorthColor = isPositive ? colors.green : colors.red;
+  const netWorthDeep = isPositive ? colors.greenDeep : colors.redDeep;
 
   return (
     <>
-      {/* Net worth display */}
-      <View style={styles.mainRow}>
-        <Text style={styles.netLabel}>Net Worth</Text>
-        <Text style={[styles.netValue, { color: netWorthColor }]}>
-          {formatCompactVND(netWorth)}
-        </Text>
+      {/* Net worth headline */}
+      <View style={[styles.mainRow, base3D(netWorthDeep, 3)]}>
+        <View style={styles.mainRowInner}>
+          <View style={styles.mainLeft}>
+            <Text style={styles.netLabel}>Net Worth</Text>
+            <Text style={[styles.netValue, { color: netWorthColor }]}>
+              {formatCompactVND(netWorth)}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.trendBadge,
+              { backgroundColor: isPositive ? colors.green : colors.red },
+            ]}
+          >
+            <Icon
+              name={isPositive ? 'trending-up' : 'trending-down'}
+              size={20}
+              color={colors.white}
+            />
+          </View>
+        </View>
       </View>
 
       {/* Breakdown */}
       <View style={styles.breakdownRow}>
         <View style={styles.breakdownItem}>
           <View
-            style={[
-              styles.iconBubble,
-              { backgroundColor: 'rgba(63,212,232,0.15)' },
-            ]}
+            style={[styles.iconBubble, base3D(colors.tealDeep, 2)]}
           >
-            <Text style={styles.emoji}>💰</Text>
+            <Icon name='piggy-bank' size={16} color={colors.white} />
           </View>
-          <View>
+          <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Tiết kiệm</Text>
             <Text style={[styles.breakdownValue, { color: colors.teal }]}>
               {formatCompactVND(totalSavings)}
@@ -62,16 +79,13 @@ export function NetWorthWidget() {
 
         <View style={styles.breakdownItem}>
           <View
-            style={[
-              styles.iconBubble,
-              { backgroundColor: 'rgba(124,110,245,0.15)' },
-            ]}
+            style={[styles.iconBubble, base3D(colors.purpleDeep, 2)]}
           >
-            <Text style={styles.emoji}>📥</Text>
+            <Icon name='tray-arrow-down' size={16} color={colors.white} />
           </View>
-          <View>
+          <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Sẽ thu</Text>
-            <Text style={[styles.breakdownValue, { color: '#7C6EF5' }]}>
+            <Text style={[styles.breakdownValue, { color: colors.purple }]}>
               {formatCompactVND(totalReceivable)}
             </Text>
           </View>
@@ -79,14 +93,11 @@ export function NetWorthWidget() {
 
         <View style={styles.breakdownItem}>
           <View
-            style={[
-              styles.iconBubble,
-              { backgroundColor: 'rgba(255,90,110,0.15)' },
-            ]}
+            style={[styles.iconBubble, base3D(colors.redDeep, 2)]}
           >
-            <Text style={styles.emoji}>📤</Text>
+            <Icon name='tray-arrow-up' size={16} color={colors.white} />
           </View>
-          <View>
+          <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Phải trả</Text>
             <Text style={[styles.breakdownValue, { color: colors.red }]}>
               {formatCompactVND(totalPayable)}
@@ -100,8 +111,12 @@ export function NetWorthWidget() {
 
 const styles = StyleSheet.create({
   emptyState: {
-    paddingVertical: 16,
+    paddingVertical: 20,
     alignItems: 'center',
+    gap: 6,
+  },
+  emptyEmoji: {
+    fontSize: 26,
   },
   emptyText: {
     fontFamily: fonts.regular,
@@ -109,20 +124,41 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   mainRow: {
+    borderRadius: radius.md,
+    backgroundColor: colors.cardAlt,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  mainRowInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  mainLeft: {
+    gap: 2,
   },
   netLabel: {
     fontFamily: fonts.medium,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.muted,
   },
   netValue: {
     fontFamily: fonts.displayExtra,
-    fontSize: 24,
+    fontSize: 28,
     ...textShadow.emboss,
+  },
+  trendBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   breakdownRow: {
     flexDirection: 'row',
@@ -134,18 +170,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 10,
-    borderRadius: 14,
+    borderRadius: radius.md,
     backgroundColor: colors.track,
   },
   iconBubble: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.card,
   },
-  emoji: {
-    fontSize: 14,
+  breakdownTextWrap: {
+    flexShrink: 1,
   },
   breakdownLabel: {
     fontFamily: fonts.regular,

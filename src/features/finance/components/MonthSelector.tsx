@@ -1,8 +1,9 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, elevation } from '@/theme/colors';
-import { Icon } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { base3D, colors, elevation, radius } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
+import { GameIconButton } from '@/components/game';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 
 interface MonthSelectorProps {
   /** Pre-formatted month label, e.g. "June 2025". */
@@ -22,52 +23,55 @@ export function MonthSelector({
   onExportCSV,
 }: MonthSelectorProps) {
   return (
-    <View style={styles.header}>
+    <AnimatedCard index={0} style={styles.header}>
       <Text style={styles.title}>Finance</Text>
 
       <View style={styles.rightGroup}>
         {onExportCSV && (
-          <TouchableOpacity
-            onPress={onExportCSV}
-            hitSlop={8}
-            style={styles.iconBtn}
-          >
-            <Icon name='export' size={18} color={colors.text} />
-          </TouchableOpacity>
+          <PressableScale onPress={onExportCSV} hitSlop={8} haptic='light'>
+            <View style={styles.actionPill}>
+              <Text style={styles.actionText}>Export</Text>
+            </View>
+          </PressableScale>
         )}
 
         {onManageRecurring && (
-          <TouchableOpacity
+          <GameIconButton
+            icon='calendar-sync'
+            variant='gold'
+            size={36}
+            iconSize={17}
             onPress={onManageRecurring}
-            hitSlop={8}
-            style={styles.iconBtn}
-          >
-            <Icon name='calendar-sync' size={18} color={colors.text} />
-          </TouchableOpacity>
+          />
         )}
+
         <View style={styles.stepper}>
-          <TouchableOpacity
+          <GameIconButton
+            icon='chevron-left'
+            variant='purple'
+            size={36}
+            iconSize={18}
             onPress={onPrev}
-            hitSlop={8}
             accessibilityRole='button'
             accessibilityLabel='Previous month'
-          >
-            <Icon name='chevron-left' size={16} color={colors.muted} />
-          </TouchableOpacity>
+          />
 
-          <Text style={styles.month}>{month}</Text>
+          <Text style={styles.month} numberOfLines={1}>
+            {month}
+          </Text>
 
-          <TouchableOpacity
+          <GameIconButton
+            icon='chevron-right'
+            variant='purple'
+            size={36}
+            iconSize={18}
             onPress={onNext}
-            hitSlop={8}
             accessibilityRole='button'
             accessibilityLabel='Next month'
-          >
-            <Icon name='chevron-right' size={16} color={colors.muted} />
-          </TouchableOpacity>
+          />
         </View>
       </View>
-    </View>
+    </AnimatedCard>
   );
 }
 
@@ -77,45 +81,54 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 8,
-    paddingHorizontal: 22,
-    marginBottom: 8,
+    paddingHorizontal: 18,
+    marginBottom: 12,
   },
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 26,
     color: colors.text,
     letterSpacing: -0.4,
+    ...textShadow.emboss,
   },
   rightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
-  iconBtn: {
-    width: 36,
+  actionPill: {
     height: 36,
-    borderRadius: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
     backgroundColor: colors.card,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.card,
+  },
+  actionText: {
+    fontFamily: fonts.displayBold,
+    fontSize: 12,
+    color: colors.text,
   },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     backgroundColor: colors.card,
     borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
     ...elevation.card,
   },
   month: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 13,
     color: colors.text,
+    paddingHorizontal: 6,
+    ...textShadow.emboss,
   },
 });

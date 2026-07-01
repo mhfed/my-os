@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { colors } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { base3D, colors, gradients, radius } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
 import type { MonthlyOverview } from '@/types/finance';
 import { formatCompactVND } from '@/utils/currency';
 
@@ -89,6 +89,41 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
       {/* Chart */}
       <View style={styles.chartWrap}>
         <Svg width={totalW} height={svgH}>
+          <Defs>
+            <LinearGradient id='incomeFill' x1='0' y1='0' x2='0' y2='1'>
+              <Stop offset='0' stopColor={gradients.gem[0]} stopOpacity={1} />
+              <Stop offset='1' stopColor={gradients.gem[1]} stopOpacity={1} />
+            </LinearGradient>
+            <LinearGradient id='incomeFillMuted' x1='0' y1='0' x2='0' y2='1'>
+              <Stop
+                offset='0'
+                stopColor={gradients.gem[0]}
+                stopOpacity={0.5}
+              />
+              <Stop
+                offset='1'
+                stopColor={gradients.gem[1]}
+                stopOpacity={0.5}
+              />
+            </LinearGradient>
+            <LinearGradient id='spentFill' x1='0' y1='0' x2='0' y2='1'>
+              <Stop offset='0' stopColor={gradients.red[0]} stopOpacity={1} />
+              <Stop offset='1' stopColor={gradients.red[1]} stopOpacity={1} />
+            </LinearGradient>
+            <LinearGradient id='spentFillMuted' x1='0' y1='0' x2='0' y2='1'>
+              <Stop
+                offset='0'
+                stopColor={gradients.red[0]}
+                stopOpacity={0.5}
+              />
+              <Stop
+                offset='1'
+                stopColor={gradients.red[1]}
+                stopOpacity={0.5}
+              />
+            </LinearGradient>
+          </Defs>
+
           {data.map((d, i) => {
             const x = i * (GROUP_W + GROUP_GAP);
             const incH = barH(d.income);
@@ -117,7 +152,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
                   width={BAR_W}
                   height={incH}
                   rx={RADIUS}
-                  fill={isActive ? colors.teal : `${colors.teal}99`}
+                  fill={isActive ? 'url(#incomeFill)' : 'url(#incomeFillMuted)'}
                 />
                 {/* Expense bar */}
                 <Rect
@@ -126,7 +161,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
                   width={BAR_W}
                   height={expH}
                   rx={RADIUS}
-                  fill={isActive ? colors.red : `${colors.red}99`}
+                  fill={isActive ? 'url(#spentFill)' : 'url(#spentFillMuted)'}
                 />
               </Pressable>
             );
@@ -164,23 +199,27 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   legendText: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 11,
     color: colors.muted,
   },
   tooltip: {
-    backgroundColor: colors.track,
-    borderRadius: 10,
+    backgroundColor: colors.cardAlt,
+    borderRadius: radius.sm,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 8,
     alignItems: 'center',
+    ...base3D(colors.tealDeep, 2),
   },
   tooltipMonth: {
     fontFamily: fonts.displayBold,
     fontSize: 13,
     color: colors.text,
     marginBottom: 4,
+    ...textShadow.emboss,
   },
   tooltipRow: {
     flexDirection: 'row',
@@ -201,7 +240,7 @@ const styles = StyleSheet.create({
   monthLabel: {
     width: GROUP_W + GROUP_GAP,
     textAlign: 'center',
-    fontFamily: fonts.regular,
+    fontFamily: fonts.monoRegular,
     fontSize: 10,
     color: colors.muted,
   },
