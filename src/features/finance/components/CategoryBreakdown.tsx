@@ -1,32 +1,26 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
-import { SetBudgetModal } from './SetBudgetModal';
 import { fonts } from '@/theme/typography';
+import { PressableScale } from '@/components/motion';
 import type { CategorySpend } from '@/types/finance';
 import { formatCompactVND } from '@/utils/currency';
 
 import { CategoryDonut } from './CategoryDonut';
+import { SetBudgetModal } from './SetBudgetModal';
 
 interface CategoryBreakdownProps {
   data: CategorySpend[];
 }
 
-/** "By category" section: donut + legend rows. */
+/** "By category" section: donut + legend rows. Designed to sit inside a GamePanel. */
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
   const [budgetOpen, setBudgetOpen] = useState(false);
 
   return (
-    <View style={styles.section}>
-      <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>By category</Text>
-        <Pressable onPress={() => setBudgetOpen(true)}>
-          <Text style={styles.actionText}>Set budget</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.card}>
+    <>
+      <View style={styles.donutRow}>
         <CategoryDonut data={data} />
 
         <View style={styles.legend}>
@@ -64,7 +58,8 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
                       ]}
                       numberOfLines={1}
                     >
-                      {formatCompactVND(slice.amount)} / {formatCompactVND(slice.budget)}
+                      {formatCompactVND(slice.amount)} /{' '}
+                      {formatCompactVND(slice.budget)}
                     </Text>
                   </View>
                 ) : (
@@ -78,45 +73,29 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
         </View>
       </View>
 
+      <PressableScale
+        style={styles.budgetBtn}
+        onPress={() => setBudgetOpen(true)}
+        haptic='light'
+      >
+        <Text style={styles.budgetBtnText}>Set budgets</Text>
+      </PressableScale>
+
       {budgetOpen && (
         <SetBudgetModal
           visible={budgetOpen}
           onClose={() => setBudgetOpen(false)}
         />
       )}
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: 24,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.text,
-  },
-  actionText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.purple,
-  },
-  card: {
+  donutRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: 18,
   },
   legend: {
     flex: 1,
@@ -151,7 +130,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: colors.track,
     overflow: 'hidden',
   },
   miniBarFill: {
@@ -161,5 +140,18 @@ const styles = StyleSheet.create({
   budgetText: {
     fontFamily: fonts.monoMedium,
     fontSize: 11,
+  },
+  budgetBtn: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: colors.track,
+    alignItems: 'center',
+  },
+  budgetBtnText: {
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
+    color: colors.text,
   },
 });

@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { colors, glow } from '@/theme/colors';
+import { colors, glow, elevation } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { timing } from '@/theme/motion';
 import { Counter } from '@/components/motion';
@@ -38,8 +38,16 @@ export function SpendingOverview({
       : [colors.purple, colors.teal];
 
   // Amount color tracks budget health, so the number itself signals trouble.
-  const amountColor = isOver ? colors.red : isWarning ? colors.orange : colors.text;
-  const glowColor = isOver ? colors.red : isWarning ? colors.orange : colors.teal;
+  const amountColor = isOver
+    ? colors.red
+    : isWarning
+      ? colors.orange
+      : colors.text;
+  const glowColor = isOver
+    ? colors.red
+    : isWarning
+      ? colors.orange
+      : colors.teal;
 
   const reduce = useReducedMotion();
   const fill = useSharedValue(reduce ? pct : 0);
@@ -50,12 +58,18 @@ export function SpendingOverview({
   const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
 
   return (
-    <View style={[styles.card, glow(glowColor, isOver || isWarning ? 0.35 : 0.22, 22), isOver && styles.cardOver]}>
+    <View
+      style={[
+        styles.card,
+        glow(glowColor, isOver || isWarning ? 0.35 : 0.22, 22),
+        isOver && styles.cardOver,
+      ]}
+    >
       <Text style={styles.label}>SPENT THIS MONTH</Text>
       <Counter
         value={spent}
-        prefix="₫"
-        separator=","
+        prefix='₫'
+        separator=','
         duration={timing.reveal.duration}
         style={[styles.amount, { color: amountColor }]}
       />
@@ -72,11 +86,23 @@ export function SpendingOverview({
       </View>
 
       <View style={styles.footer}>
-        <Text style={[styles.footerMuted, isOver && { color: colors.red }, isWarning && { color: colors.orange }]}>
-          {isOver ? 'Vượt ngân sách' : isWarning ? 'Sắp đến giới hạn' : `${Math.round(pct * 100)}% of budget`}
+        <Text
+          style={[
+            styles.footerMuted,
+            isOver && { color: colors.red },
+            isWarning && { color: colors.orange },
+          ]}
+        >
+          {isOver
+            ? 'Vượt ngân sách'
+            : isWarning
+              ? 'Sắp đến giới hạn'
+              : `${Math.round(pct * 100)}% of budget`}
         </Text>
         <Text style={[styles.footerLeft, isOver && { color: colors.red }]}>
-          {isOver ? `+${formatVND(Math.abs(remaining))}` : `${formatVND(remaining)} left`}
+          {isOver
+            ? `+${formatVND(Math.abs(remaining))}`
+            : `${formatVND(remaining)} left`}
         </Text>
       </View>
     </View>
@@ -85,15 +111,16 @@ export function SpendingOverview({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.border,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    ...elevation.card,
   },
   cardOver: {
-    borderColor: `${colors.red}55`,
+    borderColor: colors.red,
   },
   label: {
     fontFamily: fonts.medium,

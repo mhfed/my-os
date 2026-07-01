@@ -3,11 +3,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
 import { colors } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
 import { formatCompactVND } from '@/utils/currency';
 
+/** Net worth summary - designed to sit inside a GamePanel */
 export function NetWorthWidget() {
-  // Subscribe to entries/payments so re-renders fire on changes
   useDebtStore((s) => s.entries);
   useDebtStore((s) => s.payments);
   const getSummary = useDebtStore((s) => s.getSummary);
@@ -21,102 +21,139 @@ export function NetWorthWidget() {
     .reduce((sum, g) => sum + g.currentAmount, 0);
 
   if (totalSavings === 0 && totalReceivable === 0 && totalPayable === 0) {
-    return null;
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyText}>No assets or debts recorded yet</Text>
+      </View>
+    );
   }
 
   const netWorth = totalSavings + totalReceivable - totalPayable;
   const netWorthColor = netWorth >= 0 ? colors.teal : colors.red;
 
   return (
-    <View style={styles.card}>
-      {/* Top row */}
-      <View style={styles.topRow}>
-        <Text style={styles.label}>Tài sản ròng</Text>
-        <Text style={[styles.netWorthValue, { color: netWorthColor }]}>
+    <>
+      {/* Net worth display */}
+      <View style={styles.mainRow}>
+        <Text style={styles.netLabel}>Net Worth</Text>
+        <Text style={[styles.netValue, { color: netWorthColor }]}>
           {formatCompactVND(netWorth)}
         </Text>
       </View>
 
-      {/* Divider */}
-      <View style={styles.divider} />
-
-      {/* Bottom row — 3 columns */}
-      <View style={styles.bottomRow}>
-        <View style={styles.col}>
-          <Text style={styles.colIcon}>💰</Text>
-          <Text style={styles.colLabel}>Tiết kiệm</Text>
-          <Text style={[styles.colValue, { color: totalSavings > 0 ? colors.teal : colors.muted }]}>
-            {formatCompactVND(totalSavings)}
-          </Text>
+      {/* Breakdown */}
+      <View style={styles.breakdownRow}>
+        <View style={styles.breakdownItem}>
+          <View
+            style={[
+              styles.iconBubble,
+              { backgroundColor: 'rgba(63,212,232,0.15)' },
+            ]}
+          >
+            <Text style={styles.emoji}>💰</Text>
+          </View>
+          <View>
+            <Text style={styles.breakdownLabel}>Tiết kiệm</Text>
+            <Text style={[styles.breakdownValue, { color: colors.teal }]}>
+              {formatCompactVND(totalSavings)}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.col}>
-          <Text style={styles.colIcon}>📥</Text>
-          <Text style={styles.colLabel}>Sẽ thu</Text>
-          <Text style={[styles.colValue, { color: totalReceivable > 0 ? '#7C6EF5' : colors.muted }]}>
-            {formatCompactVND(totalReceivable)}
-          </Text>
+        <View style={styles.breakdownItem}>
+          <View
+            style={[
+              styles.iconBubble,
+              { backgroundColor: 'rgba(124,110,245,0.15)' },
+            ]}
+          >
+            <Text style={styles.emoji}>📥</Text>
+          </View>
+          <View>
+            <Text style={styles.breakdownLabel}>Sẽ thu</Text>
+            <Text style={[styles.breakdownValue, { color: '#7C6EF5' }]}>
+              {formatCompactVND(totalReceivable)}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.col}>
-          <Text style={styles.colIcon}>📤</Text>
-          <Text style={styles.colLabel}>Phải trả</Text>
-          <Text style={[styles.colValue, { color: totalPayable > 0 ? colors.red : colors.muted }]}>
-            {formatCompactVND(totalPayable)}
-          </Text>
+        <View style={styles.breakdownItem}>
+          <View
+            style={[
+              styles.iconBubble,
+              { backgroundColor: 'rgba(255,90,110,0.15)' },
+            ]}
+          >
+            <Text style={styles.emoji}>📤</Text>
+          </View>
+          <View>
+            <Text style={styles.breakdownLabel}>Phải trả</Text>
+            <Text style={[styles.breakdownValue, { color: colors.red }]}>
+              {formatCompactVND(totalPayable)}
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 20,
-  },
-  topRow: {
-    flexDirection: 'row',
+  emptyState: {
+    paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  label: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  netWorthValue: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 20,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 12,
-  },
-  bottomRow: {
-    flexDirection: 'row',
-  },
-  col: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  colIcon: {
-    fontSize: 16,
-    marginBottom: 2,
-  },
-  colLabel: {
+  emptyText: {
     fontFamily: fonts.regular,
-    fontSize: 11,
+    fontSize: 14,
     color: colors.muted,
   },
-  colValue: {
-    fontFamily: fonts.monoMedium,
+  mainRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  netLabel: {
+    fontFamily: fonts.medium,
     fontSize: 14,
+    color: colors.muted,
+  },
+  netValue: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 24,
+    ...textShadow.emboss,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  breakdownItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: colors.track,
+  },
+  iconBubble: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoji: {
+    fontSize: 14,
+  },
+  breakdownLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    color: colors.muted,
+  },
+  breakdownValue: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 12,
   },
 });

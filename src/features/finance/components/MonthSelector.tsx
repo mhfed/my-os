@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, elevation } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     paddingHorizontal: 22,
+    marginBottom: 8,
   },
   title: {
     fontFamily: fonts.semibold,
@@ -88,14 +89,14 @@ const styles = StyleSheet.create({
   rightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -105,11 +106,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: 11,
+    borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 14,
+    ...elevation.card,
   },
   month: {
     fontFamily: fonts.semibold,

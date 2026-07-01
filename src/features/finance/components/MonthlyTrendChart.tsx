@@ -21,12 +21,30 @@ const RADIUS = 4;
 
 function shortMonth(monthKey: string): string {
   const [, m] = monthKey.split('-');
-  const names = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  const names = [
+    'T1',
+    'T2',
+    'T3',
+    'T4',
+    'T5',
+    'T6',
+    'T7',
+    'T8',
+    'T9',
+    'T10',
+    'T11',
+    'T12',
+  ];
   return names[parseInt(m, 10) - 1] ?? m;
 }
 
+/** Monthly trend chart - designed to sit inside a GamePanel */
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
-  const [tooltip, setTooltip] = useState<{ month: string; income: number; spent: number } | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    month: string;
+    income: number;
+    spent: number;
+  } | null>(null);
 
   if (data.length === 0) return null;
 
@@ -40,22 +58,24 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   }
 
   return (
-    <View style={styles.section}>
-      <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>Xu hướng 6 tháng</Text>
-        <View style={styles.legend}>
+    <>
+      {/* Legend */}
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
           <View style={[styles.dot, { backgroundColor: colors.teal }]} />
-          <Text style={styles.legendText}>Thu</Text>
+          <Text style={styles.legendText}>Thu nhập</Text>
+        </View>
+        <View style={styles.legendItem}>
           <View style={[styles.dot, { backgroundColor: colors.red }]} />
-          <Text style={styles.legendText}>Chi</Text>
+          <Text style={styles.legendText}>Chi tiêu</Text>
         </View>
       </View>
 
-      <View style={styles.card}>
-        {/* Tooltip */}
-        {tooltip && (
-          <View style={styles.tooltip}>
-            <Text style={styles.tooltipMonth}>{tooltip.month}</Text>
+      {/* Tooltip */}
+      {tooltip && (
+        <View style={styles.tooltip}>
+          <Text style={styles.tooltipMonth}>{tooltip.month}</Text>
+          <View style={styles.tooltipRow}>
             <Text style={[styles.tooltipVal, { color: colors.teal }]}>
               ↙ {formatCompactVND(tooltip.income)}
             </Text>
@@ -63,8 +83,11 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
               ↗ {formatCompactVND(tooltip.spent)}
             </Text>
           </View>
-        )}
+        </View>
+      )}
 
+      {/* Chart */}
+      <View style={styles.chartWrap}>
         <Svg width={totalW} height={svgH}>
           {data.map((d, i) => {
             const x = i * (GROUP_W + GROUP_GAP);
@@ -79,7 +102,11 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
                   setTooltip(
                     isActive
                       ? null
-                      : { month: shortMonth(d.month), income: d.income, spent: d.spent },
+                      : {
+                          month: shortMonth(d.month),
+                          income: d.income,
+                          spent: d.spent,
+                        },
                   )
                 }
               >
@@ -106,7 +133,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           })}
         </Svg>
 
-        {/* Month labels below */}
+        {/* Month labels */}
         <View style={[styles.labels, { width: totalW }]}>
           {data.map((d) => (
             <Text key={d.month} style={styles.monthLabel}>
@@ -115,26 +142,18 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           ))}
         </View>
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: 24,
-  },
-  headerRow: {
+  legendRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 12,
   },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.text,
-  },
-  legend: {
+  legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -148,16 +167,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 11,
     color: colors.muted,
-    marginRight: 4,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: 18,
-    alignItems: 'flex-start',
-    gap: 4,
   },
   tooltip: {
     backgroundColor: colors.track,
@@ -165,17 +174,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 8,
-    gap: 3,
+    alignItems: 'center',
   },
   tooltipMonth: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 4,
+  },
+  tooltipRow: {
+    flexDirection: 'row',
+    gap: 16,
   },
   tooltipVal: {
     fontFamily: fonts.monoMedium,
     fontSize: 12,
+  },
+  chartWrap: {
+    alignItems: 'flex-start',
+    gap: 4,
   },
   labels: {
     flexDirection: 'row',
