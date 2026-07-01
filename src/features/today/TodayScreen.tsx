@@ -114,7 +114,7 @@ export function TodayScreen() {
                 end={{ x: 0.9, y: 1 }}
                 style={styles.avatar}
               >
-                <Text style={styles.avatarLetter}>K</Text>
+                <Text style={styles.avatarLetter}>H</Text>
               </LinearGradient>
               <View style={styles.levelBadge}>
                 <Text style={styles.levelText}>{level}</Text>
@@ -148,7 +148,7 @@ export function TodayScreen() {
             <View style={styles.heroTop}>
               <View>
                 <Text style={styles.heroGreeting}>Good morning</Text>
-                <Text style={styles.heroName}>Khoa</Text>
+                <Text style={styles.heroName}>Hiếu</Text>
               </View>
               <StarRating filled={starsFilled} count={3} size={20} />
             </View>
