@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { base3D, colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
@@ -12,8 +13,15 @@ import { useSettingsStore } from '@/store/settingsStore';
 function TabBarBackground() {
   return (
     <View style={StyleSheet.absoluteFill}>
-      <BlurView tint='light' intensity={40} style={StyleSheet.absoluteFill} />
+      <BlurView tint='light' intensity={52} style={StyleSheet.absoluteFill} />
       <View style={styles.tabBarTint} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.52)', 'rgba(255,255,255,0.08)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.tabBarGlow}
+        pointerEvents='none'
+      />
     </View>
   );
 }
@@ -77,11 +85,15 @@ export default function TabsLayout() {
     tabBarStyle: {
       position: 'absolute' as const,
       height: 88,
+      marginHorizontal: 14,
+      marginBottom: 10,
+      borderRadius: 30,
       paddingTop: 12,
       paddingBottom: 26,
       borderTopWidth: 2,
-      borderTopColor: colors.white,
+      borderTopColor: 'rgba(255,255,255,0.95)',
       backgroundColor: 'transparent',
+      overflow: 'hidden' as const,
     },
     tabBarItemStyle: { gap: 5 },
     tabBarLabelStyle: {
@@ -153,7 +165,14 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   tabBarTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(244,248,255,0.88)',
+    backgroundColor: 'rgba(244,248,255,0.76)',
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.8)',
+  },
+  tabBarGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 30,
   },
 
   /* Magic float button — 3D glossy purple slab */
@@ -169,7 +188,7 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     backgroundColor: colors.purple,
-    opacity: 0.22,
+    opacity: 0.28,
   },
   magicGlowActive: {
     opacity: 0.36,

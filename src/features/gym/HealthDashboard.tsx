@@ -6,6 +6,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { GamePanel } from '@/components/game';
+import { AnimatedCard } from '@/components/motion';
+import { SkiaBackground } from '@/components/skia';
 import { useGymStore } from '@/store/gymStore';
 import { formatTxnDate } from '@/utils/date';
 
@@ -25,78 +28,95 @@ export function HealthDashboard() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <SkiaBackground domain='health' intensity={0.36} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Health</Text>
-        </View>
-
-        {/* Start Workout Card */}
-        <Pressable onPress={() => startWorkout('Chest & Triceps')}>
-          <LinearGradient
-            colors={[colors.purple, '#5D52C9']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.9, y: 0.3 }}
-            style={styles.startCard}
-          >
-            <View style={styles.startContent}>
-              <Icon name='dumbbell' size={24} color={colors.white} />
-              <View>
-                <Text style={styles.startTitle}>Start Workout</Text>
-                <Text style={styles.startSub}>
-                  Empty session or pick template
-                </Text>
-              </View>
+        <AnimatedCard index={0}>
+          <GamePanel style={styles.headerPanel}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Health</Text>
+              <Text style={styles.subtitle}>Training, recovery, and streaks</Text>
             </View>
-            <Icon name='arrow-right' size={20} color={colors.white} />
-          </LinearGradient>
-        </Pressable>
+          </GamePanel>
+        </AnimatedCard>
 
-        {/* Mock Run Tracker Card */}
-        <View style={styles.mockCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View
-              style={[styles.iconBox, { backgroundColor: tint(colors.orange) }]}
+        <AnimatedCard index={1} style={styles.section}>
+          <Pressable onPress={() => startWorkout('Chest & Triceps')}>
+            <LinearGradient
+              colors={[colors.purple, '#5D52C9']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.9, y: 0.3 }}
+              style={styles.startCard}
             >
-              <Icon name='shoe-sneaker' size={20} color={colors.orange} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.mockTitle}>Run Tracker</Text>
-              <Text style={styles.mockSub}>
-                Connect to Strava (Coming soon)
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Workout History</Text>
-
-        <View style={styles.historyList}>
-          {history.length === 0 ? (
-            <Text style={styles.emptyText}>No workouts logged yet.</Text>
-          ) : (
-            history.map((workout) => (
-              <View key={workout.id} style={styles.historyCard}>
-                <View style={styles.historyHeader}>
-                  <Text style={styles.historyName}>{workout.name}</Text>
-                  <Text style={styles.historyDate}>
-                    {formatTxnDate(workout.startTime)}
+              <View style={styles.startContent}>
+                <Icon name='dumbbell' size={24} color={colors.white} />
+                <View>
+                  <Text style={styles.startTitle}>Start Workout</Text>
+                  <Text style={styles.startSub}>
+                    Empty session or pick template
                   </Text>
                 </View>
-                <Text style={styles.historyStats}>
-                  {workout.exercises.length} exercises ·{' '}
-                  {workout.endTime
-                    ? Math.round(
-                        (workout.endTime - workout.startTime) / 60000,
-                      ) + ' min'
-                    : 'Unknown'}
+              </View>
+              <Icon name='arrow-right' size={20} color={colors.white} />
+            </LinearGradient>
+          </Pressable>
+        </AnimatedCard>
+
+        <AnimatedCard index={2} style={styles.section}>
+          <GamePanel>
+            <View style={styles.mockRow}>
+              <View
+                style={[styles.iconBox, { backgroundColor: tint(colors.orange) }]}
+              >
+                <Icon name='shoe-sneaker' size={20} color={colors.orange} />
+              </View>
+              <View style={styles.mockTextWrap}>
+                <Text style={styles.mockTitle}>Run Tracker</Text>
+                <Text style={styles.mockSub}>
+                  Connect to Strava (Coming soon)
                 </Text>
               </View>
-            ))
-          )}
-        </View>
+            </View>
+          </GamePanel>
+        </AnimatedCard>
+
+        <AnimatedCard index={3} style={styles.section}>
+          <GamePanel title='Workout History'>
+            <View style={styles.historyList}>
+              {history.length === 0 ? (
+                <Text style={styles.emptyText}>No workouts logged yet.</Text>
+              ) : (
+                history.map((workout) => (
+                  <View key={workout.id} style={styles.historyCard}>
+                    <View style={styles.historyHeader}>
+                      <Text style={styles.historyName}>{workout.name}</Text>
+                      <Text style={styles.historyDate}>
+                        {formatTxnDate(workout.startTime)}
+                      </Text>
+                    </View>
+                    <Text style={styles.historyStats}>
+                      {workout.exercises.length} exercises ·{' '}
+                      {workout.endTime
+                        ? Math.round(
+                            (workout.endTime - workout.startTime) / 60000,
+                          ) + ' min'
+                        : 'Unknown'}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </GamePanel>
+        </AnimatedCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -107,13 +127,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   content: {
     paddingTop: 8,
-    paddingHorizontal: 22,
+    paddingHorizontal: 18,
     paddingBottom: 110,
   },
+  headerPanel: {
+    marginBottom: 16,
+  },
   header: {
-    marginBottom: 20,
+    gap: 2,
   },
   title: {
     fontFamily: fonts.semibold,
@@ -121,13 +147,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: -0.4,
   },
+  subtitle: {
+    fontFamily: fonts.monoRegular,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  section: {
+    marginTop: 16,
+  },
   startCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    borderRadius: 20,
-    marginBottom: 16,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.34)',
   },
   startContent: {
     flexDirection: 'row',
@@ -135,7 +170,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   startTitle: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 16,
     color: colors.white,
   },
@@ -145,13 +180,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
-  mockCard: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 30,
+  mockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  mockTextWrap: {
+    flex: 1,
   },
   iconBox: {
     width: 40,
@@ -171,12 +206,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 2,
   },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 16,
-  },
   historyList: {
     gap: 12,
   },
@@ -186,10 +215,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   historyCard: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
+    backgroundColor: colors.cardAlt,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 16,
   },
   historyHeader: {

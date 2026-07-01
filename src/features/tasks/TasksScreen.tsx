@@ -6,6 +6,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { GamePanel } from '@/components/game';
+import { AnimatedCard } from '@/components/motion';
+import { SkiaBackground } from '@/components/skia';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
 
 import { AddTaskModal } from './components/AddTaskModal';
@@ -48,17 +51,33 @@ export function TasksScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Tasks</Text>
-          <Text style={styles.subtitle}>
-            {activeCount} active · {overdueCount} overdue
-          </Text>
-        </View>
-        <Pressable style={styles.addButton} onPress={() => setAddVisible(true)}>
-          <Icon name='plus' size={22} color={colors.screenBg} />
-        </Pressable>
-      </View>
+      <SkiaBackground domain='tasks' intensity={0.36} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
+
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <GamePanel style={styles.headerPanel}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.title}>Tasks</Text>
+              <Text style={styles.subtitle}>
+                {activeCount} active · {overdueCount} overdue
+              </Text>
+            </View>
+            <Pressable
+              style={styles.addButton}
+              onPress={() => setAddVisible(true)}
+            >
+              <Icon name='plus' size={22} color={colors.screenBg} />
+            </Pressable>
+          </View>
+        </GamePanel>
+      </AnimatedCard>
 
       <FilterPills active={activeFilter} onSelect={setFilter} />
 
@@ -127,12 +146,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerWrap: {
+    paddingTop: 8,
+    paddingHorizontal: 18,
+  },
+  headerPanel: {
+    paddingVertical: 2,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
-    paddingHorizontal: 22,
+    paddingHorizontal: 4,
   },
   title: {
     fontFamily: fonts.semibold,

@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 import {
   colors,
@@ -23,6 +24,7 @@ import {
 } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
+import { SkiaBackground } from '@/components/skia';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -180,6 +182,7 @@ export function SuperAppSheet() {
         style={[styles.backdrop, { opacity: fadeAnim }]}
         pointerEvents='box-none'
       >
+        <SkiaBackground domain='today' intensity={0.2} />
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       </Animated.View>
 
@@ -193,6 +196,14 @@ export function SuperAppSheet() {
           },
         ]}
       >
+        <BlurView tint='light' intensity={50} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={['rgba(255,255,255,0.34)', 'rgba(255,255,255,0.04)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.sheetGloss}
+          pointerEvents='none'
+        />
         {/* Handle */}
         <View style={styles.handle} />
 
@@ -354,27 +365,31 @@ export function SuperAppSheet() {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: 'rgba(20,29,48,0.34)',
   },
   sheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.9)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderColor: 'rgba(255,255,255,0.96)',
     ...elevation.panel,
     maxHeight: '82%',
     justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  sheetGloss: {
+    ...StyleSheet.absoluteFillObject,
   },
   handle: {
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(110,122,150,0.45)',
     alignSelf: 'center',
     marginTop: 12,
     marginBottom: 6,
@@ -386,7 +401,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(200,213,238,0.8)',
   },
   title: {
     fontFamily: fonts.displayBold,
@@ -399,6 +414,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
     ...base3D(colors.purpleDeep, 3),
   },
   editBtnText: {
@@ -429,10 +446,10 @@ const styles = StyleSheet.create({
     aspectRatio: 1.1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.88)',
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderColor: 'rgba(255,255,255,0.96)',
     gap: 8,
     padding: 12,
     ...elevation.card,
@@ -483,8 +500,8 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 10,
     borderTopWidth: 2,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    borderTopColor: 'rgba(200,213,238,0.8)',
+    backgroundColor: 'rgba(252,253,255,0.72)',
     marginTop: 8,
   },
   footerText: {
@@ -512,9 +529,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.88)',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderColor: 'rgba(255,255,255,0.96)',
     borderRadius: radius.md,
     padding: 14,
     marginBottom: 10,

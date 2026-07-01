@@ -75,6 +75,13 @@ export function FinanceScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <SkiaBackground domain='finance' intensity={0.38} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
 
       {/* HUD bar */}
       <AnimatedCard index={0} style={styles.hud}>
@@ -261,6 +268,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.screenBg,
+  },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
   },
   placeholder: {
     flex: 1,
