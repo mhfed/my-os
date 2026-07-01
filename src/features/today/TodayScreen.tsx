@@ -120,6 +120,13 @@ export function TodayScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <SkiaBackground domain='today' intensity={0.42} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -158,8 +165,21 @@ export function TodayScreen() {
         {/* Hero — Skia energy orb inside a glossy panel */}
         <AnimatedCard index={1}>
           <GamePanel style={styles.heroPanel}>
+            <LinearGradient
+              colors={['rgba(109,94,247,0.18)', 'rgba(79,140,255,0.04)']}
+              start={{ x: 0.1, y: 0.1 }}
+              end={{ x: 0.95, y: 1 }}
+              style={styles.heroAura}
+              pointerEvents='none'
+            />
+            <View style={styles.heroHalo} pointerEvents='none' />
             {/* Shimmer overlay */}
-            <ShimmerView width={300} height={250} duration={3000} />
+            <ShimmerView
+              width={320}
+              height={260}
+              duration={3200}
+              color='rgba(255,255,255,0.22)'
+            />
             <LinearGradient
               colors={gradients.gloss}
               start={{ x: 0.5, y: 0 }}
@@ -257,6 +277,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   placeholder: {
     flex: 1,
     backgroundColor: colors.screenBg,
@@ -321,6 +344,24 @@ const styles = StyleSheet.create({
   heroPanel: {
     overflow: 'hidden',
     paddingBottom: 8,
+    minHeight: 312,
+  },
+  heroAura: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroHalo: {
+    position: 'absolute',
+    top: 88,
+    alignSelf: 'center',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(79,140,255,0.12)',
+    shadowColor: colors.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 28,
+    elevation: 6,
   },
   heroGloss: {
     position: 'absolute',

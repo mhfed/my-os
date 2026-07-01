@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, elevation, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
@@ -18,9 +19,9 @@ interface GamePanelProps {
 }
 
 /**
- * The base playful surface of the game UI: a bright, heavily-rounded panel with
- * a soft cool drop shadow and a 2px light inner edge that reads as a beveled
- * rim. Everything sits on these — sections, cards, lists.
+ * The base playful surface of the game UI: a bright, glassy panel with a soft
+ * cool drop shadow, beveled rim, and top sheen. It keeps the playful rounded
+ * shape while feeling closer to premium iOS game chrome.
  */
 export function GamePanel({
   children,
@@ -38,6 +39,24 @@ export function GamePanel({
         style,
       ]}
     >
+      <LinearGradient
+        colors={[
+          'rgba(255,255,255,0.42)',
+          'rgba(255,255,255,0.16)',
+          'rgba(255,255,255,0)',
+        ]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.85, y: 0.82 }}
+        style={styles.glassFill}
+        pointerEvents='none'
+      />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.72)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.4, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.topGlow}
+        pointerEvents='none'
+      />
       {title ? (
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
@@ -60,8 +79,21 @@ const styles = StyleSheet.create({
   panel: {
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.95)',
+    borderColor: 'rgba(255,255,255,0.98)',
+    overflow: 'hidden',
     ...elevation.panel,
+  },
+  glassFill: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  topGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 14,
+    right: 14,
+    height: 64,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
   },
   padded: {
     padding: INSET,
