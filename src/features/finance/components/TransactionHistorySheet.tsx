@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   FlatList,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,9 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, radius } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
+import { PressableScale } from '@/components/motion';
+import { GameIconButton } from '@/components/game';
 import { useFinanceStore } from '@/store/financeStore';
 import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
@@ -67,7 +68,7 @@ export function TransactionHistorySheet({
           id: t.id,
           name: t.note || categoryName,
           categoryName,
-          color: cat?.color ?? '#999999',
+          color: cat?.color ?? colors.muted,
           icon: cat?.icon ?? 'cash',
           amount: t.amount,
           type: t.type,
@@ -123,9 +124,13 @@ export function TransactionHistorySheet({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Lịch sử giao dịch</Text>
-          <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={8}>
-            <Icon name='close' size={18} color={colors.muted} />
-          </Pressable>
+          <GameIconButton
+            icon='close'
+            variant='red'
+            size={36}
+            iconSize={16}
+            onPress={handleClose}
+          />
         </View>
 
         {/* Search */}
@@ -151,9 +156,10 @@ export function TransactionHistorySheet({
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
-              <Pressable
+              <PressableScale
                 key={f.key}
                 onPress={() => setFilter(f.key)}
+                haptic='selection'
                 style={[styles.filterChip, active && styles.filterChipActive]}
               >
                 <Text
@@ -164,7 +170,7 @@ export function TransactionHistorySheet({
                 >
                   {f.label}
                 </Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </ScrollView>
@@ -180,7 +186,7 @@ export function TransactionHistorySheet({
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Icon name='receipt' size={40} color={colors.tabInactive} />
+              <Icon name='receipt-text-outline' size={40} color={colors.tabInactive} />
               <Text style={styles.emptyText}>Không có giao dịch</Text>
             </View>
           }
@@ -219,17 +225,10 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   title: {
-    fontFamily: fonts.semibold,
-    fontSize: 18,
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
     color: colors.text,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...textShadow.emboss,
   },
   searchRow: {
     flexDirection: 'row',
@@ -237,11 +236,11 @@ const styles = StyleSheet.create({
     gap: 10,
     marginHorizontal: 20,
     marginBottom: 12,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
-    paddingHorizontal: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
+    paddingHorizontal: 16,
     paddingVertical: 10,
   },
   searchInput: {
@@ -257,27 +256,27 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
+    backgroundColor: colors.white,
   },
   filterChipActive: {
-    backgroundColor: tint(colors.purple, '2E'),
-    borderColor: colors.purple,
+    backgroundColor: colors.purple,
+    borderColor: colors.purpleDeep,
   },
   filterChipText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.muted,
   },
   filterChipTextActive: {
-    color: colors.purple,
+    color: colors.white,
   },
   count: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.tabInactive,
     paddingHorizontal: 20,
@@ -293,7 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dateHeader: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 12,
     color: colors.muted,
     letterSpacing: 0.3,

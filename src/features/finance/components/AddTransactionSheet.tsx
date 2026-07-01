@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, elevation, radius, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { useFinanceStore } from '@/store/financeStore';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
+import { PressableScale } from '@/components/motion';
+import { GameButton, GameIconButton } from '@/components/game';
 import type { TxnType } from '@/types/finance';
 
 interface AddTransactionSheetProps {
@@ -188,13 +190,13 @@ export function AddTransactionSheet({
 
             <View style={styles.headerRow}>
               <Text style={styles.title}>Add transaction</Text>
-              <Pressable
-                hitSlop={10}
+              <GameIconButton
+                icon='close'
+                variant='red'
+                size={36}
+                iconSize={16}
                 onPress={handleClose}
-                style={styles.closeBtn}
-              >
-                <Icon name='close' size={18} color={colors.muted} />
-              </Pressable>
+              />
             </View>
 
             <ScrollView
@@ -205,13 +207,21 @@ export function AddTransactionSheet({
               <View style={styles.segment}>
                 {(['expense', 'income'] as const).map((t) => {
                   const active = type === t;
+                  const activeVariantColor =
+                    t === 'expense' ? colors.red : colors.green;
+                  const activeVariantDeep =
+                    t === 'expense' ? colors.redDeep : colors.greenDeep;
                   return (
-                    <Pressable
+                    <PressableScale
                       key={t}
                       onPress={() => switchType(t)}
+                      haptic='selection'
                       style={[
                         styles.segmentBtn,
-                        active && styles.segmentBtnActive,
+                        active && {
+                          backgroundColor: activeVariantColor,
+                          borderColor: activeVariantDeep,
+                        },
                       ]}
                     >
                       <Text
@@ -222,7 +232,7 @@ export function AddTransactionSheet({
                       >
                         {t === 'expense' ? 'Expense' : 'Income'}
                       </Text>
-                    </Pressable>
+                    </PressableScale>
                   );
                 })}
               </View>
@@ -257,16 +267,17 @@ export function AddTransactionSheet({
                 {categories.map((cat) => {
                   const selected = cat.id === categoryId;
                   return (
-                    <Pressable
+                    <PressableScale
                       key={cat.id}
                       onPress={() => setCategoryId(cat.id)}
+                      haptic='selection'
                       style={[
                         styles.chip,
                         {
                           backgroundColor: selected
                             ? tint(cat.color, '2E')
-                            : colors.card,
-                          borderColor: selected ? cat.color : colors.border,
+                            : colors.white,
+                          borderColor: selected ? cat.color : colors.track,
                         },
                       ]}
                     >
@@ -284,19 +295,20 @@ export function AddTransactionSheet({
                       >
                         {cat.name}
                       </Text>
-                    </Pressable>
+                    </PressableScale>
                   );
                 })}
 
-                <Pressable
+                <PressableScale
                   onPress={() => setAdding((v) => !v)}
+                  haptic='light'
                   style={[styles.chip, styles.newChip]}
                 >
                   <Icon name='plus' size={16} color={colors.purple} />
                   <Text style={[styles.chipText, { color: colors.purple }]}>
                     New
                   </Text>
-                </Pressable>
+                </PressableScale>
               </ScrollView>
 
               {/* Inline add-category row */}
@@ -326,13 +338,15 @@ export function AddTransactionSheet({
                       );
                     })}
                   </View>
-                  <Pressable
+                  <GameIconButton
+                    icon='check'
+                    variant='green'
+                    size={36}
+                    iconSize={16}
                     onPress={handleAddCategory}
                     disabled={!newName.trim()}
-                    style={[styles.addBtn, !newName.trim() && styles.disabled]}
-                  >
-                    <Icon name='check' size={18} color={colors.white} />
-                  </Pressable>
+                    style={!newName.trim() ? styles.disabled : undefined}
+                  />
                 </View>
               )}
 
@@ -368,13 +382,16 @@ export function AddTransactionSheet({
               />
 
               {/* Submit */}
-              <Pressable
-                onPress={handleSubmit}
+              <GameButton
+                label='Add'
+                variant={type === 'income' ? 'green' : 'gem'}
+                size='md'
+                fullWidth
                 disabled={!canSubmit}
-                style={[styles.submit, !canSubmit && styles.disabled]}
-              >
-                <Text style={styles.submitText}>Add</Text>
-              </Pressable>
+                style={!canSubmit ? styles.disabled : undefined}
+                onPress={handleSubmit}
+              />
+              <View style={{ height: 8 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -394,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   manageText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 12,
     color: colors.purple,
     marginBottom: 8,
@@ -405,54 +422,48 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(74,46,18,0.72)',
   },
   kav: {
     width: '100%',
   },
   sheet: {
-    backgroundColor: colors.screenBg,
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
+    ...elevation.panel,
     paddingHorizontal: 20,
     paddingTop: 10,
     maxHeight: '88%',
   },
   handle: {
     alignSelf: 'center',
-    width: 38,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
-    marginBottom: 14,
+    marginBottom: 10,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   title: {
-    fontFamily: fonts.semibold,
-    fontSize: 17,
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
     color: colors.text,
-  },
-  closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
+    ...textShadow.emboss,
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.white,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
     padding: 4,
     gap: 4,
     marginBottom: 22,
@@ -460,19 +471,20 @@ const styles = StyleSheet.create({
   segmentBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: radius.pill,
     alignItems: 'center',
-  },
-  segmentBtnActive: {
-    backgroundColor: colors.purple,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   segmentText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 14,
     color: colors.muted,
   },
   segmentTextActive: {
+    fontFamily: fonts.displayBold,
     color: colors.white,
+    ...textShadow.button,
   },
   amountWrap: {
     flexDirection: 'row',
@@ -495,7 +507,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   label: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.muted,
     marginBottom: 10,
@@ -509,10 +521,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    paddingHorizontal: 13,
+    paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: radius.pill,
+    borderWidth: 2,
   },
   newChip: {
     backgroundColor: tint(colors.purple, '1A'),
@@ -520,7 +532,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   chipText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.muted,
   },
@@ -529,10 +541,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginTop: 12,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.lg,
     padding: 10,
   },
   addInput: {
@@ -554,23 +566,15 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   swatchPicked: {
-    borderColor: colors.white,
-  },
-  addBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: colors.text,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
     paddingHorizontal: 6,
     paddingVertical: 10,
     marginBottom: 18,
@@ -585,7 +589,7 @@ const styles = StyleSheet.create({
   dateLabel: {
     flex: 1,
     textAlign: 'center',
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 14,
     color: colors.text,
   },
@@ -593,24 +597,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 13,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.lg,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 24,
-  },
-  submit: {
-    backgroundColor: colors.purple,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  submitText: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.white,
   },
   disabled: {
     opacity: 0.4,

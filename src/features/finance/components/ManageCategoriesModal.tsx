@@ -11,9 +11,11 @@ import {
   Platform,
 } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { PressableScale } from '@/components/motion';
+import { GameButton, GameIconButton } from '@/components/game';
 import { useFinanceStore } from '@/store/financeStore';
 import type { Category } from '@/types/finance';
 
@@ -32,14 +34,14 @@ const COMMON_ICONS = [
   'heart',
   'airplane',
 ];
-const COMMON_COLORS = [
+const COMMON_COLORS: string[] = [
   colors.orange,
   colors.teal,
   colors.purple,
   colors.red,
-  '#3498db',
-  '#e84393',
-  '#f1c40f',
+  colors.blue,
+  colors.pink,
+  colors.yellow,
 ];
 
 export function ManageCategoriesModal({
@@ -88,18 +90,28 @@ export function ManageCategoriesModal({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.sheet}>
-            <View style={styles.grabber} />
-            <Text style={styles.heading}>Manage Categories</Text>
+            <View style={styles.handle} />
+            <View style={styles.headerRow}>
+              <Text style={styles.heading}>Manage Categories</Text>
+              <GameIconButton
+                icon='close'
+                variant='red'
+                size={36}
+                iconSize={16}
+                onPress={onClose}
+              />
+            </View>
 
             {editingId ? (
               <View style={styles.editPane}>
-                <Pressable
+                <PressableScale
                   onPress={() => setEditingId(null)}
+                  haptic='light'
                   style={styles.backBtn}
                 >
                   <Icon name='arrow-left' size={20} color={colors.text} />
                   <Text style={styles.backText}>Back</Text>
-                </Pressable>
+                </PressableScale>
 
                 <TextInput
                   style={styles.input}
@@ -113,7 +125,7 @@ export function ManageCategoriesModal({
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
+                  contentContainerStyle={styles.choiceRow}
                 >
                   {COMMON_ICONS.map((ic) => (
                     <Pressable
@@ -137,7 +149,7 @@ export function ManageCategoriesModal({
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
+                  contentContainerStyle={styles.choiceRow}
                 >
                   {COMMON_COLORS.map((c) => (
                     <Pressable
@@ -152,43 +164,49 @@ export function ManageCategoriesModal({
                   ))}
                 </ScrollView>
 
-                <Pressable
-                  style={[styles.saveBtn, !canSave && { opacity: 0.5 }]}
-                  onPress={handleSave}
+                <GameButton
+                  label='Save Category'
+                  variant='purple'
+                  size='md'
+                  fullWidth
                   disabled={!canSave}
-                >
-                  <Text style={styles.saveBtnText}>Save Category</Text>
-                </Pressable>
+                  style={!canSave ? styles.disabled : undefined}
+                  onPress={handleSave}
+                />
               </View>
             ) : (
-              <ScrollView style={{ marginTop: 10, maxHeight: 400 }}>
+              <ScrollView style={styles.list}>
                 {categories.map((c) => (
                   <View key={c.id} style={styles.row}>
-                    <View
-                      style={[
-                        styles.iconBox,
-                        { backgroundColor: tint(c.color) },
-                      ]}
-                    >
-                      <Icon name={c.icon as any} size={18} color={c.color} />
+                    <View style={styles.iconBoxWrap}>
+                      <View
+                        style={[
+                          styles.iconBox,
+                          { backgroundColor: tint(c.color, '26') },
+                        ]}
+                      >
+                        <Icon name={c.icon as any} size={18} color={c.color} />
+                      </View>
                     </View>
-                    <Text style={styles.rowText}>{c.name}</Text>
-                    <Pressable
+                    <Text style={styles.rowText} numberOfLines={1}>
+                      {c.name}
+                    </Text>
+                    <GameIconButton
+                      icon='pencil'
+                      variant='blue'
+                      size={34}
+                      iconSize={15}
                       onPress={() => handleEdit(c)}
-                      style={styles.actionBtn}
-                    >
-                      <Icon name='pencil' size={16} color={colors.muted} />
-                    </Pressable>
-                    <Pressable
+                      style={styles.rowActionBtn}
+                    />
+                    <GameIconButton
+                      icon='trash-can-outline'
+                      variant='red'
+                      size={34}
+                      iconSize={15}
                       onPress={() => handleDelete(c.id)}
-                      style={[styles.actionBtn, { marginLeft: 8 }]}
-                    >
-                      <Icon
-                        name='trash-can-outline'
-                        size={16}
-                        color={colors.red}
-                      />
-                    </Pressable>
+                      style={styles.rowActionBtn}
+                    />
                   </View>
                 ))}
               </ScrollView>
@@ -204,97 +222,124 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(74,46,18,0.72)',
   },
   backdropFill: {
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: colors.card,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
+    ...elevation.panel,
     paddingHorizontal: 22,
-    paddingTop: 12,
+    paddingTop: 10,
     paddingBottom: 34,
   },
-  grabber: {
+  handle: {
     alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
-    marginBottom: 16,
+    marginBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   heading: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 20,
     color: colors.text,
-    letterSpacing: -0.3,
+    ...textShadow.emboss,
+  },
+  list: {
+    marginTop: 10,
+    maxHeight: 400,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    gap: 8,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.md,
+    padding: 10,
+    marginBottom: 10,
+    ...elevation.card,
+  },
+  iconBoxWrap: {
+    ...base3D(colors.purpleDeep, 2),
+    borderRadius: radius.sm,
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
   rowText: {
     flex: 1,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.text,
   },
-  actionBtn: {
-    padding: 8,
+  rowActionBtn: {
+    marginLeft: 2,
   },
   editPane: {
-    marginTop: 16,
+    marginTop: 8,
   },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginBottom: 16,
+    alignSelf: 'flex-start',
   },
   backText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.text,
   },
   input: {
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.track,
+    borderRadius: radius.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
     marginBottom: 16,
   },
   fieldLabel: {
-    fontFamily: fonts.monoSemibold,
+    fontFamily: fonts.displayBold,
     fontSize: 11,
     color: colors.muted,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
     marginBottom: 8,
+  },
+  choiceRow: {
+    gap: 8,
+    paddingBottom: 4,
   },
   iconChoice: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     borderWidth: 2,
     borderColor: 'transparent',
-    backgroundColor: colors.screenBg,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -302,20 +347,12 @@ const styles = StyleSheet.create({
   colorChoice: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: 'transparent',
     marginBottom: 24,
   },
-  saveBtn: {
-    backgroundColor: colors.purple,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  saveBtnText: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.white,
+  disabled: {
+    opacity: 0.4,
   },
 });

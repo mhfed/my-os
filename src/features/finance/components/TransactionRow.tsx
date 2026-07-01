@@ -1,9 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
-import { colors, tint } from '@/theme/colors';
+import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
+import { PressableScale } from '@/components/motion';
 import type { TransactionView } from '@/types/finance';
 import { formatSignedVND, formatVND } from '@/utils/currency';
 import { formatTxnDate } from '@/utils/date';
@@ -24,15 +25,17 @@ function DeleteAction({ onPress }: { onPress: () => void }) {
 
 export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
   const isIncome = txn.type === 'income';
-  const amountColor = isIncome ? colors.teal : colors.text;
+  const amountColor = isIncome ? colors.green : colors.text;
   const amountText = isIncome
     ? formatSignedVND(txn.amount, 'income')
     : formatVND(txn.amount);
 
   const rowContent = (
-    <Pressable onPress={onEdit} style={styles.row}>
-      <View style={[styles.chip, { backgroundColor: tint(txn.color) }]}>
-        <Icon name={txn.icon as IconName} size={19} color={txn.color} />
+    <PressableScale style={styles.row} onPress={onEdit} haptic='light'>
+      <View style={styles.chipWrap}>
+        <View style={[styles.chip, { backgroundColor: tint(txn.color, '26') }]}>
+          <Icon name={txn.icon as IconName} size={19} color={txn.color} />
+        </View>
       </View>
 
       <View style={styles.middle}>
@@ -45,7 +48,7 @@ export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
       </View>
 
       <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
-    </Pressable>
+    </PressableScale>
   );
 
   if (!onDelete) return rowContent;
@@ -68,16 +71,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 13,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    paddingVertical: 13,
-    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    ...elevation.card,
+  },
+  chipWrap: {
+    ...base3D(colors.tealDeep, 2),
+    borderRadius: radius.sm,
   },
   chip: {
     width: 40,
     height: 40,
-    borderRadius: 11,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -104,7 +112,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.red,
-    borderRadius: 14,
+    borderRadius: radius.md,
     marginLeft: 8,
+    ...base3D(colors.redDeep, 3),
   },
 });
