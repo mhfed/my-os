@@ -1,122 +1,94 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import {
-  BlurMask,
-  Canvas,
-  Circle,
-  Group,
-  Path,
-  RadialGradient,
-  Skia,
-  SweepGradient,
-  vec,
-} from '@shopify/react-native-skia';
-import {
-  Easing,
-  useDerivedValue,
+import Animated, {
+  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withDelay,
-  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, domains, glow } from '@/theme/colors';
-import { fonts, textShadow } from '@/theme/typography';
+import { colors, domains, glow, gradients, radius, tint } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 import { timing } from '@/theme/motion';
 import { Counter, ShimmerView } from '@/components/motion';
-import { formatVND } from '@/utils/currency';
-
-const SIZE = 200;
-const C = SIZE / 2;
-const RING_R = 78;
-const ORB_R = 58;
-const TWO_PI = Math.PI * 2;
+import { IconBadge } from '@/components/game';
+import { formatCompactVND } from '@/utils/currency';
 
 interface FinanceHeroProps {
-  /** Budget used percentage (0-1) */
+  /** Budget used fraction (0-1, may exceed 1 when over). */
   budgetUsed: number;
-  /** Amount spent this month */
+  /** Amount spent this month. */
   spent: number;
-  /** Amount saved this month */
+  /** Amount saved this month (income - spent). */
   saved: number;
+  /** Income this month. */
+  income: number;
+  /** Total budget for the month (sum of category budgets). */
+  budget: number;
+  /** budget - spent (can be negative). */
+  remaining: number;
 }
 
 /**
- * Finance hero visualization: A glowing orb with ring showing budget health.
- * Similar to Today's EnergyOrb but themed for finance with teal/gold palette.
+ * Finance hero — a budget dashboard: a big "remaining" headline, a chunky 3D
+ * jelly progress bar (spent vs budget), and an Income/Spent/Saved stat footer.
+ * The bar + headline + status carry the budget-health colour (teal → gold →
+ * red). Replaces the old circular coin/orb.
  */
-export function FinanceHero({ budgetUsed, spent, saved }: FinanceHeroProps) {
-  const clamped = Math.max(0, Math.min(1, budgetUsed));
+export function FinanceHero({
+  budgetUsed,
+  spent,
+  saved,
+  income,
+  budget,
+  remaining,
+}: FinanceHeroProps) {
   const reduce = useReducedMotion();
+  const hasBudget = budget > 0;
+  const clamped = Math.max(0, Math.min(1, budgetUsed));
+  const pct = Math.round(budgetUsed * 100);
 
-  // Determine health status
-  const isOver = clamped >= 1;
-  const isWarning = !isOver && clamped >= 0.9;
-  const healthColor = isOver
-    ? colors.red
+  const isOver = hasBudget && remaining < 0;
+  const isWarning = hasBudget && !isOver && clamped >= 0.9;
+  const healthColor = !hasBudget
+    ? domains.finance.accent
+    : isOver
+      ? colors.red
+      : isWarning
+        ? colors.orange
+        : domains.finance.accent;
+  const barGradient = isOver
+    ? gradients.red
     : isWarning
-      ? colors.orange
-      : domains.finance.accent;
+      ? gradients.gold
+      : gradients.gem;
 
-  const ringPath = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addCircle(C, C, RING_R);
-    return p;
-  }, []);
-
-  const orbClip = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addCircle(C, C, ORB_R);
-    return p;
-  }, []);
+  // Headline: remaining budget, or the overspend amount, or (no budget) spend.
+  const headLabel = !hasBudget
+    ? 'ĐÃ CHI THÁNG NÀY'
+    : isOver
+      ? 'VƯỢT NGÂN SÁCH'
+      : 'CÒN LẠI';
+  const headValue = !hasBudget ? spent : isOver ? spent - budget : remaining;
 
   const fill = useSharedValue(reduce ? clamped : 0);
-  const spin = useSharedValue(0);
-  const pulseGlow = useSharedValue(0);
-
   useEffect(() => {
     if (reduce) {
       fill.value = clamped;
       return;
     }
     fill.value = withDelay(180, withTiming(clamped, timing.reveal));
-    spin.value = withRepeat(
-      withTiming(1, { duration: 12000, easing: Easing.linear }),
-      -1,
-      false,
-    );
-    pulseGlow.value = withRepeat(
-      withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
-  }, [clamped, reduce, fill, spin, pulseGlow]);
+  }, [clamped, reduce, fill]);
 
-  const sheenTransform = useDerivedValue(() => [
-    { rotate: spin.value * TWO_PI },
-  ]);
-
-  const glowOpacity = useDerivedValue(() => 0.3 + pulseGlow.value * 0.2);
-
-  // Gradient colors based on health
-  const ringColors = isOver
-    ? [colors.red, colors.orange, colors.red]
-    : isWarning
-      ? [colors.orange, colors.yellow, colors.orange]
-      : [domains.finance.accent, colors.teal, domains.finance.accent];
-
-  const orbGradientColors = isOver
-    ? ['#FFFFFF', '#FFB3B3', '#FF6B6B', '#E04545', '#6E1A1A']
-    : isWarning
-      ? ['#FFFFFF', '#FFE4B3', '#FFB866', '#E0A030', '#6E4A1A']
-      : ['#FFFFFF', '#B3F0FF', '#66E0F0', '#3FD4E8', '#1A5A6E'];
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${fill.value * 100}%`,
+  }));
 
   return (
     <View style={styles.panel}>
-      {/* Shimmer overlay */}
-      <ShimmerView width={300} height={280} duration={3500} />
+      <ShimmerView width={340} height={260} duration={3500} />
       <LinearGradient
         colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.0)']}
         start={{ x: 0.5, y: 0 }}
@@ -125,121 +97,95 @@ export function FinanceHero({ budgetUsed, spent, saved }: FinanceHeroProps) {
         pointerEvents='none'
       />
 
-      <View style={styles.topRow}>
-        <View>
-          <Text style={styles.label}>SPENT THIS MONTH</Text>
+      {/* Headline */}
+      <View style={styles.head}>
+        <View style={styles.headText}>
+          <Text style={styles.headLabel}>{headLabel}</Text>
           <Counter
-            value={spent}
+            value={headValue}
             prefix='₫'
             separator=','
             duration={timing.reveal.duration}
-            style={[styles.amount, { color: healthColor }]}
+            style={[styles.headAmount, { color: healthColor }]}
           />
         </View>
-        <View style={styles.savedBadge}>
-          <Text style={styles.savedLabel}>Saved</Text>
+        {hasBudget ? (
+          <View
+            style={[styles.pctChip, { backgroundColor: tint(healthColor, '22') }]}
+          >
+            <Text style={[styles.pctText, { color: healthColor }]}>{pct}%</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* 3D jelly budget bar */}
+      <View style={styles.barBlock}>
+        <View style={styles.barTrack}>
+          <Animated.View style={[styles.barFillWrap, fillStyle]}>
+            <LinearGradient
+              colors={barGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.barFillGrad}
+            >
+              <LinearGradient
+                colors={gradients.gloss}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.barGloss}
+                pointerEvents='none'
+              />
+            </LinearGradient>
+          </Animated.View>
+        </View>
+        <View style={styles.barCaptions}>
+          <Text style={styles.barCap}>{formatCompactVND(spent)}</Text>
+          <Text style={styles.barCap}>
+            {hasBudget ? formatCompactVND(budget) : 'Chưa đặt ngân sách'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Stat footer */}
+      <View style={styles.footer}>
+        <View style={styles.statItem}>
+          <IconBadge icon='arrow-bottom-left' color={colors.teal} size={34} iconSize={17} />
+          <Text style={styles.statLabel}>Income</Text>
+          <Text style={[styles.statValue, { color: colors.teal }]}>
+            {formatCompactVND(income)}
+          </Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <IconBadge icon='arrow-top-right' color={colors.red} size={34} iconSize={17} />
+          <Text style={styles.statLabel}>Spent</Text>
+          <Text style={[styles.statValue, { color: colors.red }]}>
+            {formatCompactVND(spent)}
+          </Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <IconBadge icon='piggy-bank' color={colors.green} size={34} iconSize={17} />
+          <Text style={styles.statLabel}>Saved</Text>
           <Text
             style={[
-              styles.savedValue,
+              styles.statValue,
               { color: saved >= 0 ? colors.green : colors.red },
             ]}
           >
-            {formatVND(saved)}
+            {formatCompactVND(saved)}
           </Text>
         </View>
       </View>
 
-      <View style={styles.orbWrap}>
-        <Canvas style={{ width: SIZE, height: SIZE }}>
-          {/* Outer glow halo */}
-          <Circle
-            cx={C}
-            cy={C}
-            r={ORB_R + 12}
-            color={healthColor}
-            opacity={glowOpacity}
-          >
-            <BlurMask blur={40} style='normal' />
-          </Circle>
-
-          {/* Ring track */}
-          <Circle
-            cx={C}
-            cy={C}
-            r={RING_R}
-            style='stroke'
-            strokeWidth={10}
-            color={colors.track}
-          />
-
-          {/* Animated budget arc */}
-          <Group origin={vec(C, C)} transform={[{ rotate: -Math.PI / 2 }]}>
-            <Path
-              path={ringPath}
-              style='stroke'
-              strokeWidth={10}
-              strokeCap='round'
-              start={0}
-              end={fill}
-            >
-              <SweepGradient c={vec(C, C)} colors={ringColors} />
-            </Path>
-          </Group>
-
-          {/* The 3D sphere */}
-          <Circle cx={C} cy={C} r={ORB_R}>
-            <RadialGradient
-              c={vec(C - 18, C - 20)}
-              r={ORB_R * 1.6}
-              colors={orbGradientColors}
-              positions={[0, 0.15, 0.45, 0.7, 1]}
-            />
-          </Circle>
-
-          {/* Rotating sheen */}
-          <Group clip={orbClip}>
-            <Group
-              origin={vec(C, C)}
-              transform={sheenTransform}
-              blendMode='screen'
-              opacity={0.4}
-            >
-              <Circle cx={C} cy={C} r={ORB_R}>
-                <SweepGradient
-                  c={vec(C, C)}
-                  colors={[
-                    'transparent',
-                    colors.teal,
-                    'transparent',
-                    colors.yellow,
-                    'transparent',
-                  ]}
-                />
-              </Circle>
-            </Group>
-          </Group>
-
-          {/* Specular highlight */}
-          <Circle cx={C - 16} cy={C - 18} r={10} color='#FFFFFF' opacity={0.8}>
-            <BlurMask blur={6} style='normal' />
-          </Circle>
-        </Canvas>
-
-        <View style={styles.center} pointerEvents='none'>
-          <Text style={[styles.percent, { color: healthColor }]}>
-            {Math.round(clamped * 100)}%
-          </Text>
-          <Text style={styles.percentLabel}>of budget</Text>
-        </View>
-      </View>
-
-      {/* Status message */}
       <Text style={[styles.status, { color: healthColor }]}>
-        {isOver
-          ? '⚠️ Vượt ngân sách'
-          : isWarning
-            ? '⚡ Sắp đến giới hạn'
-            : '✨ Đúng kế hoạch'}
+        {!hasBudget
+          ? '💡 Đặt ngân sách để theo dõi'
+          : isOver
+            ? '⚠️ Vượt ngân sách'
+            : isWarning
+              ? '⚡ Sắp đến giới hạn'
+              : '✨ Đúng kế hoạch'}
       </Text>
     </View>
   );
@@ -252,6 +198,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 20,
+    paddingTop: 18,
     paddingBottom: 16,
     ...glow(domains.finance.accent, 0.18, 20),
   },
@@ -262,62 +210,107 @@ const styles = StyleSheet.create({
     right: 0,
     height: 60,
   },
-  topRow: {
+  head: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 16,
   },
-  label: {
+  headText: {
+    flex: 1,
+  },
+  headLabel: {
     fontFamily: fonts.medium,
     fontSize: 11,
     color: colors.muted,
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  amount: {
+  headAmount: {
     fontFamily: fonts.monoSemibold,
-    fontSize: 28,
+    fontSize: 32,
     letterSpacing: -1,
+    padding: 0,
   },
-  savedBadge: {
-    alignItems: 'flex-end',
-  },
-  savedLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    color: colors.muted,
-  },
-  savedValue: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 14,
-  },
-  orbWrap: {
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  center: {
-    ...StyleSheet.absoluteFillObject,
+  pctChip: {
+    paddingHorizontal: 14,
+    height: 34,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    top: 50,
   },
-  percent: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 36,
-    letterSpacing: -1,
+  pctText: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 16,
   },
-  percentLabel: {
-    fontFamily: fonts.regular,
+  barBlock: {
+    marginTop: 14,
+  },
+  barTrack: {
+    height: 20,
+    borderRadius: radius.pill,
+    backgroundColor: colors.track,
+    borderWidth: 2,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  barFillWrap: {
+    height: '100%',
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  barFillGrad: {
+    flex: 1,
+    borderRadius: radius.pill,
+  },
+  barGloss: {
+    position: 'absolute',
+    top: 1,
+    left: 3,
+    right: 3,
+    height: '46%',
+    borderRadius: radius.pill,
+  },
+  barCaptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  barCap: {
+    fontFamily: fonts.monoMedium,
     fontSize: 11,
     color: colors.muted,
-    marginTop: 2,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 18,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  statLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 10.5,
+    color: colors.muted,
+  },
+  statValue: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 13,
+  },
+  statDivider: {
+    width: 1,
+    height: 38,
+    backgroundColor: colors.border,
   },
   status: {
     fontFamily: fonts.displayMedium,
     fontSize: 13,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 14,
   },
 });

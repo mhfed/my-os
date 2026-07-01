@@ -10,15 +10,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { base3D, colors, elevation, radius } from '@/theme/colors';
+import { base3D, colors, elevation, radius, resolveAccent } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GameButton } from '@/components/game';
 import { PressableScale } from '@/components/motion';
 import { useFinanceStore } from '@/store/financeStore';
 import { monthLabel } from '@/utils/date';
-
-import { resolveAccent } from './CategoryDonut';
 
 interface SetBudgetModalProps {
   visible: boolean;

@@ -120,89 +120,27 @@ export function FinanceScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Hero — Finance orb visualization */}
+        {/* Hero — budget dashboard */}
         <AnimatedCard index={1}>
           <FinanceHero
             budgetUsed={overview.budgetUsed}
             spent={overview.spent}
             saved={overview.saved}
+            income={overview.income}
+            budget={overview.budget}
+            remaining={overview.remaining}
           />
         </AnimatedCard>
 
-        {/* Quick stats */}
-        <AnimatedCard index={2} style={styles.section}>
-          <GamePanel
-            title='Overview'
-            headerRight={
-              <View style={styles.countChip}>
-                <Text style={styles.countText}>
-                  {Math.round(overview.budgetUsed * 100)}%
-                </Text>
-              </View>
-            }
-          >
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    { backgroundColor: 'rgba(63,212,232,0.15)' },
-                  ]}
-                >
-                  <Icon
-                    name='arrow-bottom-left'
-                    size={18}
-                    color={colors.teal}
-                  />
-                </View>
-                <Text style={styles.statLabel}>Income</Text>
-                <Text style={[styles.statValue, { color: colors.teal }]}>
-                  {formatCompactVND(overview.income)}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    { backgroundColor: 'rgba(255,90,110,0.15)' },
-                  ]}
-                >
-                  <Icon name='arrow-top-right' size={18} color={colors.red} />
-                </View>
-                <Text style={styles.statLabel}>Spent</Text>
-                <Text style={[styles.statValue, { color: colors.red }]}>
-                  {formatCompactVND(overview.spent)}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    { backgroundColor: 'rgba(111,208,58,0.15)' },
-                  ]}
-                >
-                  <Icon name='piggy-bank' size={18} color={colors.green} />
-                </View>
-                <Text style={styles.statLabel}>Saved</Text>
-                <Text style={[styles.statValue, { color: colors.green }]}>
-                  {formatCompactVND(overview.saved)}
-                </Text>
-              </View>
-            </View>
-          </GamePanel>
-        </AnimatedCard>
-
         {/* Net Worth */}
-        <AnimatedCard index={3} style={styles.section}>
+        <AnimatedCard index={2} style={styles.section}>
           <GamePanel title='Net Worth'>
             <NetWorthWidget />
           </GamePanel>
         </AnimatedCard>
 
         {/* Savings Goals */}
-        <AnimatedCard index={4} style={styles.section}>
+        <AnimatedCard index={3} style={styles.section}>
           <GamePanel
             title='Savings Goals'
             headerRight={
@@ -219,7 +157,7 @@ export function FinanceScreen() {
         </AnimatedCard>
 
         {/* Debt Summary */}
-        <AnimatedCard index={5} style={styles.section}>
+        <AnimatedCard index={4} style={styles.section}>
           <GamePanel
             title='Debt Ledger'
             headerRight={
@@ -237,14 +175,14 @@ export function FinanceScreen() {
         </AnimatedCard>
 
         {/* Monthly Trend */}
-        <AnimatedCard index={6} style={styles.section}>
+        <AnimatedCard index={5} style={styles.section}>
           <GamePanel title='Monthly Trend'>
             <MonthlyTrendChart data={trends} />
           </GamePanel>
         </AnimatedCard>
 
         {/* Category Breakdown */}
-        <AnimatedCard index={7} style={styles.section}>
+        <AnimatedCard index={6} style={styles.section}>
           <GamePanel
             title='Categories'
             headerRight={
@@ -258,7 +196,7 @@ export function FinanceScreen() {
         </AnimatedCard>
 
         {/* Recent Transactions */}
-        <AnimatedCard index={8} style={styles.section}>
+        <AnimatedCard index={7} style={styles.section}>
           <GamePanel
             title='Recent Transactions'
             headerRight={
@@ -414,38 +352,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold,
     fontSize: 12,
     color: colors.white,
-  },
-
-  // --- Stats row ---
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-  },
-  statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.muted,
-  },
-  statValue: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 14,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.border,
   },
 
   // --- FAB ---
