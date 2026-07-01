@@ -35,7 +35,6 @@ export function GamePanel({
       style={[
         styles.panel,
         { backgroundColor: alt ? colors.cardAlt : colors.card },
-        !flush && styles.padded,
         style,
       ]}
     >
@@ -45,10 +44,17 @@ export function GamePanel({
           {headerRight}
         </View>
       ) : null}
-      {children}
+      {/* The header is always inset by INSET; only the body follows `flush`, so
+          edge-to-edge scrollers bleed to the edges while headers stay aligned.
+          A titled body skips its own top inset (the header supplies the gap). */}
+      <View style={flush ? undefined : title ? styles.body : styles.padded}>
+        {children}
+      </View>
     </View>
   );
 }
+
+const INSET = 16;
 
 const styles = StyleSheet.create({
   panel: {
@@ -58,12 +64,18 @@ const styles = StyleSheet.create({
     ...elevation.panel,
   },
   padded: {
-    padding: 16,
+    padding: INSET,
+  },
+  body: {
+    paddingHorizontal: INSET,
+    paddingBottom: INSET,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: INSET,
+    paddingHorizontal: INSET,
     marginBottom: 12,
   },
   title: {
