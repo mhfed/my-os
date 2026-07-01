@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
 interface SectionHeaderProps {
@@ -17,18 +17,30 @@ export function SectionHeader({ label, count, tone }: SectionHeaderProps) {
     <View style={styles.row}>
       <View
         style={[
-          styles.dot,
-          { backgroundColor: isOverdue ? colors.red : colors.purple },
-        ]}
-      />
-      <Text
-        style={[
-          styles.label,
-          isOverdue ? styles.labelOverdue : styles.labelToday,
+          styles.badge,
+          {
+            backgroundColor: isOverdue
+              ? tint(colors.red, '22')
+              : tint(colors.blue, '22'),
+            borderColor: isOverdue ? tint(colors.red, '44') : tint(colors.blue, '44'),
+          },
         ]}
       >
-        {label}
-      </Text>
+        <View
+          style={[
+            styles.dot,
+            { backgroundColor: isOverdue ? colors.red : colors.blue },
+          ]}
+        />
+        <Text
+          style={[
+            styles.label,
+            isOverdue ? styles.labelOverdue : styles.labelToday,
+          ]}
+        >
+          {label}
+        </Text>
+      </View>
       <Text style={styles.count}>{count}</Text>
     </View>
   );
@@ -41,21 +53,30 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
   dot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
   },
   label: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
+    fontFamily: fonts.displayBold,
+    fontSize: 12,
   },
   labelOverdue: {
     color: colors.red,
     letterSpacing: 0.3,
   },
   labelToday: {
-    color: colors.text,
+    color: colors.blue,
     letterSpacing: 0.3,
   },
   count: {

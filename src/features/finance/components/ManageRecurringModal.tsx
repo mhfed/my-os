@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 import { base3D, colors, elevation, radius, tint } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
@@ -83,6 +84,7 @@ export function ManageRecurringModal({
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
+          <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -286,27 +288,28 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: 'rgba(20,29,48,0.34)',
   },
   backdropFill: {
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.92)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderColor: 'rgba(255,255,255,0.96)',
     ...elevation.panel,
     paddingHorizontal: 20,
     paddingTop: 10,
     height: '68%',
+    overflow: 'hidden',
   },
   handle: {
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(110,122,150,0.45)',
     alignSelf: 'center',
     marginBottom: 10,
   },
@@ -317,7 +320,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(200,213,238,0.8)',
   },
   backBtn: {
     width: 36,

@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import { colors, elevation, radius, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
@@ -185,7 +186,8 @@ export function AddTransactionSheet({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.kav}
         >
-          <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}> 
+            <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
             <View style={styles.handle} />
 
             <View style={styles.headerRow}>
@@ -422,28 +424,29 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: 'rgba(20,29,48,0.34)',
   },
   kav: {
     width: '100%',
   },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.92)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderColor: 'rgba(255,255,255,0.96)',
     ...elevation.panel,
     paddingHorizontal: 20,
     paddingTop: 10,
     maxHeight: '88%',
+    overflow: 'hidden',
   },
   handle: {
     alignSelf: 'center',
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(110,122,150,0.45)',
     marginBottom: 10,
   },
   headerRow: {
@@ -460,7 +463,7 @@ const styles = StyleSheet.create({
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: colors.track,
@@ -541,7 +544,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginTop: 12,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     borderWidth: 2,
     borderColor: colors.track,
     borderRadius: radius.lg,
@@ -571,7 +574,7 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     borderWidth: 2,
     borderColor: colors.track,
     borderRadius: radius.pill,
@@ -597,7 +600,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     borderWidth: 2,
     borderColor: colors.track,
     borderRadius: radius.lg,

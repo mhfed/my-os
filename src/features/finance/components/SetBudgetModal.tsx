@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import { base3D, colors, elevation, radius, resolveAccent } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
@@ -65,7 +66,8 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
 
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}> 
+          <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -157,23 +159,24 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(74,46,18,0.72)',
+    backgroundColor: 'rgba(20,29,48,0.34)',
   },
   sheet: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(244,248,255,0.92)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderColor: 'rgba(255,255,255,0.96)',
     paddingHorizontal: 22,
     paddingTop: 12,
     ...elevation.panel,
+    overflow: 'hidden',
   },
   handle: {
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(110,122,150,0.45)',
     alignSelf: 'center',
     marginBottom: 14,
   },
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: colors.track,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.86)',
   },
   categoryText: {
     fontFamily: fonts.semibold,
@@ -232,7 +235,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: colors.track,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     paddingVertical: 13,
     paddingHorizontal: 20,
     fontFamily: fonts.monoSemibold,
@@ -253,7 +256,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 2,
     borderColor: colors.track,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.86)',
   },
   cancelText: {
     fontFamily: fonts.displayBold,

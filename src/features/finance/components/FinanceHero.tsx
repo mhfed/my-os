@@ -88,6 +88,14 @@ export function FinanceHero({
 
   return (
     <View style={styles.panel}>
+      <LinearGradient
+        colors={['rgba(30,202,211,0.16)', 'rgba(79,140,255,0.04)']}
+        start={{ x: 0.08, y: 0.08 }}
+        end={{ x: 0.92, y: 1 }}
+        style={styles.aura}
+        pointerEvents='none'
+      />
+      <View style={styles.halo} pointerEvents='none' />
       <ShimmerView width={340} height={260} duration={3500} />
       <LinearGradient
         colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.0)']}
@@ -202,6 +210,18 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 16,
     ...glow(domains.finance.accent, 0.18, 20),
+  },
+  aura: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  halo: {
+    position: 'absolute',
+    top: 18,
+    right: 18,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(30,202,211,0.1)',
   },
   gloss: {
     position: 'absolute',

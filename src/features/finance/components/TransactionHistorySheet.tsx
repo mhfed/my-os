@@ -9,12 +9,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, radius } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
 import { GameIconButton } from '@/components/game';
+import { SkiaBackground } from '@/components/skia';
 import { useFinanceStore } from '@/store/financeStore';
 import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
@@ -121,6 +123,14 @@ export function TransactionHistorySheet({
     >
       <EditTransactionSheet txn={editTxn} onClose={() => setEditTxn(null)} />
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <SkiaBackground domain='finance' intensity={0.24} />
+        <LinearGradient
+          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Lịch sử giao dịch</Text>
@@ -216,6 +226,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -236,7 +249,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginHorizontal: 20,
     marginBottom: 12,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.92)',
     borderWidth: 2,
     borderColor: colors.track,
     borderRadius: radius.pill,
@@ -261,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 2,
     borderColor: colors.track,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(252,253,255,0.86)',
   },
   filterChipActive: {
     backgroundColor: colors.purple,

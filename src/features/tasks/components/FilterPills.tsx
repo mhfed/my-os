@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { FILTERS } from '@/store/tasksStore';
 import type { TaskFilter } from '@/types/task';
@@ -56,14 +56,15 @@ const styles = StyleSheet.create({
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 11,
+    borderRadius: 14,
+    borderWidth: 2,
   },
   pillActive: {
-    backgroundColor: colors.text,
+    backgroundColor: tint(colors.blue, '2A'),
+    borderColor: colors.blue,
   },
   pillInactive: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
+    backgroundColor: 'rgba(252,253,255,0.82)',
     borderColor: colors.border,
   },
   label: {
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   labelActive: {
-    color: colors.screenBg,
+    color: colors.blue,
   },
   labelInactive: {
     color: colors.muted,

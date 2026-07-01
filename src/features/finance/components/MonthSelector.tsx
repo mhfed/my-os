@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { base3D, colors, elevation, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
@@ -24,6 +25,13 @@ export function MonthSelector({
 }: MonthSelectorProps) {
   return (
     <AnimatedCard index={0} style={styles.header}>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={styles.headerGlow}
+        pointerEvents='none'
+      />
       <Text style={styles.title}>Finance</Text>
 
       <View style={styles.rightGroup}>
@@ -83,6 +91,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingHorizontal: 18,
     marginBottom: 12,
+    overflow: 'hidden',
+  },
+  headerGlow: {
+    ...StyleSheet.absoluteFillObject,
   },
   title: {
     fontFamily: fonts.displayBold,
@@ -100,7 +112,7 @@ const styles = StyleSheet.create({
     height: 36,
     paddingHorizontal: 14,
     borderRadius: radius.pill,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.86)',
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
@@ -116,9 +128,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(252,253,255,0.9)',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderColor: 'rgba(255,255,255,0.96)',
     borderRadius: radius.pill,
     paddingVertical: 4,
     paddingHorizontal: 6,
