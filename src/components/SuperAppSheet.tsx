@@ -26,9 +26,10 @@ import { Icon, type IconName } from '@/theme/icons';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const GRID_PADDING = 20;
-const GRID_GAP = 10;
-const ITEM_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const SHEET_PADDING = 16;
+const ITEM_GAP = 10;
+const ITEM_MIN_WIDTH = 100; // Minimum width for flex items
 
 interface ItemConfig {
   key: SuperAppItemKey;
@@ -367,6 +368,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.85)',
     ...elevation.panel,
     maxHeight: '82%',
+    justifyContent: 'flex-end',
   },
   handle: {
     width: 44,
@@ -406,6 +408,8 @@ const styles = StyleSheet.create({
     ...textShadow.button,
   },
   scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
     paddingBottom: 16,
   },
 
@@ -413,19 +417,24 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: GRID_PADDING,
-    gap: GRID_GAP,
+    paddingHorizontal: SHEET_PADDING,
+    gap: ITEM_GAP,
     paddingTop: 12,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   gridItem: {
-    width: ITEM_WIDTH,
+    minWidth: ITEM_MIN_WIDTH,
+    flex: 1,
+    aspectRatio: 1.1,
     alignItems: 'center',
-    paddingVertical: 16,
+    justifyContent: 'center',
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.9)',
     gap: 8,
+    padding: 12,
     ...elevation.card,
   },
   gridItemPressed: {
