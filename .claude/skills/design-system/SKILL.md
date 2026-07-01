@@ -95,6 +95,7 @@ All tokens live in `src/theme/`. Import via the `@/theme/*` alias.
 Two-stop arrays consumed by `expo-linear-gradient`:
 `backdrop`, `warm`, `green` `['#8FE34A','#5BC02E']`, `purple` `['#9B7BFF','#7C5BE6']`,
 `gold` `['#FFE27A','#FFB23F']`, `gem` `['#7DE9F7','#3FD4E8']`, `red` `['#FF8A9B','#FF5A6E']`,
+`blue` `['#7DA8FF','#5B8DEF']`, `pink` `['#FF9ECB','#FF7EB6']`,
 `gloss` `['rgba(255,255,255,0.55)','rgba(255,255,255,0.0)']`, `spend`.
 
 - Use a domain/accent gradient for the **cap** of a button.

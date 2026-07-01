@@ -66,6 +66,10 @@ export const gradients = {
   gem: ['#7DE9F7', '#3FD4E8'] as const,
   // danger
   red: ['#FF8A9B', '#FF5A6E'] as const,
+  // sky / tasks
+  blue: ['#7DA8FF', '#5B8DEF'] as const,
+  // candy pink
+  pink: ['#FF9ECB', '#FF7EB6'] as const,
   // glossy highlight overlay (top sheen on jelly buttons)
   gloss: ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.0)'] as const,
   // progress fill
