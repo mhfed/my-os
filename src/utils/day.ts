@@ -50,3 +50,12 @@ export function weekdayLetter(key: string): string {
   const at = startOfDay(key);
   return ['S', 'M', 'T', 'W', 'T', 'F', 'S'][new Date(at).getDay()];
 }
+
+/** Time of day greeting based on current hour. */
+export function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  if (hour >= 17 && hour < 21) return 'Good evening';
+  return 'Good night';
+}

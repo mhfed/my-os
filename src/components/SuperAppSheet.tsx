@@ -11,14 +11,19 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, tint } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
-import { Icon, type IconName } from '@/theme/icons';
 import {
-  useSettingsStore,
-  type SuperAppItemKey,
-} from '@/store/settingsStore';
+  colors,
+  gradients,
+  tint,
+  radius,
+  elevation,
+  base3D,
+} from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
+import { Icon, type IconName } from '@/theme/icons';
+import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_PADDING = 20;
@@ -199,9 +204,7 @@ export function SuperAppSheet() {
             style={styles.editBtn}
             onPress={() => setEditMode(!editMode)}
           >
-            <Text style={styles.editBtnText}>
-              {editMode ? 'Done' : 'Edit'}
-            </Text>
+            <Text style={styles.editBtnText}>{editMode ? 'Done' : 'Edit'}</Text>
           </Pressable>
         </View>
 
@@ -231,13 +234,19 @@ export function SuperAppSheet() {
                       ]}
                       onPress={() => handleItemPress(item)}
                     >
-                      <View
-                        style={[
-                          styles.gridIcon,
-                          { backgroundColor: tint(item.color, '26') },
-                        ]}
-                      >
-                        <Icon name={item.icon} size={28} color={item.color} />
+                      <View style={styles.gridIconWrap}>
+                        <LinearGradient
+                          colors={[item.color, item.color]}
+                          start={{ x: 0.3, y: 0 }}
+                          end={{ x: 0.7, y: 1 }}
+                          style={styles.gridIcon}
+                        >
+                          <Icon
+                            name={item.icon}
+                            size={26}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
                       </View>
                       <Text style={styles.gridLabel} numberOfLines={1}>
                         {item.label}
@@ -263,20 +272,20 @@ export function SuperAppSheet() {
                       ]}
                       onPress={() => togglePinned(item.key)}
                     >
-                      <View
-                        style={[
-                          styles.editIcon,
-                          { backgroundColor: tint(item.color) },
-                        ]}
-                      >
-                        <Icon name={item.icon} size={18} color={item.color} />
+                      <View style={styles.editIconWrap}>
+                        <LinearGradient
+                          colors={[item.color, item.color]}
+                          style={styles.editIcon}
+                        >
+                          <Icon
+                            name={item.icon}
+                            size={18}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
                       </View>
                       <Text style={styles.editLabel}>{item.label}</Text>
-                      <Icon
-                        name='minus-circle'
-                        size={22}
-                        color={colors.red}
-                      />
+                      <Icon name='minus-circle' size={24} color={colors.red} />
                     </Pressable>
                   ))}
                 </>
@@ -297,20 +306,20 @@ export function SuperAppSheet() {
                       ]}
                       onPress={() => togglePinned(item.key)}
                     >
-                      <View
-                        style={[
-                          styles.editIcon,
-                          { backgroundColor: tint(item.color) },
-                        ]}
-                      >
-                        <Icon name={item.icon} size={18} color={item.color} />
+                      <View style={styles.editIconWrap}>
+                        <LinearGradient
+                          colors={[item.color, item.color]}
+                          style={styles.editIcon}
+                        >
+                          <Icon
+                            name={item.icon}
+                            size={18}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
                       </View>
                       <Text style={styles.editLabel}>{item.label}</Text>
-                      <Icon
-                        name='plus-circle-outline'
-                        size={22}
-                        color={colors.teal}
-                      />
+                      <Icon name='plus-circle' size={24} color={colors.green} />
                     </Pressable>
                   ))}
                 </>
@@ -322,7 +331,10 @@ export function SuperAppSheet() {
         {/* Footer: navigate to More settings */}
         {!editMode && (
           <Pressable
-            style={({ pressed }) => [styles.footer, pressed && { opacity: 0.6 }]}
+            style={({ pressed }) => [
+              styles.footer,
+              pressed && { opacity: 0.6 },
+            ]}
             onPress={() => {
               handleClose();
               setTimeout(() => router.push('/more' as any), 50);
@@ -341,57 +353,60 @@ export function SuperAppSheet() {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(5,5,7,0.78)',
+    backgroundColor: 'rgba(74,46,18,0.72)',
   },
   sheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
+    ...elevation.panel,
     maxHeight: '82%',
   },
   handle: {
-    width: 38,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
     alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 4,
+    marginTop: 12,
+    marginBottom: 6,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 22,
-    paddingVertical: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   title: {
-    fontFamily: fonts.semibold,
-    fontSize: 18,
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
     color: colors.text,
-    letterSpacing: -0.3,
+    ...textShadow.emboss,
   },
   editBtn: {
-    backgroundColor: colors.track,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
+    backgroundColor: colors.purple,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    ...base3D(colors.purpleDeep, 3),
   },
   editBtnText: {
     fontFamily: fonts.semibold,
     fontSize: 13,
-    color: colors.purple,
+    color: colors.textOnDark,
+    ...textShadow.button,
   },
   scrollContent: {
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
 
   /* Grid (normal mode) */
@@ -400,32 +415,39 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingHorizontal: GRID_PADDING,
     gap: GRID_GAP,
-    paddingTop: 4,
+    paddingTop: 12,
   },
   gridItem: {
     width: ITEM_WIDTH,
     alignItems: 'center',
-    paddingVertical: 18,
-    backgroundColor: colors.track,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 10,
+    paddingVertical: 16,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    gap: 8,
+    ...elevation.card,
   },
   gridItemPressed: {
-    opacity: 0.65,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.75,
+    transform: [{ scale: 0.95 }],
+  },
+  gridIconWrap: {
+    ...base3D(colors.purpleDeep, 3),
+    borderRadius: radius.md,
   },
   gridIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   gridLabel: {
     fontFamily: fonts.semibold,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.text,
     textAlign: 'center',
   },
@@ -433,12 +455,12 @@ const styles = StyleSheet.create({
   /* Empty state */
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 48,
     gap: 12,
   },
   emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
+    fontFamily: fonts.medium,
+    fontSize: 15,
     color: colors.muted,
     textAlign: 'center',
   },
@@ -447,55 +469,65 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.track,
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 10,
+    borderTopWidth: 2,
+    borderTopColor: colors.border,
+    backgroundColor: colors.card,
+    marginTop: 8,
   },
   footerText: {
     flex: 1,
     fontFamily: fonts.medium,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.muted,
   },
 
   /* Edit mode */
   editList: {
     paddingHorizontal: 20,
-    paddingTop: 4,
+    paddingTop: 12,
   },
   editSectionLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 11,
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
     color: colors.muted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: 10,
+    ...textShadow.emboss,
   },
   editRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.track,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 8,
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.md,
+    padding: 14,
+    marginBottom: 10,
+    ...elevation.card,
+  },
+  editIconWrap: {
+    ...base3D(colors.purpleDeep, 2),
+    borderRadius: radius.sm,
   },
   editIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   editLabel: {
     flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 15,
+    fontFamily: fonts.semibold,
+    fontSize: 16,
     color: colors.text,
   },
 });

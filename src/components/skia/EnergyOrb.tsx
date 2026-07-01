@@ -66,6 +66,7 @@ export function EnergyOrb({ score, focus, body, mind }: EnergyOrbProps) {
 
   const fill = useSharedValue(reduce ? clamped / 100 : 0);
   const spin = useSharedValue(0);
+  const glow = useSharedValue(0);
 
   useEffect(() => {
     if (reduce) {
@@ -73,10 +74,24 @@ export function EnergyOrb({ score, focus, body, mind }: EnergyOrbProps) {
       return;
     }
     fill.value = withDelay(180, withTiming(clamped / 100, timing.reveal));
-    spin.value = withRepeat(withTiming(1, { duration: 9000, easing: Easing.linear }), -1, false);
-  }, [clamped, reduce, fill, spin]);
+    spin.value = withRepeat(
+      withTiming(1, { duration: 9000, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    // Glow pulse animation - subtle breathing effect
+    glow.value = withRepeat(
+      withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+  }, [clamped, reduce, fill, spin, glow]);
 
-  const sheenTransform = useDerivedValue(() => [{ rotate: spin.value * TWO_PI }]);
+  const sheenTransform = useDerivedValue(() => [
+    { rotate: spin.value * TWO_PI },
+  ]);
+
+  const glowOpacity = useDerivedValue(() => 0.35 + glow.value * 0.25);
 
   const legend = [
     { label: 'Focus', value: focus, color: colors.purple },
@@ -88,25 +103,51 @@ export function EnergyOrb({ score, focus, body, mind }: EnergyOrbProps) {
     <View style={styles.wrap}>
       <View style={styles.orbWrap}>
         <Canvas style={{ width: SIZE, height: SIZE }}>
+          {/* animated outer glow halo - breathing effect */}
+          <Circle
+            cx={C}
+            cy={C}
+            r={ORB_R + 16}
+            color={domains.today.accent}
+            opacity={glowOpacity}
+          >
+            <BlurMask blur={48} style='normal' />
+          </Circle>
           {/* soft outer halo */}
-          <Circle cx={C} cy={C} r={ORB_R + 8} color={domains.today.accent} opacity={0.45}>
-            <BlurMask blur={32} style="normal" />
+          <Circle
+            cx={C}
+            cy={C}
+            r={ORB_R + 8}
+            color={domains.today.accent}
+            opacity={0.45}
+          >
+            <BlurMask blur={32} style='normal' />
           </Circle>
 
           {/* ring track */}
-          <Circle cx={C} cy={C} r={RING_R} style="stroke" strokeWidth={12} color={colors.track} />
+          <Circle
+            cx={C}
+            cy={C}
+            r={RING_R}
+            style='stroke'
+            strokeWidth={12}
+            color={colors.track}
+          />
 
           {/* animated score arc, started from 12 o'clock going clockwise */}
           <Group origin={vec(C, C)} transform={[{ rotate: -Math.PI / 2 }]}>
             <Path
               path={ringPath}
-              style="stroke"
+              style='stroke'
               strokeWidth={12}
-              strokeCap="round"
+              strokeCap='round'
               start={0}
               end={fill}
             >
-              <SweepGradient c={vec(C, C)} colors={[colors.purple, colors.teal, colors.purple]} />
+              <SweepGradient
+                c={vec(C, C)}
+                colors={[colors.purple, colors.teal, colors.purple]}
+              />
             </Path>
           </Group>
 
@@ -122,24 +163,39 @@ export function EnergyOrb({ score, focus, body, mind }: EnergyOrbProps) {
 
           {/* rotating aurora sheen, clipped to the sphere, screen-blended */}
           <Group clip={orbClip}>
-            <Group origin={vec(C, C)} transform={sheenTransform} blendMode="screen" opacity={0.5}>
+            <Group
+              origin={vec(C, C)}
+              transform={sheenTransform}
+              blendMode='screen'
+              opacity={0.5}
+            >
               <Circle cx={C} cy={C} r={ORB_R}>
                 <SweepGradient
                   c={vec(C, C)}
-                  colors={['transparent', colors.teal, 'transparent', colors.red, 'transparent']}
+                  colors={[
+                    'transparent',
+                    colors.teal,
+                    'transparent',
+                    colors.red,
+                    'transparent',
+                  ]}
                 />
               </Circle>
             </Group>
           </Group>
 
           {/* specular highlight */}
-          <Circle cx={C - 20} cy={C - 24} r={13} color="#FFFFFF" opacity={0.85}>
-            <BlurMask blur={7} style="normal" />
+          <Circle cx={C - 20} cy={C - 24} r={13} color='#FFFFFF' opacity={0.85}>
+            <BlurMask blur={7} style='normal' />
           </Circle>
         </Canvas>
 
-        <View style={styles.center} pointerEvents="none">
-          <Counter value={score} duration={timing.reveal.duration} style={styles.score} />
+        <View style={styles.center} pointerEvents='none'>
+          <Counter
+            value={score}
+            duration={timing.reveal.duration}
+            style={styles.score}
+          />
           <Text style={styles.scoreLabel}>TODAY&apos;S SCORE</Text>
         </View>
       </View>
@@ -160,8 +216,17 @@ export function EnergyOrb({ score, focus, body, mind }: EnergyOrbProps) {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', marginBottom: 34 },
-  orbWrap: { width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' },
-  center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  orbWrap: {
+    width: SIZE,
+    height: SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   score: {
     fontFamily: fonts.monoSemibold,
     fontSize: 56,

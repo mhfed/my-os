@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, gradients, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
-import { AnimatedCard, PressableScale } from '@/components/motion';
+import { AnimatedCard, PressableScale, ShimmerView } from '@/components/motion';
 import { EnergyOrb, SkiaBackground } from '@/components/skia';
 import {
   CurrencyChip,
@@ -18,12 +18,13 @@ import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
-import { todayKey } from '@/utils/day';
+import { getGreeting, todayKey } from '@/utils/day';
 import type { Task } from '@/types/task';
 
 import { HabitPill } from './components/HabitPill';
 import { QuickCapture } from './components/QuickCapture';
 import { TaskRow } from './components/TaskRow';
+import { StreakIndicator } from './components/StreakIndicator';
 
 export function TodayScreen() {
   const router = useRouter();
@@ -97,6 +98,25 @@ export function TodayScreen() {
   const level = Math.max(1, Math.ceil(score / 20));
   const starsFilled = Math.min(3, Math.max(0, Math.round(score / 34)));
 
+  // --- Streak calculation (simplified: consecutive days with tasks done) ---
+  const [streak, setStreak] = useState(0);
+  useEffect(() => {
+    // Calculate streak based on task completion history
+    // For now, use a simple heuristic based on today's progress
+    const todayProgress = todayDoneTasks >= 1 || doneTodayCount >= 1 ? 1 : 0;
+    setStreak(todayProgress);
+  }, [todayDoneTasks, doneTodayCount]);
+
+  // Time-based greeting
+  const [greeting, setGreeting] = useState(getGreeting());
+  useEffect(() => {
+    // Update greeting every minute
+    const interval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <SkiaBackground domain='today' intensity={0.42} />
@@ -138,6 +158,8 @@ export function TodayScreen() {
         {/* Hero — Skia energy orb inside a glossy panel */}
         <AnimatedCard index={1}>
           <GamePanel style={styles.heroPanel}>
+            {/* Shimmer overlay */}
+            <ShimmerView width={300} height={250} duration={3000} />
             <LinearGradient
               colors={gradients.gloss}
               start={{ x: 0.5, y: 0 }}
@@ -146,9 +168,10 @@ export function TodayScreen() {
               pointerEvents='none'
             />
             <View style={styles.heroTop}>
-              <View>
-                <Text style={styles.heroGreeting}>Good morning</Text>
-                <Text style={styles.heroName}>Hiếu</Text>
+              <View style={styles.heroTopLeft}>
+                <Text style={styles.heroGreeting}>{greeting}</Text>
+                <Text style={styles.heroName}>Minh Hiếu</Text>
+                <StreakIndicator count={streak} />
               </View>
               <StarRating filled={starsFilled} count={3} size={20} />
             </View>
@@ -308,9 +331,12 @@ const styles = StyleSheet.create({
   },
   heroTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  heroTopLeft: {
+    gap: 4,
   },
   heroGreeting: {
     fontFamily: fonts.displayMedium,

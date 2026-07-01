@@ -6,3 +6,4 @@ export { PressableScale } from './PressableScale';
 export { AnimatedCard } from './AnimatedCard';
 export { Counter } from './Counter';
 export { GlowOrb } from './GlowOrb';
+export { ShimmerView } from './ShimmerView';
