@@ -2,30 +2,37 @@ import { useState } from 'react';
 import {
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, tint } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
-import { useFinanceStore } from '@/store/financeStore';
+import { base3D, colors, elevation, radius } from '@/theme/colors';
+import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { GameButton } from '@/components/game';
+import { PressableScale } from '@/components/motion';
+import { useFinanceStore } from '@/store/financeStore';
 import { monthLabel } from '@/utils/date';
+
+import { resolveAccent } from './CategoryDonut';
 
 interface SetBudgetModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+/** Bottom-sheet modal to set a monthly budget cap for a category. */
 export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
   const categories = useFinanceStore((s) =>
     s.categories.filter((c) => c.type === 'expense'),
   );
   const setBudget = useFinanceStore((s) => s.setBudget);
   const activeMonth = useFinanceStore((s) => s.activeMonth);
+  const insets = useSafeAreaInsets();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -58,48 +65,55 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
       onRequestClose={handleClose}
     >
       <View style={styles.backdrop}>
-        <Pressable style={styles.backdropFill} onPress={handleClose} />
-        <View style={styles.sheet}>
-          <View style={styles.grabber} />
-          <Text style={styles.heading}>
-            Set Budget for {monthLabel(activeMonth)}
-          </Text>
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+          <View style={styles.handle} />
+
+          <View style={styles.header}>
+            <Text style={styles.title}>Set Budget</Text>
+            <Text style={styles.subtitle}>for {monthLabel(activeMonth)}</Text>
+          </View>
 
           <Text style={styles.fieldLabel}>CATEGORY</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoryScroll}
-            contentContainerStyle={{ gap: 8 }}
+            contentContainerStyle={styles.categoryScrollContent}
           >
             {categories.map((c) => {
               const isActive = c.id === selectedCategoryId;
+              const { face, deep } = resolveAccent(c.color);
               return (
-                <Pressable
+                <PressableScale
                   key={c.id}
                   onPress={() => setSelectedCategoryId(c.id)}
+                  haptic='selection'
                   style={[
                     styles.categoryPill,
                     isActive && {
-                      backgroundColor: tint(c.color),
-                      borderColor: c.color,
+                      backgroundColor: face,
+                      borderColor: deep,
+                      ...base3D(deep, 3),
                     },
                   ]}
                 >
                   <Icon
                     name={c.icon as any}
                     size={14}
-                    color={isActive ? c.color : colors.text}
+                    color={isActive ? colors.white : colors.text}
                   />
                   <Text
                     style={[
                       styles.categoryText,
-                      isActive && { color: c.color },
+                      isActive && styles.categoryTextActive,
                     ]}
+                    numberOfLines={1}
                   >
                     {c.name}
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </ScrollView>
@@ -116,16 +130,24 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
           />
 
           <View style={styles.actions}>
-            <Pressable style={styles.cancelButton} onPress={handleClose}>
+            <PressableScale
+              style={styles.cancelButton}
+              onPress={handleClose}
+              haptic='light'
+            >
               <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+            </PressableScale>
+            <GameButton
+              label='Save'
+              variant='purple'
+              size='md'
               onPress={handleSave}
               disabled={!canSave}
-            >
-              <Text style={styles.saveText}>Save</Text>
-            </Pressable>
+              style={{
+                ...styles.saveButton,
+                ...(!canSave ? styles.saveButtonDisabled : null),
+              }}
+            />
           </View>
         </View>
       </View>
@@ -137,45 +159,56 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  backdropFill: {
-    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(74,46,18,0.72)',
   },
   sheet: {
-    backgroundColor: colors.card,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.cardAlt,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
     paddingHorizontal: 22,
     paddingTop: 12,
-    paddingBottom: 34,
+    ...elevation.panel,
   },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+  handle: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
-    marginBottom: 16,
+    alignSelf: 'center',
+    marginBottom: 14,
   },
-  heading: {
-    fontFamily: fonts.semibold,
-    fontSize: 20,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    marginBottom: 4,
+  },
+  title: {
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
     color: colors.text,
-    letterSpacing: -0.3,
+    ...textShadow.emboss,
+  },
+  subtitle: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.muted,
   },
   fieldLabel: {
     fontFamily: fonts.monoSemibold,
     fontSize: 11,
     color: colors.muted,
     letterSpacing: 0.5,
-    marginTop: 20,
+    marginTop: 18,
     marginBottom: 10,
   },
   categoryScroll: {
-    maxHeight: 40,
+    maxHeight: 44,
+  },
+  categoryScrollContent: {
+    gap: 8,
   },
   categoryPill: {
     flexDirection: 'row',
@@ -183,59 +216,56 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.screenBg,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
+    backgroundColor: colors.card,
   },
   categoryText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.text,
   },
+  categoryTextActive: {
+    color: colors.white,
+    ...textShadow.button,
+  },
   input: {
-    backgroundColor: colors.screenBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
+    backgroundColor: colors.white,
     paddingVertical: 13,
-    paddingHorizontal: 14,
+    paddingHorizontal: 20,
     fontFamily: fonts.monoSemibold,
     fontSize: 18,
-    color: colors.purple,
+    color: colors.text,
   },
   actions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    marginTop: 26,
+    marginTop: 24,
   },
   cancelButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.screenBg,
+    justifyContent: 'center',
+    height: 52,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.track,
+    backgroundColor: colors.card,
   },
   cancelText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.displayBold,
     fontSize: 15,
     color: colors.muted,
   },
   saveButton: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: colors.purple,
   },
   saveButtonDisabled: {
-    opacity: 0.4,
-  },
-  saveText: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.white,
+    opacity: 0.45,
   },
 });
