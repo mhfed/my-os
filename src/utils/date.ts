@@ -40,7 +40,7 @@ export function currentMonthKey(): string {
 /** "June 2025" for a "YYYY-MM" key. */
 export function monthLabel(monthKey: string): string {
   const { year, month } = parseMonthKey(monthKey);
-  return `${MONTH_NAMES[month - 1]} ${year}`;
+  return `${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`;
 }
 
 /** Shifts a month key by `delta` months (can be negative). Returns "YYYY-MM". */

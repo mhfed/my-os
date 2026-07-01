@@ -7,37 +7,45 @@ interface SectionHeaderProps {
   label: string;
   count: number;
   /** Color of the leading dot + (for overdue) the label text. */
-  tone: 'overdue' | 'today';
+  tone: 'overdue' | 'today' | 'completed';
 }
 
 /** Section heading: colored dot + uppercase label + muted mono count. */
 export function SectionHeader({ label, count, tone }: SectionHeaderProps) {
   const isOverdue = tone === 'overdue';
+  const isCompleted = tone === 'completed';
+  const badgeBg = isOverdue
+    ? tint(colors.red, '22')
+    : isCompleted
+    ? tint(colors.green, '22')
+    : tint(colors.blue, '22');
+  const badgeBorder = isOverdue
+    ? tint(colors.red, '44')
+    : isCompleted
+    ? tint(colors.green, '44')
+    : tint(colors.blue, '44');
+  const dotColor = isOverdue
+    ? colors.red
+    : isCompleted
+    ? colors.green
+    : colors.blue;
+  const labelStyle = isOverdue
+    ? styles.labelOverdue
+    : isCompleted
+    ? styles.labelCompleted
+    : styles.labelToday;
   return (
     <View style={styles.row}>
       <View
         style={[
           styles.badge,
-          {
-            backgroundColor: isOverdue
-              ? tint(colors.red, '22')
-              : tint(colors.blue, '22'),
-            borderColor: isOverdue ? tint(colors.red, '44') : tint(colors.blue, '44'),
-          },
+          { backgroundColor: badgeBg, borderColor: badgeBorder },
         ]}
       >
         <View
-          style={[
-            styles.dot,
-            { backgroundColor: isOverdue ? colors.red : colors.blue },
-          ]}
+          style={[styles.dot, { backgroundColor: dotColor }]}
         />
-        <Text
-          style={[
-            styles.label,
-            isOverdue ? styles.labelOverdue : styles.labelToday,
-          ]}
-        >
+        <Text style={[styles.label, labelStyle]}>
           {label}
         </Text>
       </View>
@@ -77,6 +85,10 @@ const styles = StyleSheet.create({
   },
   labelToday: {
     color: colors.blue,
+    letterSpacing: 0.3,
+  },
+  labelCompleted: {
+    color: colors.green,
     letterSpacing: 0.3,
   },
   count: {

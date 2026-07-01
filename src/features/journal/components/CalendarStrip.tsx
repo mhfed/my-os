@@ -18,7 +18,7 @@ function dayOfMonth(key: string): string {
 export function CalendarStrip() {
   const activeDate = useJournalStore((s) => s.activeDate);
   const setActiveDate = useJournalStore((s) => s.setActiveDate);
-  const writtenDates = useJournalStore((s) => s.writtenDates());
+  const writtenDates = useJournalStore((s) => s.writtenDatesSet);
 
   const days = lastNDays(7);
 

@@ -21,6 +21,8 @@ export interface JournalState {
   /** "YYYY-MM-DD" the screen is editing (defaults to today). */
   activeDate: string;
   ready: boolean;
+  /** Stable Set of dates that have entries — updated alongside entries. */
+  writtenDatesSet: Set<string>;
 
   init: () => Promise<void>;
   setActiveDate: (date: string) => void;

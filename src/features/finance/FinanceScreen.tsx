@@ -22,6 +22,7 @@ import { DebtSummaryWidget } from './components/DebtSummaryWidget';
 import { FinanceHero } from './components/FinanceHero';
 import { ManageRecurringModal } from './components/ManageRecurringModal';
 import { MonthSelector } from './components/MonthSelector';
+import { SetBudgetModal } from './components/SetBudgetModal';
 import { MonthlyTrendChart } from './components/MonthlyTrendChart';
 import { NetWorthWidget } from './components/NetWorthWidget';
 import { RecentTransactions } from './components/RecentTransactions';
@@ -49,6 +50,7 @@ export function FinanceScreen() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
+  const [budgetOpen, setBudgetOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [debtOpen, setDebtOpen] = useState(false);
 
@@ -136,6 +138,7 @@ export function FinanceScreen() {
             income={overview.income}
             budget={overview.budget}
             remaining={overview.remaining}
+            onSetBudget={() => setBudgetOpen(true)}
           />
         </AnimatedCard>
 
@@ -262,6 +265,8 @@ export function FinanceScreen() {
       />
 
       <DebtLedgerSheet visible={debtOpen} onClose={() => setDebtOpen(false)} />
+
+      <SetBudgetModal visible={budgetOpen} onClose={() => setBudgetOpen(false)} />
     </SafeAreaView>
   );
 }

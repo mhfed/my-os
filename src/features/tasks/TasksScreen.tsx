@@ -47,6 +47,10 @@ export function TasksScreen() {
   const overdueTasks = tasks.filter((task) => sectionOf(task) === 'overdue');
   const todayTasks = todayTasksFn();
 
+  const completedTasks = tasks
+    .filter((t) => t.done)
+    .sort((a, b) => (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt));
+
   const showOverdue = activeFilter !== 'Today';
 
   return (
@@ -123,6 +127,28 @@ export function TasksScreen() {
             ))}
           </View>
         </View>
+
+        {completedTasks.length > 0 && (
+          <View style={styles.completedSection}>
+            <SectionHeader
+              label='COMPLETED'
+              count={completedTasks.length}
+              tone='completed'
+            />
+            <View style={styles.list}>
+              {completedTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  timeLabel={taskTimeLabel(task)}
+                  overdue={false}
+                  onToggle={toggleTask}
+                  onToggleSubtask={toggleSubtask}
+                />
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={() => setAddVisible(true)}>
@@ -195,6 +221,10 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 10,
+  },
+  completedSection: {
+    marginTop: 28,
+    marginBottom: 12,
   },
   fab: {
     position: 'absolute',

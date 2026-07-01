@@ -102,6 +102,8 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
   entries: [],
   activeDate: todayKey(),
   ready: false,
+  /** Stable set of dates with entries - updated alongside entries. */
+  writtenDatesSet: new Set<string>(),
 
   // ----- lifecycle -----
   init: async () => {
@@ -113,7 +115,7 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
     const rows = await allRows<JournalEntryRow>(
       'SELECT * FROM journal_entries ORDER BY date DESC;',
     );
-    set({ entries: rows.map(mapEntry), ready: true });
+    set({ entries: rows.map(mapEntry), ready: true, writtenDatesSet: new Set(rows.map(r => r.date)) });
   },
 
   setActiveDate: (date) => set({ activeDate: date }),
@@ -148,7 +150,8 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
 
     set((s) => {
       const others = s.entries.filter((e) => e.date !== date);
-      return { entries: [saved, ...others] };
+      const newEntries = [saved, ...others];
+      return { entries: newEntries, writtenDatesSet: new Set(newEntries.map(e => e.date)) };
     });
   },
 
@@ -166,7 +169,7 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
     return count;
   },
 
-  writtenDates: () => new Set(get().entries.map((e) => e.date)),
+  writtenDates: () => get().writtenDatesSet,
 
   getTimeCapsule: () => {
     const today = todayKey();

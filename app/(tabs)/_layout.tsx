@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { base3D, colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { Icon, Ucon } from '@/theme/icons';
+import { Ucon } from '@/theme/icons';
 import { useGymStore } from '@/store/gymStore';
 import { useSettingsStore } from '@/store/settingsStore';
 

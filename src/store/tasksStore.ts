@@ -313,9 +313,19 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
 
 /** Human-readable time/context label for a task row. */
 export function taskTimeLabel(task: Task): string {
+  if (task.done) {
+    if (task.completedAt) {
+      const d = new Date(task.completedAt);
+      const hh = d.getHours() < 10 ? `0${d.getHours()}` : `${d.getHours()}`;
+      const mm = d.getMinutes() < 10 ? `0${d.getMinutes()}` : `${d.getMinutes()}`;
+      return `✓ Done at ${hh}:${mm}`;
+    }
+    return '✓ Done';
+  }
+
   const start = startOfToday();
 
-  if (task.dueDate != null && task.dueDate < start && !task.done) {
+  if (task.dueDate != null && task.dueDate < start) {
     const daysAgo = Math.round((start - task.dueDate) / DAY_MS);
     return daysAgo <= 1 ? 'Due yesterday' : `Due ${daysAgo} days ago`;
   }

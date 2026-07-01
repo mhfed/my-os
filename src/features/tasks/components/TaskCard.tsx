@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, tint } from '@/theme/colors';
+import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { Icon } from '@/theme/icons';
+import { Icon, IconName } from '@/theme/icons';
 import type { Priority, Task } from '@/types/task';
 
 interface TaskCardProps {
@@ -13,7 +13,7 @@ interface TaskCardProps {
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
 }
 
-/** Color used for the priority badge text + tinted background. */
+/** Color used for the priority icon. */
 function priorityColor(priority: Priority): string {
   switch (priority) {
     case 'P0':
@@ -22,6 +22,20 @@ function priorityColor(priority: Priority): string {
       return colors.orange;
     default:
       return colors.teal;
+  }
+}
+
+/** Icon name for each priority level — matches Jira arrow semantics. */
+function priorityIcon(priority: Priority): IconName {
+  switch (priority) {
+    case 'P0':
+      return 'signal-cellular-3';
+    case 'P1':
+      return 'signal-cellular-2';
+    case 'P2':
+      return 'signal-cellular-1';
+    case 'P3':
+      return 'signal-cellular-outline';
   }
 }
 
@@ -72,11 +86,7 @@ export function TaskCard({
           </Text>
         </View>
 
-        <View style={[styles.badge, { backgroundColor: tint(priColor) }]}>
-          <Text style={[styles.badgeText, { color: priColor }]}>
-            {task.priority}
-          </Text>
-        </View>
+        <Icon name={priorityIcon(task.priority)} size={16} color={priColor} />
       </Pressable>
 
       {hasSubtasks && !task.done && (
@@ -173,15 +183,6 @@ const styles = StyleSheet.create({
   },
   timeToday: {
     color: colors.muted,
-  },
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: 9,
-    borderRadius: radius.pill,
-  },
-  badgeText: {
-    fontFamily: fonts.displayBold,
-    fontSize: 11,
   },
   subtasksContainer: {
     backgroundColor: 'rgba(244,248,255,0.9)',

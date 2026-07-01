@@ -64,11 +64,7 @@ export function NetWorthWidget() {
       {/* Breakdown */}
       <View style={styles.breakdownRow}>
         <View style={styles.breakdownItem}>
-          <View
-            style={[styles.iconBubble, base3D(colors.tealDeep, 2)]}
-          >
-            <Icon name='piggy-bank' size={16} color={colors.white} />
-          </View>
+          <Icon name='piggy-bank' size={20} color={colors.teal} />
           <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Tiết kiệm</Text>
             <Text style={[styles.breakdownValue, { color: colors.teal }]}>
@@ -78,11 +74,7 @@ export function NetWorthWidget() {
         </View>
 
         <View style={styles.breakdownItem}>
-          <View
-            style={[styles.iconBubble, base3D(colors.purpleDeep, 2)]}
-          >
-            <Icon name='tray-arrow-down' size={16} color={colors.white} />
-          </View>
+          <Icon name='tray-arrow-down' size={20} color={colors.purple} />
           <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Sẽ thu</Text>
             <Text style={[styles.breakdownValue, { color: colors.purple }]}>
@@ -92,11 +84,7 @@ export function NetWorthWidget() {
         </View>
 
         <View style={styles.breakdownItem}>
-          <View
-            style={[styles.iconBubble, base3D(colors.redDeep, 2)]}
-          >
-            <Icon name='tray-arrow-up' size={16} color={colors.white} />
-          </View>
+          <Icon name='tray-arrow-up' size={20} color={colors.red} />
           <View style={styles.breakdownTextWrap}>
             <Text style={styles.breakdownLabel}>Phải trả</Text>
             <Text style={[styles.breakdownValue, { color: colors.red }]}>
@@ -172,14 +160,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: radius.md,
     backgroundColor: colors.track,
-  },
-  iconBubble: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
   },
   breakdownTextWrap: {
     flexShrink: 1,

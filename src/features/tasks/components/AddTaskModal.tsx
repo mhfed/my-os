@@ -38,6 +38,20 @@ function priorityColor(priority: Priority): string {
   }
 }
 
+/** Icon name matching priority arrow semantics (Jira-style). */
+function priorityIcon(priority: Priority): 'signal-cellular-3' | 'signal-cellular-2' | 'signal-cellular-1' | 'signal-cellular-outline' {
+  switch (priority) {
+    case 'P0':
+      return 'signal-cellular-3';
+    case 'P1':
+      return 'signal-cellular-2';
+    case 'P2':
+      return 'signal-cellular-1';
+    case 'P3':
+      return 'signal-cellular-outline';
+  }
+}
+
 function dueDateFor(choice: DueChoice): number | undefined {
   switch (choice) {
     case 'Today':
@@ -127,14 +141,11 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                       : styles.segmentInactive,
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      { color: isActive ? pColor : colors.muted },
-                    ]}
-                  >
-                    {p}
-                  </Text>
+                  <Icon
+                    name={priorityIcon(p)}
+                    size={18}
+                    color={isActive ? pColor : colors.muted}
+                  />
                 </Pressable>
               );
             })}

@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, domains, glow, gradients, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { timing } from '@/theme/motion';
-import { Counter, ShimmerView } from '@/components/motion';
+import { Counter, PressableScale, ShimmerView } from '@/components/motion';
 import { IconBadge } from '@/components/game';
 import { formatCompactVND } from '@/utils/currency';
 
@@ -29,6 +29,8 @@ interface FinanceHeroProps {
   budget: number;
   /** budget - spent (can be negative). */
   remaining: number;
+  /** Called when the "Set budget" tip is tapped. */
+  onSetBudget?: () => void;
 }
 
 /**
@@ -44,6 +46,7 @@ export function FinanceHero({
   income,
   budget,
   remaining,
+  onSetBudget,
 }: FinanceHeroProps) {
   const reduce = useReducedMotion();
   const hasBudget = budget > 0;
@@ -186,15 +189,23 @@ export function FinanceHero({
         </View>
       </View>
 
-      <Text style={[styles.status, { color: healthColor }]}>
-        {!hasBudget
-          ? '💡 Đặt ngân sách để theo dõi'
-          : isOver
-            ? '⚠️ Vượt ngân sách'
-            : isWarning
-              ? '⚡ Sắp đến giới hạn'
-              : '✨ Đúng kế hoạch'}
-      </Text>
+      {!hasBudget && onSetBudget ? (
+        <PressableScale onPress={onSetBudget} haptic='light'>
+          <Text style={[styles.status, { color: healthColor }]}>
+            💡 Đặt ngân sách để theo dõi
+          </Text>
+        </PressableScale>
+      ) : (
+        <Text style={[styles.status, { color: healthColor }]}>
+          {!hasBudget
+            ? '💡 Đặt ngân sách để theo dõi'
+            : isOver
+              ? '⚠️ Vượt ngân sách'
+              : isWarning
+                ? '⚡ Sắp đến giới hạn'
+                : '✨ Đúng kế hoạch'}
+        </Text>
+      )}
     </View>
   );
 }

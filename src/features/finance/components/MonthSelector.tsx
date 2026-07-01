@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { base3D, colors, elevation, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { GameIconButton } from '@/components/game';
-import { AnimatedCard, PressableScale } from '@/components/motion';
+import { AnimatedCard } from '@/components/motion';
 
 interface MonthSelectorProps {
   /** Pre-formatted month label, e.g. "June 2025". */
@@ -36,11 +36,13 @@ export function MonthSelector({
 
       <View style={styles.rightGroup}>
         {onExportCSV && (
-          <PressableScale onPress={onExportCSV} hitSlop={8} haptic='light'>
-            <View style={styles.actionPill}>
-              <Text style={styles.actionText}>Export</Text>
-            </View>
-          </PressableScale>
+          <GameIconButton
+            icon='file-download'
+            variant='purple'
+            size={36}
+            iconSize={17}
+            onPress={onExportCSV}
+          />
         )}
 
         {onManageRecurring && (
@@ -107,22 +109,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  actionPill: {
-    height: 36,
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(252,253,255,0.86)',
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...elevation.card,
-  },
-  actionText: {
-    fontFamily: fonts.displayBold,
-    fontSize: 12,
-    color: colors.text,
   },
   stepper: {
     flexDirection: 'row',

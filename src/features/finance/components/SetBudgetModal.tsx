@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -26,11 +26,14 @@ interface SetBudgetModalProps {
 
 /** Bottom-sheet modal to set a monthly budget cap for a category. */
 export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
-  const categories = useFinanceStore((s) =>
-    s.categories.filter((c) => c.type === 'expense'),
-  );
+  const allCategories = useFinanceStore((s) => s.categories);
   const setBudget = useFinanceStore((s) => s.setBudget);
   const activeMonth = useFinanceStore((s) => s.activeMonth);
+
+  const categories = useMemo(
+    () => allCategories.filter((c) => c.type === 'expense'),
+    [allCategories],
+  );
   const insets = useSafeAreaInsets();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
