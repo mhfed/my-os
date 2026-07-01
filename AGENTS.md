@@ -56,3 +56,15 @@ quickly and safely in this repo.
 - `.claude/skills/database/SKILL.md`
 - `.claude/skills/feature/SKILL.md`
 - `.claude/skills/checkpoint/SKILL.md`
+
+## Release to iPhone
+
+- Build Release mode (JS bundle embedded, no WiFi/dev server needed):
+  `cd ios && xcodebuild -workspace PersonalOS.xcworkspace -scheme PersonalOS -configuration Release -destination "id=00008120-000A68982208201E" -allowProvisioningUpdates build`
+- Install via ios-deploy:
+  `npx ios-deploy --id "00008120-000A68982208201E" --bundle ~/Library/Developer/Xcode/DerivedData/PersonalOS-*/Build/Products/Release-iphoneos/PersonalOS.app`
+- Device: iPhone 14 Pro Max ("iPhone của Hiếu 🍭"), iOS 18.7.7
+- UDID (ios-deploy): `00008120-000A68982208201E`
+- UDID (devicectl): `2FCAE322-7871-5D3B-97E8-0B7CCA0CDD0F`
+- ⚠️ Current signing uses Development Provisioning Profile → expires in 7 days, must rebuild after expiry.
+- For permanent standalone builds, need Apple Developer account ($99/yr) + EAS Build.
