@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, gradients, radius, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
 import { useSavingsStore } from '@/store/savingsStore';
 import { formatCompactVND } from '@/utils/currency';
@@ -12,6 +13,24 @@ import type { SavingsGoalView } from '@/types/savings';
 import { AddGoalSheet } from './AddGoalSheet';
 import { GoalDetailSheet } from './GoalDetailSheet';
 import { SavingsGoalListSheet } from './SavingsGoalListSheet';
+
+/** Map a goal's stored accent color to its matching gradient + glow tint. */
+function barGradientFor(barColor: string): readonly [string, string] {
+  switch (barColor) {
+    case colors.teal:
+      return gradients.gem;
+    case colors.red:
+      return gradients.red;
+    case colors.orange:
+      return gradients.gold;
+    case colors.purple:
+      return gradients.purple;
+    case colors.green:
+      return gradients.green;
+    default:
+      return gradients.purple;
+  }
+}
 
 function GoalBar({
   view,
@@ -25,6 +44,8 @@ function GoalBar({
     : view.isAchieved
       ? colors.teal
       : view.color;
+  const pct = Math.max(0, Math.min(1, view.progressPct));
+  const barGradient = barGradientFor(barColor);
 
   return (
     <PressableScale style={styles.goalRow} onPress={onPress} haptic='light'>
@@ -37,21 +58,27 @@ function GoalBar({
         <View style={styles.goalTopRow}>
           <Text style={styles.goalName} numberOfLines={1}>
             {view.name}
+            {view.isAchieved ? ' \u{1F389}' : ''}
           </Text>
           <Text style={[styles.goalPct, { color: barColor }]}>
-            {Math.round(view.progressPct * 100)}%
+            {Math.round(pct * 100)}%
           </Text>
         </View>
         <View style={styles.track}>
-          <View
-            style={[
-              styles.fill,
-              {
-                width: `${view.progressPct * 100}%`,
-                backgroundColor: barColor,
-              },
-            ]}
-          />
+          <LinearGradient
+            colors={barGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.fill, { width: `${pct * 100}%` }]}
+          >
+            <LinearGradient
+              colors={gradients.gloss}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={styles.fillGloss}
+              pointerEvents='none'
+            />
+          </LinearGradient>
         </View>
         <View style={styles.goalBottomRow}>
           <Text style={styles.goalAmount}>
@@ -87,7 +114,9 @@ export function SavingsGoalsSection() {
           onPress={() => setAddOpen(true)}
           haptic='light'
         >
-          <Icon name='piggy-bank' size={20} color={colors.muted} />
+          <View style={styles.emptyIcon}>
+            <Icon name='piggy-bank' size={20} color={colors.purple} />
+          </View>
           <Text style={styles.emptyText}>Tạo mục tiêu tiết kiệm đầu tiên</Text>
           <Icon name='chevron-right' size={14} color={colors.tabInactive} />
         </PressableScale>
@@ -108,6 +137,7 @@ export function SavingsGoalsSection() {
               <Text style={styles.seeAllText}>
                 +{goals.length - 3} more goals
               </Text>
+              <Icon name='chevron-right' size={14} color={colors.teal} />
             </PressableScale>
           )}
         </>
@@ -130,12 +160,20 @@ const styles = StyleSheet.create({
   emptyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     padding: 18,
+  },
+  emptyIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tint(colors.purple, '1A'),
   },
   emptyText: {
     flex: 1,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.muted,
   },
@@ -153,13 +191,13 @@ const styles = StyleSheet.create({
   goalIcon: {
     width: 38,
     height: 38,
-    borderRadius: 11,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   goalMid: {
     flex: 1,
-    gap: 5,
+    gap: 6,
   },
   goalTopRow: {
     flexDirection: 'row',
@@ -167,24 +205,32 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   goalName: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
+    fontFamily: fonts.display,
+    fontSize: 14,
     color: colors.text,
     flex: 1,
   },
   goalPct: {
-    fontFamily: fonts.monoMedium,
+    fontFamily: fonts.monoSemibold,
     fontSize: 12,
   },
   track: {
-    height: 5,
+    height: 12,
     backgroundColor: colors.track,
-    borderRadius: 3,
+    borderRadius: radius.pill,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  fillGloss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '55%',
   },
   goalBottomRow: {
     flexDirection: 'row',
@@ -201,8 +247,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   seeAllRow: {
-    paddingVertical: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 14,
   },
   seeAllText: {
     fontFamily: fonts.displayBold,

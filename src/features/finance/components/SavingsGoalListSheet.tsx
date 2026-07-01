@@ -8,10 +8,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, gradients, radius, elevation, base3D, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
-import { fonts } from '@/theme/typography';
+import { fonts, textShadow } from '@/theme/typography';
+import { GameIconButton } from '@/components/game';
+import { PressableScale } from '@/components/motion';
 import { useSavingsStore } from '@/store/savingsStore';
 import { formatCompactVND } from '@/utils/currency';
 import type { SavingsGoalView } from '@/types/savings';
@@ -32,30 +35,56 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Tất cả' },
 ];
 
-function GoalRow({ view, onPress }: { view: SavingsGoalView; onPress: () => void }) {
+/** Map a goal's stored accent color to its matching gradient (fallback purple). */
+function gradientFor(barColor: string): readonly [string, string] {
+  switch (barColor) {
+    case colors.teal:
+      return gradients.gem;
+    case colors.red:
+      return gradients.red;
+    case colors.orange:
+      return gradients.gold;
+    case colors.green:
+      return gradients.green;
+    case colors.purple:
+    default:
+      return gradients.purple;
+  }
+}
+
+function GoalRow({ view, onPress, index }: { view: SavingsGoalView; onPress: () => void; index: number }) {
   const barColor =
     view.status === 'achieved'
       ? colors.teal
       : view.isOverdue
       ? colors.red
       : view.color;
+  const pct = Math.min(1, Math.max(0, view.progressPct));
 
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <View style={[styles.goalIcon, { backgroundColor: tint(view.color, '22') }]}>
-        <Icon name={view.icon as IconName} size={18} color={view.color} />
+    <PressableScale style={styles.row} onPress={onPress} haptic='light'>
+      <View style={[styles.goalIconWrap, base3D(colors.purpleDeep, 2)]}>
+        <View style={[styles.goalIcon, { backgroundColor: tint(view.color, '22') }]}>
+          <Icon name={view.icon as IconName} size={18} color={view.color} />
+        </View>
       </View>
 
       <View style={styles.rowMid}>
         <View style={styles.rowTop}>
-          <Text style={styles.goalName} numberOfLines={1}>{view.name}</Text>
+          <Text style={styles.goalName} numberOfLines={1}>
+            {view.name}
+            {view.status === 'achieved' ? ' \u{1F389}' : ''}
+          </Text>
           <Text style={[styles.pct, { color: barColor }]}>
-            {Math.round(view.progressPct * 100)}%
+            {Math.round(pct * 100)}%
           </Text>
         </View>
         <View style={styles.track}>
-          <View
-            style={[styles.fill, { width: `${Math.min(1, view.progressPct) * 100}%`, backgroundColor: barColor }]}
+          <LinearGradient
+            colors={gradientFor(barColor)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.fill, { width: `${pct * 100}%` }]}
           />
         </View>
         <View style={styles.rowBottom}>
@@ -75,7 +104,7 @@ function GoalRow({ view, onPress }: { view: SavingsGoalView; onPress: () => void
       </View>
 
       <Icon name='chevron-right' size={15} color={colors.tabInactive} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -106,9 +135,7 @@ export function SavingsGoalListSheet({ visible, onClose }: SavingsGoalListSheetP
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <Text style={styles.title}>Mục tiêu tiết kiệm</Text>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={8}>
-            <Icon name='close' size={18} color={colors.muted} />
-          </Pressable>
+          <GameIconButton icon='close' variant='purple' size={36} iconSize={16} onPress={onClose} />
         </View>
 
         <View style={styles.filterRow}>
@@ -136,15 +163,20 @@ export function SavingsGoalListSheet({ visible, onClose }: SavingsGoalListSheetP
               <Text style={styles.emptyText}>Không có mục tiêu nào</Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <GoalRow view={item} onPress={() => setSelectedId(item.id)} />
+          renderItem={({ item, index }) => (
+            <GoalRow view={item} index={index} onPress={() => setSelectedId(item.id)} />
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
 
-        <Pressable style={styles.fab} onPress={() => setAddOpen(true)}>
-          <Icon name='plus' size={24} color={colors.white} />
-        </Pressable>
+        <GameIconButton
+          icon='plus'
+          variant='purple'
+          size={56}
+          iconSize={26}
+          style={styles.fab}
+          onPress={() => setAddOpen(true)}
+        />
       </SafeAreaView>
 
       {/* Sub-sheets inside Modal so they appear on top of the pageSheet */}
@@ -164,71 +196,63 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  title: { fontFamily: fonts.semibold, fontSize: 18, color: colors.text },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
+  title: {
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
+    color: colors.text,
+    ...textShadow.emboss,
   },
   filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.track,
+    backgroundColor: colors.white,
   },
-  chipActive: { backgroundColor: tint(colors.purple, '2E'), borderColor: colors.purple },
-  chipText: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
+  chipActive: { backgroundColor: tint(colors.purple, '22'), borderColor: colors.purple },
+  chipText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
   chipTextActive: { color: colors.purple },
-  list: { paddingHorizontal: 20, paddingBottom: 100, paddingTop: 4 },
+  list: { paddingHorizontal: 20, paddingBottom: 120, paddingTop: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+    borderRadius: radius.lg,
     padding: 14,
+    ...elevation.card,
+  },
+  goalIconWrap: {
+    borderRadius: radius.md,
   },
   goalIcon: {
     width: 42,
     height: 42,
-    borderRadius: 13,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
-  rowMid: { flex: 1, gap: 5 },
+  rowMid: { flex: 1, gap: 6 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  goalName: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text, flex: 1 },
-  pct: { fontFamily: fonts.monoMedium, fontSize: 12 },
-  track: { height: 4, backgroundColor: colors.track, borderRadius: 2, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: 2 },
+  goalName: { fontFamily: fonts.display, fontSize: 14, color: colors.text, flex: 1 },
+  pct: { fontFamily: fonts.monoSemibold, fontSize: 12 },
+  track: { height: 10, backgroundColor: colors.track, borderRadius: radius.pill, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: radius.pill },
   rowBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   amounts: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
-  statusBadge: { fontFamily: fonts.medium, fontSize: 11 },
+  statusBadge: { fontFamily: fonts.semibold, fontSize: 11 },
   separator: { height: 10 },
   empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 12 },
-  emptyText: { fontFamily: fonts.regular, fontSize: 14, color: colors.tabInactive },
+  emptyText: { fontFamily: fonts.medium, fontSize: 14, color: colors.tabInactive },
   fab: {
     position: 'absolute',
     right: 22,
     bottom: 28,
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: colors.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.purple,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
   },
 });
