@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { AnimatedCard } from '@/components/motion';
 import { GamePanel } from '@/components/game';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
@@ -23,6 +23,8 @@ import { todayKey } from '@/utils/day';
 import { TodayHud } from './components/TodayHud';
 import { QuickCapture } from './components/QuickCapture';
 import { WidgetGrid } from './components/WidgetGrid';
+import { FinanceHeroWidget } from './components/widgets/FinanceHeroWidget';
+import { PersonStatsWidget } from './components/widgets/PersonStatsWidget';
 import { TasksWidget } from './components/widgets/TasksWidget';
 import { HabitsWidget } from './components/widgets/HabitsWidget';
 import { FinanceWidget } from './components/widgets/FinanceWidget';
@@ -139,7 +141,7 @@ export function TodayScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <SkiaBackground domain='today' intensity={0.42} />
+      <FarmBackground domain='today' />
       <LinearGradient
         colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
         start={{ x: 0.5, y: 0 }}
@@ -169,6 +171,12 @@ export function TodayScreen() {
           streak={streak}
           onOpenInbox={openInbox}
         />
+
+        {/* Hero widgets — full-width premium cards */}
+        <View style={styles.heroSection}>
+          <FinanceHeroWidget />
+          <PersonStatsWidget />
+        </View>
 
         {/* Widget grid — glanceable summaries of pinned modules */}
         <WidgetGrid renderWidget={renderWidget} />
@@ -207,5 +215,9 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 16,
+  },
+  heroSection: {
+    gap: 14,
+    marginTop: 4,
   },
 });

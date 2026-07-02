@@ -14,25 +14,36 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { colors, gradients } from '@/theme/colors';
+import { colors, glassy, gradients } from '@/theme/colors';
 import { springs } from '@/theme/motion';
 import { Icon, type IconName } from '@/theme/icons';
-import type { GameButtonVariant } from './GameButton';
+
+import type { GameButtonVariant, ButtonMaterial } from './GameButton';
+
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 interface VariantSpec {
   gradient: readonly [string, string];
   base: string;
 }
 
+const glassGrad = (g: readonly [string, string]) =>
+  [glassy(g[0], 'D6'), glassy(g[1], 'E8')] as const;
+
 const VARIANTS: Record<GameButtonVariant, VariantSpec> = {
-  green: { gradient: gradients.green, base: colors.greenDeep },
-  purple: { gradient: gradients.purple, base: colors.purpleDeep },
-  gold: { gradient: gradients.gold, base: colors.orangeDeep },
-  gem: { gradient: gradients.gem, base: colors.tealDeep },
-  red: { gradient: gradients.red, base: colors.redDeep },
-  blue: { gradient: gradients.blue, base: colors.blueDeep },
+  green: { gradient: glassGrad(gradients.green), base: colors.greenDeep },
+  purple: { gradient: glassGrad(gradients.purple), base: colors.purpleDeep },
+  gold: { gradient: glassGrad(gradients.gold), base: colors.goldDeep },
+  gem: { gradient: glassGrad(gradients.gem), base: colors.tealDeep },
+  red: { gradient: glassGrad(gradients.red), base: colors.redDeep },
+  blue: { gradient: glassGrad(gradients.blue), base: colors.blueDeep },
+};
+
+const MATERIALS: Record<ButtonMaterial, { capGradient: readonly [string, string]; capBorder: string } | null> = {
+  gem: null,
+  stone: { capGradient: ['#B8B0A8', '#8A8078'] as const, capBorder: 'rgba(90,80,72,0.5)' },
+  wood: { capGradient: ['#C4A060', '#8B6914'] as const, capBorder: 'rgba(70,50,10,0.5)' },
+  metal: { capGradient: ['#D8D8D8', '#888888'] as const, capBorder: 'rgba(160,160,180,0.6)' },
 };
 
 interface GameIconButtonProps extends Omit<
@@ -41,6 +52,7 @@ interface GameIconButtonProps extends Omit<
 > {
   icon: IconName;
   variant?: GameButtonVariant;
+  material?: ButtonMaterial;
   size?: number;
   iconSize?: number;
   style?: ViewStyle;
@@ -48,12 +60,13 @@ interface GameIconButtonProps extends Omit<
 }
 
 /**
- * Round (or squircle) 3D icon button — the HUD chrome used for close / camera /
- * settings / "+" affordances. Same jelly-press mechanic as {@link GameButton}.
+ * 3D icon button with material variants.
+ * Same 3-layer press mechanic as GameButton.
  */
 export function GameIconButton({
   icon,
   variant = 'purple',
+  material = 'gem',
   size = 46,
   iconSize,
   style,
@@ -63,6 +76,7 @@ export function GameIconButton({
   ...rest
 }: GameIconButtonProps) {
   const spec = VARIANTS[variant];
+  const mat = MATERIALS[material];
   const lift = Math.max(3, Math.round(size * 0.1));
   const press = useSharedValue(0);
 
@@ -88,6 +102,8 @@ export function GameIconButton({
   );
 
   const r = size * 0.42;
+  const capGradient = mat?.capGradient ?? spec.gradient;
+  const capBorder = mat?.capBorder ?? 'rgba(255,255,255,0.6)';
 
   return (
     <AnimatedPressable
@@ -99,23 +115,25 @@ export function GameIconButton({
       <View
         style={[
           StyleSheet.absoluteFill,
-          { top: lift, borderRadius: r, backgroundColor: spec.base },
+          { top: lift, borderRadius: r, backgroundColor: material === 'metal' ? '#666' : spec.base },
         ]}
       />
       <Animated.View style={capStyle}>
         <LinearGradient
-          colors={spec.gradient}
+          colors={capGradient}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
-          style={[styles.cap, { width: size, height: size, borderRadius: r }]}
+          style={[styles.cap, { width: size, height: size, borderRadius: r, borderColor: capBorder }]}
         >
-          <LinearGradient
-            colors={gradients.gloss}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={[styles.gloss, { borderRadius: r - 2, height: size * 0.5 }]}
-            pointerEvents='none'
-          />
+          {material === 'gem' && (
+            <LinearGradient
+              colors={gradients.gloss}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={[styles.gloss, { borderRadius: r - 2, height: size * 0.5 }]}
+              pointerEvents='none'
+            />
+          )}
           <Icon
             name={icon}
             size={iconSize ?? size * 0.5}
@@ -132,7 +150,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
     overflow: 'hidden',
   },
   gloss: {

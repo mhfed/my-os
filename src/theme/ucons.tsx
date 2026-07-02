@@ -37,7 +37,7 @@ import UilGrid from '@iconscout/react-native-unicons/icons/uil-grid';
 // import UilGrids from '@iconscout/react-native-unicons/icons/uil-grids';
 // import UilHeart from '@iconscout/react-native-unicons/icons/uil-heart';
 import UilHeartbeat from '@iconscout/react-native-unicons/icons/uil-heartbeat';
-// import UilHome from '@iconscout/react-native-unicons/icons/uil-home';
+import UilHome from '@iconscout/react-native-unicons/icons/uil-home';
 // import UilLamp from '@iconscout/react-native-unicons/icons/uil-lamp';
 // import UilLightbulb from '@iconscout/react-native-unicons/icons/uil-lightbulb';
 // import UilLink from '@iconscout/react-native-unicons/icons/uil-link';
@@ -150,7 +150,7 @@ export const uconRegistry = {
   // 'grids': UilGrids,
   // 'heart': UilHeart,
   'heartbeat': UilHeartbeat,
-  // 'home': UilHome,
+  'home': UilHome,
   // 'image': UilImage,
   // 'lamp': UilLamp,
   // 'lightbulb': UilLightbulb,

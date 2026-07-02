@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+import { FarmBackground } from '@/components/skia';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -25,13 +26,17 @@ export function InboxScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <FarmBackground domain='inbox' />
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={10}
-          style={({ pressed }) => [styles.back, pressed ? styles.pressed : null]}
+          style={({ pressed }) => [
+            styles.back,
+            pressed ? styles.pressed : null,
+          ]}
         >
-          <Icon name="chevron-left" size={26} color={colors.text} />
+          <Icon name='chevron-left' size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Inbox</Text>
         {ready && openCount() > 0 ? (
@@ -47,7 +52,7 @@ export function InboxScreen() {
         </View>
       ) : items.length === 0 ? (
         <View style={styles.center}>
-          <Icon name="inbox-arrow-down" size={48} color={colors.muted} />
+          <Icon name='inbox-arrow-down' size={48} color={colors.muted} />
           <Text style={styles.emptyText}>Inbox zero ✨</Text>
           <Text style={styles.emptySub}>Nothing to triage</Text>
         </View>

@@ -19,7 +19,7 @@ import { SavingsGoalListSheet } from './SavingsGoalListSheet';
 function barGradientFor(barColor: string): readonly [string, string] {
   switch (barColor) {
     case colors.teal:
-      return gradients.gem;
+      return gradients.gold;
     case colors.red:
       return gradients.red;
     case colors.orange:

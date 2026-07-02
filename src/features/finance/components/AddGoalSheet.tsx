@@ -52,7 +52,7 @@ interface AccentSpec {
 
 export const GOAL_PALETTE: AccentSpec[] = [
   { color: colors.purple, deep: colors.purpleDeep, gradient: gradients.purple },
-  { color: colors.teal, deep: colors.tealDeep, gradient: gradients.gem },
+  { color: colors.gold, deep: colors.goldDeep, gradient: gradients.gold },
   { color: colors.orange, deep: colors.orangeDeep, gradient: gradients.gold },
   { color: colors.red, deep: colors.redDeep, gradient: gradients.red },
   { color: colors.blue, deep: colors.blueDeep, gradient: gradients.blue },

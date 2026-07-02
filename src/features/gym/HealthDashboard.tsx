@@ -8,7 +8,7 @@ import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
 import { AnimatedCard } from '@/components/motion';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { useGymStore } from '@/store/gymStore';
 import { formatTxnDate } from '@/utils/date';
 
@@ -28,7 +28,7 @@ export function HealthDashboard() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <SkiaBackground domain='health' intensity={0.36} />
+      <FarmBackground domain='health' />
       <LinearGradient
         colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
         start={{ x: 0.5, y: 0 }}

@@ -1,79 +1,117 @@
 /**
- * Personal OS color tokens — "Magic Academy" mobile-game design language.
+ * Personal OS color tokens — "Sunny Farm Glass" design language.
  *
- * The visual target: a modern, polished game UI. Saturated accents, glossy
- * buttons with a hard coloured "base" shadow for a 3D pressable feel, cooler
- * glassy surfaces, and a soft sky-to-slate backdrop.
+ * The visual target: a bright, cheerful farm-game world (blue sky, rolling
+ * green hills, golden sun) with UI chrome rendered as translucent 3D glass —
+ * frosted white panels you can see the scenery through, chunky see-through
+ * candy buttons with hard coloured 3D bases, and glossy sheens everywhere.
  *
  * See `.claude/skills/design-system/SKILL.md` for the full design system.
  */
 export const colors = {
-  // ---- surfaces ----------------------------------------------------------
-  appBg: '#93A7D9', // outermost cool sky backdrop
-  screenBg: '#EEF3FF', // light blue-white screen background
-  card: '#FCFDFF', // card / panel surface (bright)
-  cardAlt: '#F4F8FF', // alternate cool panel
-  track: '#DCE5F6', // progress track / inset wells
-  border: '#C8D5EE', // soft cool hairline / panel edge
+  // ---- surfaces ------------------------------------------------------------
+  appBg: '#5EC4F0', // farm sky blue (outermost backdrop)
+  screenBg: '#D8F1FF', // light sky fallback behind the Skia scene
+  card: '#FFFFFFB8', // translucent white glass panel (~72%)
+  cardAlt: '#EFFBFFA6', // tinted alt glass (~65%)
+  track: '#FFFFFF7A', // translucent inset well / progress track
+  border: '#FFFFFFE0', // bright glass rim
 
-  // ---- text --------------------------------------------------------------
-  text: '#182033', // primary text (deep slate)
+  // ---- text ----------------------------------------------------------------
+  text: '#3E2C15', // warm farm-brown primary text
   textOnDark: '#FFFFFF', // text on coloured/3D buttons
-  muted: '#6E7A96', // secondary / muted cool text
-  tabInactive: '#93A0BD', // inactive tab tint
+  muted: '#8A7150', // secondary text (hay brown)
+  tabInactive: '#7E97AA', // inactive tab tint (hazy sky)
 
-  // ---- accents (candy game palette) --------------------------------------
-  purple: '#6D5EF7', // primary magic accent
-  purpleDeep: '#4B3FD0', // 3D base / pressed shade for purple
-  teal: '#1ECAD3', // gems / info
-  tealDeep: '#1296A3',
-  green: '#57C96B', // success / primary CTA
-  greenDeep: '#31964B',
-  orange: '#FF9B55', // coins / warning
-  orangeDeep: '#D7722F',
-  yellow: '#FFC94A', // XP / stars
-  yellowDeep: '#D99A1C',
-  red: '#FF647C', // danger / close / expense
-  redDeep: '#D6455D',
-  blue: '#4F8CFF', // secondary info
-  blueDeep: '#3265D6',
-  pink: '#FF78AE',
-  pinkDeep: '#D9568A',
+  // ---- accents (juicy farm palette) ----------------------------------------
+  purple: '#9C5FE8', // berry / magic
+  purpleDeep: '#7239BC',
+  teal: '#2FC6E4', // pond water / gems
+  tealDeep: '#1795B4',
+  green: '#58C832', // grass / success CTA
+  greenDeep: '#3B9414',
+  orange: '#FF9330', // carrot / coins
+  orangeDeep: '#D66B0E',
+  yellow: '#FFC933', // sunshine / XP
+  yellowDeep: '#E09E00',
+  red: '#FF5D55', // barn red / danger
+  redDeep: '#D63A34',
+  blue: '#3D9BFF', // clear sky / info
+  blueDeep: '#1F6FD6',
+  pink: '#FF7FC3', // blossom
+  pinkDeep: '#E0509A',
+  gold: '#FFD700', // treasure / coins
+  goldDeep: '#B8860B', // gold 3D base
+  amber: '#FF8C00', // warm treasure accent
+  copper: '#CD7F32', // copper accent
+  goldSoft: '#FFF3C4', // gold tint fill
 
   white: '#FFFFFF',
-  black: '#101522',
+  black: '#26190B',
 } as const;
 
 /** Add an alpha suffix to a hex (e.g. tint('#3FD4E8') -> '#3FD4E81A'). */
 export const tint = (hex: string, alpha = '1A') => `${hex}${alpha}`;
 
 /**
- * Gradient stops used across the app. Game UIs lean on glossy vertical
- * gradients (light top -> rich bottom) plus the signature gloss highlight.
+ * Translucent "coloured glass" shade — a hex with a heavier alpha so vivid
+ * candy surfaces let the farm scenery glow through. Default ~88% opaque.
+ */
+export const glassy = (hex: string, alpha = 'E0') => `${hex}${alpha}`;
+
+/**
+ * Shared frosted-glass surface tokens. Use these instead of ad-hoc rgba
+ * whites so every pane of glass in the app matches.
+ */
+export const glass = {
+  /** Primary frosted panel fill (over BlurView). */
+  fill: 'rgba(255,255,255,0.42)',
+  /** Stronger fill for readable content areas. */
+  fillStrong: 'rgba(255,255,255,0.60)',
+  /** Subtle fill for far-background shapes. */
+  fillSoft: 'rgba(255,255,255,0.22)',
+  /** Bright top/outer rim that sells the glass edge. */
+  rim: 'rgba(255,255,255,0.92)',
+  /** Softer inner rim / hairline. */
+  rimSoft: 'rgba(255,255,255,0.55)',
+  /** Dark glass (HUD pills sitting on bright sky). */
+  dark: 'rgba(38,45,66,0.44)',
+  darkRim: 'rgba(255,255,255,0.50)',
+} as const;
+
+/**
+ * Gradient stops used across the app. Glossy vertical gradients
+ * (light top -> rich bottom) plus the signature gloss highlight.
  */
 export const gradients = {
-  // screen backdrop (soft sky)
-  backdrop: ['#C4D4FF', '#93A7D9'] as const,
-  // cool interior wash
-  warm: ['#F8FBFF', '#EEF3FF'] as const,
-  // CTA candy green
-  green: ['#7CDE8E', '#57C96B'] as const,
-  // magic purple
-  purple: ['#9A8CFF', '#6D5EF7'] as const,
-  // coins / gold
-  gold: ['#FFD978', '#FF9B55'] as const,
-  // gems / cyan
-  gem: ['#72E4EA', '#1ECAD3'] as const,
-  // danger
-  red: ['#FF94A7', '#FF647C'] as const,
-  // sky / tasks
-  blue: ['#7DAFFF', '#4F8CFF'] as const,
-  // candy pink
-  pink: ['#FFA1C7', '#FF78AE'] as const,
-  // glossy highlight overlay (top sheen on jelly buttons)
-  gloss: ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.0)'] as const,
+  // screen backdrop (sunny sky)
+  backdrop: ['#A9E4FF', '#5EC4F0'] as const,
+  // soft interior wash
+  warm: ['#FFFFFF', '#EAF7FF'] as const,
+  // CTA grass green
+  green: ['#8BE05C', '#58C832'] as const,
+  // berry purple
+  purple: ['#BE8CFF', '#9C5FE8'] as const,
+  // sunshine gold
+  gold: ['#FFDE6B', '#FF9330'] as const,
+  // pond gem cyan
+  gem: ['#7BE3F5', '#2FC6E4'] as const,
+  // barn red
+  red: ['#FF938D', '#FF5D55'] as const,
+  // clear sky blue
+  blue: ['#7FC0FF', '#3D9BFF'] as const,
+  // blossom pink
+  pink: ['#FFA9D6', '#FF7FC3'] as const,
+  // glossy highlight overlay (top sheen on jelly/glass surfaces)
+  gloss: ['rgba(255,255,255,0.62)', 'rgba(255,255,255,0.0)'] as const,
+  // frosted glass panel wash (diagonal)
+  glassPanel: [
+    'rgba(255,255,255,0.58)',
+    'rgba(255,255,255,0.30)',
+    'rgba(255,255,255,0.14)',
+  ] as const,
   // progress fill
-  spend: ['#7C5BE6', '#3FD4E8'] as const,
+  spend: ['#58C832', '#2FC6E4'] as const,
 };
 
 export type AppColors = typeof colors;
@@ -101,13 +139,13 @@ export const domains = {
     accent: colors.blue,
     deep: colors.blueDeep,
     soft: tint(colors.blue),
-    gradient: ['#7DA8FF', '#5B8DEF'],
+    gradient: gradients.blue,
   },
   finance: {
-    accent: colors.teal,
-    deep: colors.tealDeep,
-    soft: tint(colors.teal),
-    gradient: gradients.gem,
+    accent: colors.gold,
+    deep: colors.goldDeep,
+    soft: tint(colors.gold),
+    gradient: gradients.gold,
   },
   health: {
     accent: colors.red,
@@ -119,7 +157,7 @@ export const domains = {
     accent: colors.pink,
     deep: colors.pinkDeep,
     soft: tint(colors.pink),
-    gradient: ['#FF9ECB', '#FF7EB6'],
+    gradient: gradients.pink,
   },
   habits: {
     accent: colors.orange,
@@ -178,6 +216,7 @@ export const base3D = (deepHex: string, height = 5) =>
 
 const ACCENT_FACES: readonly string[] = [
   colors.purple,
+  colors.gold,
   colors.teal,
   colors.green,
   colors.orange,
@@ -189,6 +228,7 @@ const ACCENT_FACES: readonly string[] = [
 
 const ACCENT_DEEP: Record<string, string> = {
   [colors.purple]: colors.purpleDeep,
+  [colors.gold]: colors.goldDeep,
   [colors.teal]: colors.tealDeep,
   [colors.green]: colors.greenDeep,
   [colors.orange]: colors.orangeDeep,
@@ -200,6 +240,7 @@ const ACCENT_DEEP: Record<string, string> = {
 
 const ACCENT_GRADIENT: Record<string, readonly [string, string]> = {
   [colors.purple]: gradients.purple,
+  [colors.gold]: gradients.gold,
   [colors.teal]: gradients.gem,
   [colors.green]: gradients.green,
   [colors.orange]: gradients.gold,
@@ -248,20 +289,20 @@ export function gradientFor(face: string): readonly [string, string] {
   return ACCENT_GRADIENT[face] ?? gradients.gem;
 }
 
-/** Neutral soft elevation for floating panels/cards. */
+/** Neutral soft elevation for floating glass panels/cards. */
 export const elevation = {
   card: {
-    shadowColor: '#4B5D86',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
+    shadowColor: '#1E5E7A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
     elevation: 6,
   },
   panel: {
-    shadowColor: '#40527A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
+    shadowColor: '#1E5E7A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
     elevation: 5,
   },
 } as const;

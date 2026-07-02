@@ -8,7 +8,7 @@ import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
 import { AnimatedCard } from '@/components/motion';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
 
 import { AddTaskModal } from './components/AddTaskModal';
@@ -55,7 +55,7 @@ export function TasksScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <SkiaBackground domain='tasks' intensity={0.36} />
+      <FarmBackground domain='tasks' />
       <LinearGradient
         colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
         start={{ x: 0.5, y: 0 }}

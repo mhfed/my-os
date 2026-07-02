@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+import { FarmBackground } from '@/components/skia';
 import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -39,6 +40,7 @@ export function GoalsScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <FarmBackground domain='goals' />
       <View style={styles.header}>
         <Pressable
           onPress={handleBack}

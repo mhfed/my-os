@@ -16,7 +16,7 @@ import { Icon } from '@/theme/icons';
 import { fonts, textShadow } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
 import { GameIconButton } from '@/components/game';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { useFinanceStore } from '@/store/financeStore';
 import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
@@ -123,7 +123,7 @@ export function TransactionHistorySheet({
     >
       <EditTransactionSheet txn={editTxn} onClose={() => setEditTxn(null)} />
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
-        <SkiaBackground domain='finance' intensity={0.24} />
+        <FarmBackground domain='finance' />
         <LinearGradient
           colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
           start={{ x: 0.5, y: 0 }}

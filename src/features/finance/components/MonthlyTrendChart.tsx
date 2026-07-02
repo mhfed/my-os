@@ -91,18 +91,18 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
         <Svg width={totalW} height={svgH}>
           <Defs>
             <LinearGradient id='incomeFill' x1='0' y1='0' x2='0' y2='1'>
-              <Stop offset='0' stopColor={gradients.gem[0]} stopOpacity={1} />
-              <Stop offset='1' stopColor={gradients.gem[1]} stopOpacity={1} />
+              <Stop offset='0' stopColor={gradients.gold[0]} stopOpacity={1} />
+              <Stop offset='1' stopColor={gradients.gold[1]} stopOpacity={1} />
             </LinearGradient>
             <LinearGradient id='incomeFillMuted' x1='0' y1='0' x2='0' y2='1'>
               <Stop
                 offset='0'
-                stopColor={gradients.gem[0]}
+                stopColor={gradients.gold[0]}
                 stopOpacity={0.5}
               />
               <Stop
                 offset='1'
-                stopColor={gradients.gem[1]}
+                stopColor={gradients.gold[1]}
                 stopOpacity={0.5}
               />
             </LinearGradient>

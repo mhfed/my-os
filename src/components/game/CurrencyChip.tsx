@@ -1,11 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, gradients, radius } from '@/theme/colors';
+import { colors, glass, gradients, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
 
-export type CurrencyKind = 'coins' | 'gems' | 'xp';
+export type CurrencyKind = 'coins' | 'gems' | 'xp' | 'savings';
 
 interface KindSpec {
   icon: IconName;
@@ -16,30 +17,40 @@ const KINDS: Record<CurrencyKind, KindSpec> = {
   coins: { icon: 'star-four-points', iconColor: '#FFD978' },
   gems: { icon: 'diamond-stone', iconColor: '#72E4EA' },
   xp: { icon: 'lightning-bolt', iconColor: '#FFD978' },
+  savings: { icon: 'treasure-chest', iconColor: '#FFD700' }, // savings: gold chest
 };
 
 interface CurrencyChipProps {
   kind: CurrencyKind;
   value: number | string;
-  /** Show the trailing round "+" affordance (like the shop chips). */
   onAdd?: () => void;
 }
 
 /**
- * The HUD resource pill: a dark inset capsule holding a coloured icon + a bold
- * mono value, optionally capped by a round green "+" button. This is the
- * coins/gems readout from the reference's top bar.
+ * HUD resource pill. `savings` kind renders a gold gradient background
+ * (instead of dark glass) to visually distinguish it as a premium resource.
  */
 export function CurrencyChip({ kind, value, onAdd }: CurrencyChipProps) {
   const spec = KINDS[kind];
+  const isSavings = kind === 'savings';
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.pill}>
-        <View style={styles.iconBubble}>
+      <View style={[styles.pill, isSavings && styles.pillSavings]}>
+        {isSavings ? (
+          <LinearGradient
+            colors={[gradients.gold[0], gradients.gold[1]]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : (
+          <BlurView intensity={22} tint='dark' style={StyleSheet.absoluteFill} />
+        )}
+        <View style={[styles.iconBubble, isSavings && { backgroundColor: 'rgba(0,0,0,0.15)' }]}>
           <Icon name={spec.icon} size={15} color={spec.iconColor} />
         </View>
-        <Text style={styles.value}>{value}</Text>
+        <Text style={[styles.value, isSavings && styles.valueSavings]}>{value}</Text>
       </View>
       {onAdd ? (
         <Pressable onPress={onAdd} hitSlop={6} style={styles.addWrap}>
@@ -70,10 +81,15 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 12,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(24,32,51,0.82)',
+    backgroundColor: glass.dark,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: glass.darkRim,
+    overflow: 'hidden',
     zIndex: 1,
+  },
+  pillSavings: {
+    backgroundColor: 'transparent',
+    borderColor: colors.goldDeep,
   },
   iconBubble: {
     width: 22,
@@ -88,6 +104,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.white,
     letterSpacing: 0.3,
+  },
+  valueSavings: {
+    color: '#3E2C15',
   },
   addWrap: {
     marginLeft: -10,

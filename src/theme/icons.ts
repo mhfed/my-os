@@ -23,7 +23,7 @@ export type { UconName } from './ucons';
 
 /** Bottom tab bar definition — order matches the design (Today → More). */
 export const TABS: { route: string; label: string; icon: IconName }[] = [
-  { route: 'index', label: 'Today', icon: 'view-grid' },
+  { route: 'index', label: 'Home', icon: 'home' },
   { route: 'tasks', label: 'Tasks', icon: 'checkbox-marked-outline' },
   { route: 'health', label: 'Health', icon: 'heart-pulse' },
   { route: 'finance', label: 'Finance', icon: 'wallet' },

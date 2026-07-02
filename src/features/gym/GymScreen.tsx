@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+import { FarmBackground } from '@/components/skia';
 import { colors } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
@@ -36,6 +37,7 @@ export function GymScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <FarmBackground domain='health' />
       <WorkoutHeader
         onBack={handleBack}
         muscleGroup={MUSCLE_GROUP}

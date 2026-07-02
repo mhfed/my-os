@@ -8,7 +8,7 @@ import { fonts, textShadow } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { AnimatedCard, PressableScale, ShimmerView } from '@/components/motion';
 import { CurrencyChip, GameIconButton, GamePanel, Unicon3D } from '@/components/game';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { useFinanceStore } from '@/store/financeStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
@@ -76,7 +76,7 @@ export function FinanceScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <SkiaBackground domain='finance' intensity={0.38} />
+      <FarmBackground domain='finance' />
       <LinearGradient
         colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
         start={{ x: 0.5, y: 0 }}
@@ -90,7 +90,7 @@ export function FinanceScreen() {
         <PressableScale onPress={() => {}} hitSlop={8} haptic='selection'>
           <View style={styles.avatarWrap}>
             <LinearGradient
-              colors={gradients.gem}
+              colors={gradients.gold}
               start={{ x: 0.1, y: 0 }}
               end={{ x: 0.9, y: 1 }}
               style={styles.avatar}
@@ -240,7 +240,7 @@ export function FinanceScreen() {
         accessibilityLabel='Add transaction'
       >
         <LinearGradient
-          colors={gradients.gem}
+          colors={gradients.gold}
           start={{ x: 0.17, y: 0 }}
           end={{ x: 0.83, y: 1 }}
           style={styles.fabGradient}
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 26,
     borderRadius: radius.pill,
-    backgroundColor: colors.teal,
+    backgroundColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },

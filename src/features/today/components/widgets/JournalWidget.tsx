@@ -8,88 +8,90 @@ import { WidgetCard } from '../WidgetCard';
 import { useJournalStore } from '@/store/journalStore';
 import { todayKey } from '@/utils/day';
 
-const MOOD_EMOJIS = ['😢', '😕', '😐', '🙂', '😄'];
-
 export function JournalWidget() {
   const router = useRouter();
   const ready = useJournalStore((s) => s.ready);
 
   if (!ready) return null;
 
-  const entry = useJournalStore.getState().entryFor(todayKey());
+  const entries = useJournalStore.getState().entries;
+  const totalEntries = entries.length;
+  const todayEntry = useJournalStore.getState().entryFor(todayKey());
+  const streak = useJournalStore.getState().streak();
 
   return (
     <WidgetCard
       domain='journal'
-      title='Journal'
-      icon='book-open-page-variant-outline'
-      onPress={() => router.push('/journal')}
+      title='Nhật ký'
+      icon='book-open-outline'
+      onPress={() => router.push('/(tabs)/journal')}
     >
-      {entry ? (
+      {todayEntry ? (
         <>
-          <View style={styles.entryRow}>
+          <View style={styles.statusRow}>
             <Icon name='check-circle' size={16} color={colors.green} />
-            <Text style={styles.writtenText}>Today's entry written</Text>
+            <Text style={styles.statusText}>Đã viết hôm nay</Text>
           </View>
-          <View style={styles.moodRow}>
-            <Text style={styles.moodEmoji}>{MOOD_EMOJIS[entry.mood]}</Text>
-            <Text style={styles.moodLabel}>Mood: {entry.mood + 1}/5</Text>
-          </View>
-          {entry.text.trim() && (
-            <Text style={styles.preview} numberOfLines={2}>
-              {entry.text}
-            </Text>
-          )}
+          <Text style={styles.preview} numberOfLines={2}>
+            {todayEntry.text}
+          </Text>
         </>
       ) : (
-        <View style={styles.emptyRow}>
-          <Icon name='book-outline' size={14} color={colors.muted} />
-          <Text style={styles.emptyText}>Not written yet today</Text>
+        <View style={styles.statusRow}>
+          <Icon name='pencil-outline' size={16} color={colors.muted} />
+          <Text style={styles.promptText}>Hôm nay thế nào?</Text>
         </View>
       )}
+      <View style={styles.footer}>
+        {streak > 0 && (
+          <Text style={styles.streakText}>
+            <Icon name='fire' size={10} color={colors.pink} /> {streak} ngày liên tiếp
+          </Text>
+        )}
+        <Text style={styles.totalText}>{totalEntries} bài</Text>
+      </View>
     </WidgetCard>
   );
 }
 
 const styles = StyleSheet.create({
-  entryRow: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 6,
   },
-  writtenText: {
+  statusText: {
     fontFamily: fonts.displayBold,
     fontSize: 13,
     color: colors.green,
   },
-  moodRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  moodEmoji: {
-    fontSize: 18,
-  },
-  moodLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
+  promptText: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
     color: colors.muted,
   },
   preview: {
     fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.muted,
-    lineHeight: 15,
-    marginTop: 2,
+    fontSize: 12,
+    color: colors.text,
+    lineHeight: 17,
+    marginBottom: 6,
   },
-  emptyRow: {
+  footer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 6,
+    marginTop: 4,
   },
-  emptyText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
+  streakText: {
+    fontFamily: fonts.display,
+    fontSize: 11,
+    color: colors.pink,
+  },
+  totalText: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
     color: colors.muted,
   },
 });

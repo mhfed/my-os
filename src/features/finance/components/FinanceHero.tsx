@@ -66,7 +66,7 @@ export function FinanceHero({
     ? gradients.red
     : isWarning
       ? gradients.gold
-      : gradients.gem;
+      : gradients.gold;
 
   // Headline: remaining budget, or the overspend amount, or (no budget) spend.
   const headLabel = !hasBudget

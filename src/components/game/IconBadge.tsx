@@ -1,7 +1,13 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, gradients, gradientFor, resolveAccent } from '@/theme/colors';
+import {
+  colors,
+  glassy,
+  gradients,
+  gradientFor,
+  resolveAccent,
+} from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 
 interface IconBadgeProps {
@@ -18,7 +24,13 @@ interface IconBadgeProps {
  * highlight spot, with the icon dropped in white. `color` is any category/
  * domain hex; it resolves to the nearest theme accent for the base + gradient.
  */
-export function IconBadge({ icon, color, size = 36, iconSize, style }: IconBadgeProps) {
+export function IconBadge({
+  icon,
+  color,
+  size = 36,
+  iconSize,
+  style,
+}: IconBadgeProps) {
   const { face, deep } = resolveAccent(color);
   const r = Math.max(9, Math.round(size * 0.34));
   const lift = Math.max(2, Math.round(size * 0.08));
@@ -33,9 +45,12 @@ export function IconBadge({ icon, color, size = 36, iconSize, style }: IconBadge
           { top: lift, borderRadius: r, backgroundColor: deep },
         ]}
       />
-      {/* gradient cap */}
+      {/* translucent candy-glass gradient cap */}
       <LinearGradient
-        colors={gradientFor(face)}
+        colors={[
+          glassy(gradientFor(face)[0], 'CC'),
+          glassy(gradientFor(face)[1], 'E6'),
+        ]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={[styles.cap, { width: size, height: size, borderRadius: r }]}
@@ -61,7 +76,11 @@ export function IconBadge({ icon, color, size = 36, iconSize, style }: IconBadge
           }}
           pointerEvents='none'
         />
-        <Icon name={icon} size={iconSize ?? Math.round(size * 0.5)} color={colors.white} />
+        <Icon
+          name={icon}
+          size={iconSize ?? Math.round(size * 0.5)}
+          color={colors.white}
+        />
       </LinearGradient>
     </View>
   );
@@ -72,7 +91,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderColor: 'rgba(255,255,255,0.65)',
     overflow: 'hidden',
   },
   gloss: {

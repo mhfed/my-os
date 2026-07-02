@@ -1,7 +1,13 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, gradients, gradientFor, resolveAccent } from '@/theme/colors';
+import {
+  colors,
+  glassy,
+  gradients,
+  gradientFor,
+  resolveAccent,
+} from '@/theme/colors';
 import { Ucon, type UconName } from '@/theme/ucons';
 
 interface Unicon3DProps {
@@ -43,9 +49,12 @@ export function Unicon3D({
           { top: lift, borderRadius: r, backgroundColor: deep },
         ]}
       />
-      {/* gradient cap */}
+      {/* translucent candy-glass gradient cap */}
       <LinearGradient
-        colors={gradientFor(face)}
+        colors={[
+          glassy(gradientFor(face)[0], 'CC'),
+          glassy(gradientFor(face)[1], 'E6'),
+        ]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={[styles.cap, { width: size, height: size, borderRadius: r }]}
@@ -86,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderColor: 'rgba(255,255,255,0.65)',
     overflow: 'hidden',
   },
   gloss: {

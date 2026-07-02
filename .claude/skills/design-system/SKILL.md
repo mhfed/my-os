@@ -1,19 +1,19 @@
 ---
 name: design-system
 description: >
-  Magic Academy game-UI design system for the Personal OS app. Use this skill
-  whenever building, restyling, or reviewing any screen, component, or visual
-  element so the candy/jelly mobile-game aesthetic stays consistent. Covers the
-  recognized design language, the full design-token reference (colors, typography,
-  radius, gradients, glow/3D shadows, motion), and component usage guidelines.
+  Sunny Farm Glass v2 — premium farm-game UI design system for Personal OS.
+  Use this skill whenever building, restyling, or reviewing any screen to keep
+  the warm, rustic farm-game aesthetic consistent. Covers the farm landscape
+  Skia background system, wood/fabric/stone material tokens, 3D gem/stone
+  buttons, and domain-colored scenes.
 ---
 
-# Magic Academy Design System
+# Sunny Farm Glass v2 Design System
 
-A warm, candy-coated **casual mobile-game** UI language for the Personal OS app.
-The look is inspired by witch/magic-academy mobile games: a dreamy purple sky
-behind cream "parchment" surfaces, chunky 3D jelly buttons with glossy sheens,
-HUD currency pills, star ratings, and bouncy spring micro-interactions.
+A warm, premium **casual farm-game** UI language for the Personal OS app.
+The look is inspired by living farm worlds (Stardew Valley, Harvest Moon):
+rolling green hills under golden sunlight, with UI crafted from natural
+materials — warm wood, burlap fabric, stone, and coloured gemstone buttons.
 
 > **Golden rule:** Never introduce raw hex, ad-hoc shadows, or one-off font
 > strings in a component. Always pull from `src/theme/*` tokens and the
@@ -24,17 +24,17 @@ HUD currency pills, star ratings, and bouncy spring micro-interactions.
 
 ## 1. Recognized Design Characteristics
 
-| Trait                             | How it shows up                                                                                                                                           |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dreamy purple backdrop**        | App-level purple sky (`appBg`) rendered by `SkiaBackground` with soft floating blurred orbs.                                                              |
-| **Warm cream surfaces**           | Screens sit on `screenBg` cream parchment; panels are white/`cardAlt` with warm borders.                                                                  |
-| **Chunky 3D jelly buttons**       | Every primary button is a 3-layer slab: a darker `deep` **base** wall, a gradient **cap** that presses DOWN into the base, and a top **gloss** highlight. |
-| **High-saturation candy palette** | Pure greens, purples, teals, golds — always paired with a darker `*Deep` for the 3D base/border.                                                          |
-| **Glossy sheen**                  | A white→transparent `gradients.gloss` overlay across the top half of buttons/panels for the "wet candy" look.                                             |
-| **Soft emboss text**              | Headings use rounded Baloo 2 with a soft brown drop shadow (`textShadow.emboss`); button labels use a hard dark shadow (`textShadow.button`).             |
-| **HUD game furniture**            | Currency pills (coins/gems/xp), level badges, star ratings, energy orb.                                                                                   |
-| **Bouncy micro-interactions**     | Spring press/release (`withSpring`), light haptics on press-in, staggered card entrance via `AnimatedCard`.                                               |
-| **Generous rounding**             | Pills and chunky corners everywhere (`radius` scale, `radius.pill` for HUD/inputs).                                                                       |
+| Trait | How it shows up |
+|---|---|
+| **Animated farm landscape** | Every screen sits on a layered Skia background: sky gradient → drifting clouds → rolling hills → tree silhouettes → foreground decor + ambient particles (fireflies, sparkles, leaves, petals). Each domain gets its own "time of day". |
+| **Wood & burlap surfaces** | GamePanel uses warm wood-grain backgrounds with rivet deco or burlap fabric for alt panels. Stone variant for inset/sunken areas. |
+| **3D gem/stone buttons** | GameButton stays 3-layer (base + gradient cap + gloss) but materials vary: `gem` (translucent jewel), `stone` (matte rock), `wood` (warm grain), `metal` (cold sheen). |
+| **Domain-colored scenes** | Each feature maps to a farm time-of-day — Finance = golden sunrise, Health = rose dawn, Tasks = clear midday, Habits = orange sunset, Goals = green meadow, etc. |
+| **Glossy sheen** | A white→transparent `gradients.gloss` overlay across the top half of buttons/panels for the "wet candy" look. |
+| **Soft emboss text** | Headings use rounded Baloo 2 with a soft brown drop shadow (`textShadow.emboss`); button labels use a hard dark shadow (`textShadow.button`). |
+| **HUD game furniture** | Currency pills (coins/gems/xp/savings), level badges, star ratings, animated particle effects. |
+| **Bouncy micro-interactions** | Spring press/release (`withSpring`), light haptics on press-in, staggered card entrance via `AnimatedCard`. |
+| **Generous rounding** | Pills and chunky corners everywhere (`radius` scale, `radius.pill` for HUD/inputs). |
 
 ---
 
@@ -45,154 +45,116 @@ All tokens live in `src/theme/`. Import via the `@/theme/*` alias.
 ### 2.1 Colors — `src/theme/colors.ts`
 
 **Surfaces & text**
+
 | Token | Value | Use |
-|-------|-------|-----|
-| `colors.appBg` | `#7C4DFF` | App-level purple sky (Skia backdrop) |
-| `colors.screenBg` | `#FBEFD8` | Cream screen background |
-| `colors.card` | `#FFFFFF` | Default panel/card |
-| `colors.cardAlt` | `#FFF6E6` | Alt/inset panel (quick-capture, subtle rows) |
-| `colors.track` | `#EAD9B8` | Inactive track, undone borders |
-| `colors.border` | `#E7C690` | Warm hairline border |
-| `colors.text` | `#4A2E12` | Primary text (warm brown) |
-| `colors.muted` | `#A6814E` | Secondary text |
-| `colors.textOnDark` / `colors.white` | `#FFFFFF` | Text on colored/dark surfaces |
-| `colors.tabInactive` | `#C9A876` | Inactive tab icon/label |
-| `colors.black` | `#2A1A0A` | Deepest warm shade |
+|---|---|---|
+| `colors.appBg` | `#5EC4F0` | Farm sky blue (outermost backdrop) |
+| `colors.screenBg` | `#D8F1FF` | Light sky fallback behind the Skia scene |
+| `colors.card` | `#FFFFFFB8` | Translucent white glass panel (~72%) |
+| `colors.cardAlt` | `#EFFBFFA6` | Tinted alt glass (~65%) |
+| `colors.track` | `#FFFFFF7A` | Translucent inset well / progress track |
+| `colors.border` | `#FFFFFFE0` | Bright glass rim |
+| `colors.text` | `#3E2C15` | Warm farm-brown primary text |
+| `colors.textOnDark` | `#FFFFFF` | Text on coloured/3D buttons |
+| `colors.muted` | `#8A7150` | Secondary text (hay brown) |
+| `colors.tabInactive` | `#7E97AA` | Inactive tab tint (hazy sky) |
 
 **Accents** — each pairs a bright face with a darker `*Deep` for the 3D base/border:
 
-| Accent | Face      | Deep      |
-| ------ | --------- | --------- |
-| purple | `#7C5BE6` | `#5B3FC4` |
-| teal   | `#3FD4E8` | `#1FA9BE` |
-| green  | `#6FD03A` | `#4DA61F` |
-| orange | `#FFA726` | `#E07E12` |
-| yellow | `#FFD23F` | `#E0A800` |
-| red    | `#FF5A6E` | `#D63A52` |
-| blue   | `#5B8DEF` | `#3D6BC4` |
-| pink   | `#FF7EB6` | `#E0568F` |
+| Accent | Face | Deep | Domain |
+|---|---|---|---|
+| purple | `#9C5FE8` | `#7239BC` | Today, Inbox |
+| gold | `#FFD700` | `#B8860B` | **Finance** |
+| teal | `#2FC6E4` | `#1795B4` | — |
+| green | `#58C832` | `#3B9414` | Goals |
+| orange | `#FF9330` | `#D66B0E` | Habits |
+| yellow | `#FFC933` | `#E09E00` | Notes |
+| red | `#FF5D55` | `#D63A34` | Health |
+| blue | `#3D9BFF` | `#1F6FD6` | Tasks |
+| pink | `#FF7FC3` | `#E0509A` | Journal |
 
-> When using an accent for a 3D element, always use its `*Deep` partner for the
-> base slab / border. Never invent a darker shade by eye.
+Additional gold palette tokens: `colors.amber` (`#FF8C00`), `colors.copper` (`#CD7F32`), `colors.goldSoft` (`#FFF3C4`).
 
-**Color helpers**
+**Gradients** — `src/theme/colors.ts` `gradients` object:
 
-- `tint(hex, alpha = '1A')` → `${hex}${alpha}` for soft fills/badges (e.g. priority badge background).
-- `glow(hex, opacity = 0.45, radius = 18)` → returns a `shadow*` style object for a colored glow halo.
-- `base3D(deepHex, height = 5)` → returns the **hard zero-blur** shadow that creates the 3D slab wall: `{ shadowColor: deepHex, shadowOffset: { width: 0, height }, shadowOpacity: 1, shadowRadius: 0, elevation: height + 2 }`. Use this for any pressable that should look like a physical jelly slab.
+| Token | Stops | Use |
+|---|---|---|
+| `backdrop` | `#A9E4FF → #5EC4F0` | Screen backdrop |
+| `warm` | `#FFFFFF → #EAF7FF` | Soft interior |
+| `green` | `#8BE05C → #58C832` | CTA success |
+| `purple` | `#BE8CFF → #9C5FE8` | Today, Inbox |
+| `gold` | `#FFDE6B → #FF9330` | Finance **new** |
+| `gem` | `#7BE3F5 → #2FC6E4` | Legacy teal |
+| `red` | `#FF938D → #FF5D55` | Health |
+| `blue` | `#7FC0FF → #3D9BFF` | Tasks |
+| `pink` | `#FFA9D6 → #FF7FC3` | Journal |
+| `gloss` | `rgba(255,255,255,0.62) → transparent` | Top sheen |
+| `spend` | `#58C832 → #2FC6E4` | Progress bars |
 
-### 2.2 Radius — `colors.radius`
+**Color helpers**: `tint(hex, alpha = '1A')`, `glassy(hex, alpha = 'E0')`, `resolveAccent(hex)`, `gradientFor(face)`, `glow(hex, opacity, radius)`, `base3D(deepHex, height)`.
 
-`{ sm: 12, md: 18, lg: 24, xl: 30, pill: 999 }`
+### 2.2 Typography — `src/theme/typography.ts`
 
-- `sm/md` → small chips, badges, inset rows.
-- `md/lg` → cards & panels.
-- `xl` → hero panels.
-- `pill` → HUD chips, text inputs, round icon buttons.
+Same Baloo 2 stack. Heading shadows warm up: `textShadow.emboss` uses `colors.text` brown.
 
-### 2.3 Gradients — `colors.gradients`
+### 2.3 Motion — `src/theme/motion.ts`
 
-Two-stop arrays consumed by `expo-linear-gradient`:
-`backdrop`, `warm`, `green` `['#8FE34A','#5BC02E']`, `purple` `['#9B7BFF','#7C5BE6']`,
-`gold` `['#FFE27A','#FFB23F']`, `gem` `['#7DE9F7','#3FD4E8']`, `red` `['#FF8A9B','#FF5A6E']`,
-`blue` `['#7DA8FF','#5B8DEF']`, `pink` `['#FF9ECB','#FF7EB6']`,
-`gloss` `['rgba(255,255,255,0.55)','rgba(255,255,255,0.0)']`, `spend`.
+Same spring/timing tokens. Add `timing.ambient: { duration: 12000, easing: Easing.linear }` for slow cloud/particle loops (optional; values can be inlined too).
 
-- Use a domain/accent gradient for the **cap** of a button.
-- Always layer `gloss` over the **top half** of a glossy surface (top→bottom).
+### 2.4 Spacing & Radius — `src/theme/colors.ts`
 
-### 2.4 Shadows / elevation — `colors.elevation`
-
-- `elevation.card` → soft resting shadow for cards.
-- `elevation.panel` → `{ shadowColor:'#5A3A12', shadowOffset:{width:0,height:6}, shadowOpacity:0.18, shadowRadius:14, elevation:5 }` for raised panels.
-- For the **3D pressable wall**, prefer `base3D(...)` over `elevation.*`.
-
-### 2.5 Typography — `src/theme/typography.ts`
-
-`fonts` keys (use the family string as `fontFamily`):
-
-| Key                                           | Family                        | Use                                           |
-| --------------------------------------------- | ----------------------------- | --------------------------------------------- |
-| `regular` / `medium` / `semibold` / `bold`    | IBM Plex Sans 400/500/600/700 | Body, labels, data                            |
-| `monoRegular` / `monoMedium` / `monoSemibold` | IBM Plex Mono                 | Numbers, code-like values                     |
-| `display`                                     | `Baloo2_600SemiBold`          | **Default headings / titles / chunky labels** |
-| `displayMedium`                               | `Baloo2_500Medium`            | Soft greetings/subtitles                      |
-| `displayBold`                                 | `Baloo2_700Bold`              | Section titles, button labels                 |
-| `displayExtra`                                | `Baloo2_800ExtraBold`         | Hero name, big numbers                        |
-
-> ⚠️ There is **no** `displaySemibold` key. The semibold rounded face is just
-> `display`. Do not reference non-existent keys.
-
-`textShadow` presets:
-
-- `textShadow.emboss` → soft brown drop (`rgba(122,74,18,0.25)`) for Baloo headings on light surfaces.
-- `textShadow.button` → hard dark drop (`rgba(0,0,0,0.22)`) for white labels on colored buttons.
-
-### 2.6 Motion — `src/theme/motion.ts` + reanimated
-
-- Press in: `withSpring` snappy (cap translates down by `lift`).
-- Release: `withSpring` bouncy (overshoot for jelly bounce).
-- Entrance: `AnimatedCard` staggers children by `index` (fade + rise).
-- Haptics: `Haptics.impactAsync(Light)` on press-in for tactile elements; `selection` for subtle taps.
-- Keep the **3D lift constant** (`LIFT`/`lift`) equal to the `base3D` height so the cap fully collapses into the base on press.
+`radius.scale`: sm 12, md 18, lg 24, xl 30, pill 999.
 
 ---
 
-## 3. Component Guidelines — `@/components/game`
+## 3. Component Library
 
-Barrel: `import { GameButton, GameIconButton, GamePanel, CurrencyChip, StarRating } from '@/components/game';`
+Reusable game UI kit at `@/components/game`. Barrel: `import { GameButton, GameIconButton, GamePanel, CurrencyChip, StarRating } from '@/components/game';`
 
 ### GameButton
 
-Chunky 3-layer jelly button (base + gradient cap + gloss).
+Chunky 3-layer button: base wall (coloured 3D shadow) + gradient cap + top gloss.
 
 ```tsx
-<GameButton label="Start quest" variant="green" size="md" icon="rocket-launch" onPress={...} />
+<GameButton label="Start quest" variant="green" size="md" material="gem" onPress={...} />
 ```
 
 - `variant`: `green | purple | gold | gem | red | blue` (drives cap gradient + `deep` base).
+- `material`: `'gem'` (default, translucent jewel) | `'stone'` (matte rock) | `'wood'` (warm grain) | `'metal'` (cold sheen).
 - `size`: `sm` (h40) | `md` (h52) | `lg` (h62).
 - `icon?` MaterialCommunityIcons name; `children?` overrides default label content; `fullWidth?`; `haptic?`.
-- Label uses `displayBold` + `textShadow.button`. Do **not** wrap in another shadow container.
 
 ### GameIconButton
 
-Square glossy 3D icon button.
+Square 3D icon button with same materials.
 
 ```tsx
-<GameIconButton icon='bell-outline' variant='gold' size={44} />
+<GameIconButton icon='bell-outline' variant='gold' material='gem' size={44} />
 ```
-
-- `variant` same set as GameButton; `size` (default 46); `iconSize?`; `haptic?`.
-- For HUD actions (notifications, add) — keep `size` 44–48.
 
 ### IconBadge
 
-Glossy 3D "clay chip" for a single icon (3dicons.co style) — a deep base wall,
-gradient cap, top gloss + top-left highlight spot, white glyph. Use it anywhere
-a category / stat / directional icon needs to read as a dimensional candy object
-instead of a flat tinted circle.
+Glossy 3D "clay chip" for a single icon — deep base wall, gradient cap, top gloss + spot highlight, white glyph.
 
 ```tsx
-<IconBadge icon='piggy-bank' color={colors.green} size={38} />
+<IconBadge icon='piggy-bank' color={colors.gold} size={38} />
 ```
 
-- `color` is any category/domain hex; it resolves to the nearest theme accent
-  (`resolveAccent`) for the base + gradient pairing — never pass a raw deep shade.
-- `size` (default 36); `iconSize?` overrides the glyph size.
+`color` resolves via `resolveAccent` to the nearest theme pairing — never pass a raw deep shade.
 
 ### GamePanel
 
-Cream/white raised container with optional title + header action.
+Material-themed raised container: wood, fabric, or stone.
 
 ```tsx
-<GamePanel title="Today's quests" headerRight={<CountChip n={3} />}>...</GamePanel>
-<GamePanel alt>...</GamePanel>      // inset cardAlt variant
-<GamePanel flush>...</GamePanel>    // no inner padding (for horizontal scrollers)
+<GamePanel title="Today's quests" variant="wood" headerRight={<CountChip n={3} />}>...</GamePanel>
+<GamePanel variant="fabric" alt>...</GamePanel>      // lighter woven look
+<GamePanel variant="stone" flush>...</GamePanel>     // inset / no padding
 ```
 
-- `title` renders a `displayBold` heading with `emboss`.
-- Use `alt` for secondary/inset blocks (e.g. quick-capture), `flush` when the child manages its own padding (e.g. a horizontal habit scroller).
+- `variant`: `'wood'` (default) — warm brown, wood-grain texture, rivet decorations
+- `'fabric'` — beige/twill background, stitched border effect
+- `'stone'` — gray chiseled stone, subtle shadow
 
 ### CurrencyChip
 
@@ -200,10 +162,11 @@ HUD resource pill.
 
 ```tsx
 <CurrencyChip kind="coins" value={score} />
-<CurrencyChip kind="gems" value={done} onAdd={...} />
+<CurrencyChip kind="savings" value={totalSavings} onAdd={...} />
 ```
 
-- `kind`: `coins | gems | xp` (icon + gradient); `value`; optional `onAdd` shows a `+` mint button.
+- `kind`: `coins` (gold, coin icon) | `gems` (teal, diamond) | `xp` (purple, star) | `savings` (gold/amber, treasure chest icon **new**).
+- `savings` kind uses gold gradient + chest icon
 
 ### StarRating
 
@@ -211,60 +174,92 @@ HUD resource pill.
 <StarRating filled={starsFilled} count={3} size={20} />
 ```
 
-- `filled` stars get a gold glow; empties are muted outlines.
-- Derive `filled` from a score: `Math.min(count, Math.max(0, Math.round(score / step)))`.
+### FarmBackground (Skia)
 
-### Supporting building blocks (already game-styled)
+Domain-colored animated farm landscape. Replace old `SkiaBackground`.
 
-- `AnimatedCard` — staggered entrance wrapper (`index` prop).
-- `PressableScale` — generic spring-scale press with `haptic`.
-- `EnergyOrb` (Skia) — hero stat ring.
-- `HabitPill` — 3D jelly habit tile (base + cap + gloss, spring press).
-- `TaskCard` — game card: round check, white border, `display` title, pill badge.
+```tsx
+import { FarmBackground } from '@/components/skia';
+// ...
+<FarmBackground domain='finance' />
+```
+
+Renders per-domain scene: sky gradient → clouds → hills → trees → ambient particles. See `src/components/skia/farm/`.
+
+### Supporting building blocks
+
+- `AnimatedCard` — staggered entrance wrapper
+- `PressableScale` — generic spring-scale press with haptic
+- `AmbientParticles` — domain-specific: fireflies, sparkles, leaves, petals
+- `CloudLayer`, `HillLayer`, `TreeLayer`, `SunMoon` — individual Skia scene layers
 
 ---
 
-## 4. Recipes (copy these patterns)
+## 4. Farm Background Scenes (per domain)
 
-**A 3D pressable slab**
+| Domain | Scene | Sky | Sun | Particles |
+|---|---|---|---|---|
+| `today` | Sunset over hills | Purple→pale blue | Purple glow | Fireflies |
+| `tasks` | Clear midday | Blue→pale | Golden | None |
+| `finance` | Golden sunrise | Gold→amber→blue | Radiant gold | Coin sparkles |
+| `health` | Rose dawn | Pink→rose→blue | Rose | Cherry petals |
+| `habits` | Orange sunset | Orange→peach→blue | Amber | Autumn leaves |
+| `goals` | Green meadow | Green→pale blue | Golden | Fireflies |
+| `journal` | Pink dawn | Pink→cream→blue | Blush pink | Cherry petals |
+| `notes` | Golden noon | Yellow→gold→blue | Bright gold | Autumn leaves |
+| `inbox` | Twilight | Lavender→purple→blue | Purple | Fireflies |
+
+Each scene renders 6-8 Skia layers with animated elements (clouds drifting, sun moving, particles floating). Respects `useReducedMotion()`.
+
+---
+
+## 5. Recipes (copy these patterns)
+
+**Domain-colored farm background**
 
 ```tsx
-// base wall
-<View style={[styles.base, base3D(colors.greenDeep, LIFT)]} />
-// cap (animated translateY: press.value * LIFT), gradient + gloss on top half
-<Animated.View style={[styles.cap, capStyle]}>
-  <LinearGradient colors={colors.gradients.green} .../>
-  <LinearGradient colors={colors.gradients.gloss} .../>  {/* top half only */}
-</Animated.View>
+<View style={{ flex: 1 }}>
+  <FarmBackground domain='finance' />
+  <ScrollView>...your content...</ScrollView>
+</View>
 ```
 
-**Heading on a light panel**
+**Wood panel with title**
 
 ```tsx
-<Text style={{ fontFamily: fonts.displayBold, color: colors.text, ...textShadow.emboss }}>
+<GamePanel title="Recent Transactions" variant='wood'>
+  {/* content */}
+</GamePanel>
 ```
 
-**White label on a colored button**
+**Gold CTA gem button**
 
 ```tsx
-<Text style={{ fontFamily: fonts.displayBold, color: colors.white, ...textShadow.button }}>
+<GameButton label="Add Transaction" variant='gold' material='gem' onPress={...} />
 ```
 
-**Pill input**
+**Savings currency chip**
 
 ```tsx
-borderRadius: radius.pill, borderWidth: 2, borderColor: colors.track, backgroundColor: colors.white
+<CurrencyChip kind='savings' value={formatCompactVND(totalSavings)} />
+```
+
+**Ambient particles on a scene**
+
+```tsx
+<AmbientParticles kind='sparkles' count={12} color={colors.gold} />
 ```
 
 ---
 
-## 5. Consistency Checklist (run before finishing any UI change)
+## 6. Consistency Checklist (run before finishing any UI change)
 
 - [ ] No raw hex / inline shadow / literal font string — all from `@/theme/*`.
 - [ ] Primary actions use `GameButton`; icon actions use `GameIconButton`.
-- [ ] Containers use `GamePanel` (with `alt`/`flush` where appropriate).
+- [ ] Containers use `GamePanel` (with `variant`/`alt`/`flush` where appropriate).
 - [ ] Accents always paired with their `*Deep` for 3D base/border.
 - [ ] Gloss overlay sits on the **top half** of glossy surfaces only.
+- [ ] Background uses `FarmBackground` instead of old `SkiaBackground`.
 - [ ] Headings: Baloo `display*` + `emboss`; button labels: `displayBold` + `button` shadow.
 - [ ] Pressables spring + light haptic; cap lift equals base height.
 - [ ] Corners use the `radius` scale; HUD/inputs use `radius.pill`.
@@ -272,9 +267,10 @@ borderRadius: radius.pill, borderWidth: 2, borderColor: colors.track, background
 
 ---
 
-## 6. Extending the system
+## 7. Extending the system
 
-1. **New accent** → add `xxx` + `xxxDeep` to `colors`, a matching `gradients.xxx`, and a `GameButton`/`GameIconButton` variant spec.
-2. **New component** → build it from base3D + gradient cap + gloss, export from `src/components/game/index.ts`, and document its props in §3.
-3. **New token** → add to the correct `src/theme/*` file first, then consume; never inline.
-4. Keep this file the **single source of truth** — update §2/§3 whenever tokens or component APIs change.
+1. **New accent** → add `xxx` + `xxxDeep` to `colors`, a matching `gradients.xxx`, scene config in `FarmBackground`, and a `GameButton` variant.
+2. **New material** → add to `GameButton`/`GameIconButton` material union. Create gradient/texture pattern for it.
+3. **New scene domain** → add scene config in `src/components/skia/farm/FarmBackground.tsx` scene map.
+4. **New component** → build from base3D + gradient cap + gloss, export from `src/components/game/index.ts`, and document its props in §3.
+5. Keep this file the **single source of truth** — update §2/§3 whenever tokens or component APIs change.

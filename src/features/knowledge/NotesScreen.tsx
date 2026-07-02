@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+import { FarmBackground } from '@/components/skia';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -49,6 +50,7 @@ export function NotesScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <FarmBackground domain='notes' />
       <View style={styles.header}>
         <Pressable
           onPress={handleBack}

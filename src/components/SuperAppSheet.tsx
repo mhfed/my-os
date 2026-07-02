@@ -24,7 +24,7 @@ import {
 } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
-import { SkiaBackground } from '@/components/skia';
+import { FarmBackground } from '@/components/skia';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -182,7 +182,7 @@ export function SuperAppSheet() {
         style={[styles.backdrop, { opacity: fadeAnim }]}
         pointerEvents='box-none'
       >
-        <SkiaBackground domain='today' intensity={0.2} />
+        <FarmBackground domain='today' />
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       </Animated.View>
 

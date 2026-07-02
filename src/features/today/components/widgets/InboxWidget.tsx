@@ -13,56 +13,97 @@ export function InboxWidget() {
 
   if (!ready) return null;
 
-  const openCount = useInboxStore.getState().openCount();
-  const openItems = useInboxStore.getState().open();
-  const latest = openItems[0];
+  const items = useInboxStore.getState().items;
+  const openItems = items.filter((i) => i.status === 'inbox');
+  const openCount = openItems.length;
+  const archivedToday = items.filter(
+    (i) => i.status === 'archived'
+  ).length;
 
   return (
     <WidgetCard
       domain='inbox'
-      title='Inbox'
-      icon='inbox'
-      onPress={() => router.push('/inbox')}
+      title='Hộp thư'
+      icon='bell-outline'
+      onPress={() => router.push('/(tabs)/inbox')}
     >
       {openCount > 0 ? (
         <>
-          <Text style={styles.count}>{openCount} item{openCount !== 1 ? 's' : ''}</Text>
-          {latest && (
-            <Text style={styles.preview} numberOfLines={2}>
-              {latest.text}
-            </Text>
-          )}
+          <View style={styles.countRow}>
+            <Text style={styles.count}>{openCount}</Text>
+            <View style={[styles.dot, { backgroundColor: colors.purple }]} />
+          </View>
+          <View style={styles.previewList}>
+            {openItems.slice(0, 3).map((item) => (
+              <View key={item.id} style={styles.previewRow}>
+                <Text style={styles.previewText} numberOfLines={1}>
+                  {item.text}
+                </Text>
+              </View>
+            ))}
+          </View>
         </>
       ) : (
-        <View style={styles.emptyRow}>
-          <Icon name='check-circle-outline' size={14} color={colors.green} />
-          <Text style={styles.emptyText}>All clear ✨</Text>
+        <View style={styles.emptyState}>
+          <Icon name='check-circle' size={22} color={colors.green} />
+          <Text style={styles.emptyText}>Tất cả đã xử lý</Text>
         </View>
+      )}
+      {archivedToday > 0 && (
+        <Text style={styles.processedText}>
+          Đã xử lý {archivedToday} hôm nay
+        </Text>
       )}
     </WidgetCard>
   );
 }
 
 const styles = StyleSheet.create({
+  countRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   count: {
     fontFamily: fonts.displayExtra,
-    fontSize: 18,
+    fontSize: 22,
     color: colors.purple,
   },
-  preview: {
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  previewList: {
+    gap: 4,
+  },
+  previewRow: {
+    paddingVertical: 2,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.purple + '30',
+    paddingLeft: 8,
+  },
+  previewText: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.muted,
-    lineHeight: 16,
   },
-  emptyRow: {
+  emptyState: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    paddingVertical: 8,
   },
   emptyText: {
     fontFamily: fonts.medium,
     fontSize: 13,
+    color: colors.green,
+  },
+  processedText: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
     color: colors.muted,
+    marginTop: 6,
   },
 });

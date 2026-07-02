@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FarmBackground } from '@/components/skia';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -51,6 +52,7 @@ export function JournalScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <FarmBackground domain='journal' />
       <View style={styles.header}>
         <Text style={styles.title}>Journal</Text>
         <View style={styles.streakPill}>

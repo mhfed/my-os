@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FarmBackground } from '@/components/skia';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -53,6 +54,7 @@ export function HabitsScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <FarmBackground domain='habits' />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
