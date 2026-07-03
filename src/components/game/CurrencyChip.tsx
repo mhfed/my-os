@@ -14,10 +14,10 @@ interface KindSpec {
 }
 
 const KINDS: Record<CurrencyKind, KindSpec> = {
-  coins: { icon: 'star-four-points', iconColor: '#FFD978' },
-  gems: { icon: 'diamond-stone', iconColor: '#72E4EA' },
-  xp: { icon: 'lightning-bolt', iconColor: '#FFD978' },
-  savings: { icon: 'treasure-chest', iconColor: '#FFD700' }, // savings: gold chest
+  coins: { icon: 'star-four-points', iconColor: '#FFD700' },
+  gems: { icon: 'diamond-stone', iconColor: '#00dbe9' },
+  xp: { icon: 'lightning-bolt', iconColor: '#2ff801' },
+  savings: { icon: 'treasure-chest', iconColor: '#FFD700' },
 };
 
 interface CurrencyChipProps {
@@ -27,12 +27,17 @@ interface CurrencyChipProps {
 }
 
 /**
- * HUD resource pill. `savings` kind renders a gold gradient background
- * (instead of dark glass) to visually distinguish it as a premium resource.
+ * Lumina HUD resource pill — exact stitch spec:
+ * Dark glass with Gold (#FFD700) border.
+ * ₫ symbol follows amount with non-breaking space: "500.000 ₫"
  */
 export function CurrencyChip({ kind, value, onAdd }: CurrencyChipProps) {
   const spec = KINDS[kind];
   const isSavings = kind === 'savings';
+
+  const formatted = typeof value === 'number'
+    ? value.toLocaleString('vi-VN')
+    : value;
 
   return (
     <View style={styles.wrap}>
@@ -45,12 +50,14 @@ export function CurrencyChip({ kind, value, onAdd }: CurrencyChipProps) {
             style={StyleSheet.absoluteFill}
           />
         ) : (
-          <BlurView intensity={22} tint='dark' style={StyleSheet.absoluteFill} />
+          <BlurView intensity={12} tint='dark' style={StyleSheet.absoluteFill} />
         )}
-        <View style={[styles.iconBubble, isSavings && { backgroundColor: 'rgba(0,0,0,0.15)' }]}>
-          <Icon name={spec.icon} size={15} color={spec.iconColor} />
+        <View style={[styles.iconBubble, isSavings && { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
+          <Icon name={spec.icon} size={14} color={spec.iconColor} />
         </View>
-        <Text style={[styles.value, isSavings && styles.valueSavings]}>{value}</Text>
+        <Text style={[styles.value, isSavings && styles.valueSavings]}>
+          {formatted} ₫
+        </Text>
       </View>
       {onAdd ? (
         <Pressable onPress={onAdd} hitSlop={6} style={styles.addWrap}>
@@ -81,15 +88,15 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 12,
     borderRadius: radius.pill,
-    backgroundColor: glass.dark,
-    borderWidth: 1.5,
-    borderColor: glass.darkRim,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: '#FFD700', // Gold border per spec
     overflow: 'hidden',
     zIndex: 1,
   },
   pillSavings: {
     backgroundColor: 'transparent',
-    borderColor: colors.goldDeep,
+    borderColor: '#FFD700',
   },
   iconBubble: {
     width: 22,
@@ -97,20 +104,18 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   value: {
-    fontFamily: fonts.displayExtra,
-    fontSize: 14,
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
     color: colors.white,
     letterSpacing: 0.3,
   },
   valueSavings: {
-    color: '#3E2C15',
+    color: colors.black,
   },
-  addWrap: {
-    marginLeft: -10,
-  },
+  addWrap: { marginLeft: -10 },
   add: {
     width: 26,
     height: 26,
@@ -118,6 +123,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.3)',
   },
 });

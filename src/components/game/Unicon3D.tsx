@@ -3,10 +3,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import {
   colors,
-  glassy,
   gradients,
   gradientFor,
   resolveAccent,
+  tint,
 } from '@/theme/colors';
 import { Ucon, type UconName } from '@/theme/ucons';
 
@@ -19,14 +19,8 @@ interface Unicon3DProps {
 }
 
 /**
- * 3D glossy chip badge for Unicons — same candy/clay style as IconBadge but
- * renders an SVG Unicon instead of a MaterialCommunityIcon glyph.
- *
- * Use this anywhere you want a rich 3D icon badge with a selected Unicon:
- *
- * ```tsx
- * <Unicon3D name="wallet" color={colors.teal} size={44} />
- * ```
+ * 3D glossy chip badge for Unicons — same candy/clay style as IconBadge.
+ * Renders an SVG Unicon instead of a MaterialCommunityIcon glyph.
  */
 export function Unicon3D({
   name,
@@ -42,24 +36,21 @@ export function Unicon3D({
 
   return (
     <View style={[{ width: size, height: size + lift }, style]}>
-      {/* deep base wall */}
       <View
         style={[
           StyleSheet.absoluteFill,
           { top: lift, borderRadius: r, backgroundColor: deep },
         ]}
       />
-      {/* translucent candy-glass gradient cap */}
       <LinearGradient
         colors={[
-          glassy(gradientFor(face)[0], 'CC'),
-          glassy(gradientFor(face)[1], 'E6'),
+          tint(gradientFor(face)[0], 'CC'),
+          tint(gradientFor(face)[1], 'E6'),
         ]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={[styles.cap, { width: size, height: size, borderRadius: r }]}
       >
-        {/* top gloss sheen (top half) */}
         <LinearGradient
           colors={gradients.gloss}
           start={{ x: 0.5, y: 0 }}
@@ -67,7 +58,6 @@ export function Unicon3D({
           style={[styles.gloss, { borderRadius: r - 2, height: size * 0.52 }]}
           pointerEvents='none'
         />
-        {/* soft highlight spot (top-left) */}
         <View
           style={{
             position: 'absolute',

@@ -3,10 +3,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import {
   colors,
-  glassy,
   gradients,
   gradientFor,
   resolveAccent,
+  tint,
 } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 
@@ -19,10 +19,8 @@ interface IconBadgeProps {
 }
 
 /**
- * Glossy 3D icon badge — a candy/clay chip (3dicons.co style): a deep base
- * wall, a gradient cap pressed onto it, a top gloss sheen and a soft top-left
- * highlight spot, with the icon dropped in white. `color` is any category/
- * domain hex; it resolves to the nearest theme accent for the base + gradient.
+ * Glossy 3D icon badge — a candy/clay chip with a deep base wall and gradient
+ * cap. `color` resolves to the nearest theme accent.
  */
 export function IconBadge({
   icon,
@@ -38,24 +36,21 @@ export function IconBadge({
 
   return (
     <View style={[{ width: size, height: size + lift }, style]}>
-      {/* deep base wall */}
       <View
         style={[
           StyleSheet.absoluteFill,
           { top: lift, borderRadius: r, backgroundColor: deep },
         ]}
       />
-      {/* translucent candy-glass gradient cap */}
       <LinearGradient
         colors={[
-          glassy(gradientFor(face)[0], 'CC'),
-          glassy(gradientFor(face)[1], 'E6'),
+          tint(gradientFor(face)[0], 'CC'),
+          tint(gradientFor(face)[1], 'E6'),
         ]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={[styles.cap, { width: size, height: size, borderRadius: r }]}
       >
-        {/* top gloss sheen (top half) */}
         <LinearGradient
           colors={gradients.gloss}
           start={{ x: 0.5, y: 0 }}
@@ -63,7 +58,6 @@ export function IconBadge({
           style={[styles.gloss, { borderRadius: r - 2, height: size * 0.52 }]}
           pointerEvents='none'
         />
-        {/* soft highlight spot (top-left) */}
         <View
           style={{
             position: 'absolute',

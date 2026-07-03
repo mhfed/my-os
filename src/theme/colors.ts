@@ -1,126 +1,134 @@
 /**
- * Personal OS color tokens — "Sunny Farm Glass" design language.
+ * Lumina OS color tokens — exact palette from stitch/DESIGN.md.
  *
- * The visual target: a bright, cheerful farm-game world (blue sky, rolling
- * green hills, golden sun) with UI chrome rendered as translucent 3D glass —
- * frosted white panels you can see the scenery through, chunky see-through
- * candy buttons with hard coloured 3D bases, and glossy sheens everywhere.
+ * Material 3 dark scheme: deep charcoal surfaces, neon functional accents.
  *
- * See `.claude/skills/design-system/SKILL.md` for the full design system.
+ * Electric Blue (primary-container):  #00f0ff  — navigation, core OS
+ * Neon Green  (secondary-container): #2ff801  — habits, growth
+ * Hot Pink    (tertiary-container):  #ffccd6  — health, vitality
+ * Gold        (accent):              #FFD700   — rewards, goals
  */
 export const colors = {
-  // ---- surfaces ------------------------------------------------------------
-  appBg: '#5EC4F0', // farm sky blue (outermost backdrop)
-  screenBg: '#D8F1FF', // light sky fallback behind the Skia scene
-  card: '#FFFFFFB8', // translucent white glass panel (~72%)
-  cardAlt: '#EFFBFFA6', // tinted alt glass (~65%)
-  track: '#FFFFFF7A', // translucent inset well / progress track
-  border: '#FFFFFFE0', // bright glass rim
+  // ---- surfaces (Material 3 dark scale, exact) ---------------------------
+  appBg: '#131313', // background / surface / surface-dim
+  screenBg: '#131313',
+  card: '#1c1b1b', // surface-container-low
+  cardAlt: '#201f1f', // surface-container
+  track: '#2a2a2a', // surface-container-high
+  border: 'rgba(255,255,255,0.08)', // glass-card border
 
-  // ---- text ----------------------------------------------------------------
-  text: '#3E2C15', // warm farm-brown primary text
-  textOnDark: '#FFFFFF', // text on coloured/3D buttons
-  muted: '#8A7150', // secondary text (hay brown)
-  tabInactive: '#7E97AA', // inactive tab tint (hazy sky)
+  // ---- text ---------------------------------------------------------------
+  text: '#e5e2e1', // on-surface
+  textOnDark: '#ffffff',
+  muted: '#b9cacb', // on-surface-variant
+  tabInactive: '#b9cacb', // on-surface-variant
 
-  // ---- accents (juicy farm palette) ----------------------------------------
-  purple: '#9C5FE8', // berry / magic
-  purpleDeep: '#7239BC',
-  teal: '#2FC6E4', // pond water / gems
-  tealDeep: '#1795B4',
-  green: '#58C832', // grass / success CTA
-  greenDeep: '#3B9414',
-  orange: '#FF9330', // carrot / coins
-  orangeDeep: '#D66B0E',
-  yellow: '#FFC933', // sunshine / XP
-  yellowDeep: '#E09E00',
-  red: '#FF5D55', // barn red / danger
-  redDeep: '#D63A34',
-  blue: '#3D9BFF', // clear sky / info
-  blueDeep: '#1F6FD6',
-  pink: '#FF7FC3', // blossom
-  pinkDeep: '#E0509A',
-  gold: '#FFD700', // treasure / coins
-  goldDeep: '#B8860B', // gold 3D base
-  amber: '#FF8C00', // warm treasure accent
-  copper: '#CD7F32', // copper accent
-  goldSoft: '#FFF3C4', // gold tint fill
+  // ---- domain accents (mapped from spec palette) -------------------------
+  purple: '#bb86fc', // custom accent purple
+  purpleDeep: '#9c5fe8',
+  teal: '#00dbe9', // primary-fixed-dim / surface-tint
+  tealDeep: '#00b8d4',
+  green: '#2ff801', // secondary-container (Neon Green)
+  greenDeep: '#00c800',
+  orange: '#ff8c00',
+  orangeDeep: '#e07000',
+  yellow: '#FFD700',
+  yellowDeep: '#e0b800',
+  red: '#ff1744',
+  redDeep: '#d50000',
+  blue: '#00f0ff', // primary-container (Electric Blue)
+  blueDeep: '#00bcd4',
+  pink: '#ffccd6', // tertiary-container (Hot Pink)
+  pinkDeep: '#ff4081',
+  gold: '#FFD700', // Gold accent
+  goldDeep: '#ffab00',
+  amber: '#ff8f00',
+  copper: '#d84315',
+  goldSoft: '#fff8e1',
 
-  white: '#FFFFFF',
-  black: '#26190B',
+  white: '#ffffff',
+  black: '#0e0e0e', // surface-container-lowest
+
+  // ---- exact Material 3 tokens (for direct reference) --------------------
+  primary: '#dbfcff',
+  onPrimary: '#00363a',
+  primaryContainer: '#00f0ff',
+  onPrimaryContainer: '#006970',
+  secondary: '#d7ffc5',
+  onSecondary: '#053900',
+  secondaryContainer: '#2ff801',
+  onSecondaryContainer: '#0f6d00',
+  tertiary: '#fff3f4',
+  onTertiary: '#66002c',
+  tertiaryContainer: '#ffccd6',
+  onTertiaryContainer: '#bb0058',
+  error: '#ffb4ab',
+  onError: '#690005',
+  errorContainer: '#93000a',
+  onErrorContainer: '#ffdad6',
+  onSurface: '#e5e2e1',
+  onSurfaceVariant: '#b9cacb',
+  outline: '#849495',
+  outlineVariant: '#3b494b',
+  surfaceTint: '#00dbe9',
+  primaryFixed: '#7df4ff',
+  primaryFixedDim: '#00dbe9',
+  secondaryFixed: '#79ff5b',
+  secondaryFixedDim: '#2ae500',
+  tertiaryFixed: '#ffd9e0',
+  tertiaryFixedDim: '#ffb1c3',
+  surfaceContainerLowest: '#0e0e0e',
+  surfaceContainerLow: '#1c1b1b',
+  surfaceContainer: '#201f1f',
+  surfaceContainerHigh: '#2a2a2a',
+  surfaceContainerHighest: '#353534',
 } as const;
 
-/** Add an alpha suffix to a hex (e.g. tint('#3FD4E8') -> '#3FD4E81A'). */
+/** Add an alpha suffix to a hex (e.g. tint('#00f0ff') -> '#00f0ff1A'). */
 export const tint = (hex: string, alpha = '1A') => `${hex}${alpha}`;
 
 /**
- * Translucent "coloured glass" shade — a hex with a heavier alpha so vivid
- * candy surfaces let the farm scenery glow through. Default ~88% opaque.
- */
-export const glassy = (hex: string, alpha = 'E0') => `${hex}${alpha}`;
-
-/**
- * Shared frosted-glass surface tokens. Use these instead of ad-hoc rgba
- * whites so every pane of glass in the app matches.
+ * Glass surface tokens following the exact glass-card spec:
+ *   background: rgba(26,26,26,0.6)
+ *   backdrop-filter: blur(12px)
+ *   border: 1px solid rgba(255,255,255,0.08)
  */
 export const glass = {
-  /** Primary frosted panel fill (over BlurView). */
-  fill: 'rgba(255,255,255,0.42)',
-  /** Stronger fill for readable content areas. */
-  fillStrong: 'rgba(255,255,255,0.60)',
-  /** Subtle fill for far-background shapes. */
-  fillSoft: 'rgba(255,255,255,0.22)',
-  /** Bright top/outer rim that sells the glass edge. */
-  rim: 'rgba(255,255,255,0.92)',
-  /** Softer inner rim / hairline. */
-  rimSoft: 'rgba(255,255,255,0.55)',
-  /** Dark glass (HUD pills sitting on bright sky). */
-  dark: 'rgba(38,45,66,0.44)',
-  darkRim: 'rgba(255,255,255,0.50)',
+  fill: 'rgba(26,26,26,0.6)',
+  fillStrong: 'rgba(26,26,26,0.8)',
+  fillSoft: 'rgba(26,26,26,0.4)',
+  rim: 'rgba(255,255,255,0.08)',
+  rimSoft: 'rgba(255,255,255,0.05)',
+  dark: 'rgba(255,255,255,0.08)', // dark glass for pills on dark bg
+  darkRim: 'rgba(255,255,255,0.12)',
 } as const;
 
 /**
- * Gradient stops used across the app. Glossy vertical gradients
- * (light top -> rich bottom) plus the signature gloss highlight.
+ * Gradient stops. Glow/bloom effects use 15-20px blur of accent colors.
  */
 export const gradients = {
-  // screen backdrop (sunny sky)
-  backdrop: ['#A9E4FF', '#5EC4F0'] as const,
-  // soft interior wash
-  warm: ['#FFFFFF', '#EAF7FF'] as const,
-  // CTA grass green
-  green: ['#8BE05C', '#58C832'] as const,
-  // berry purple
-  purple: ['#BE8CFF', '#9C5FE8'] as const,
-  // sunshine gold
-  gold: ['#FFDE6B', '#FF9330'] as const,
-  // pond gem cyan
-  gem: ['#7BE3F5', '#2FC6E4'] as const,
-  // barn red
-  red: ['#FF938D', '#FF5D55'] as const,
-  // clear sky blue
-  blue: ['#7FC0FF', '#3D9BFF'] as const,
-  // blossom pink
-  pink: ['#FFA9D6', '#FF7FC3'] as const,
-  // glossy highlight overlay (top sheen on jelly/glass surfaces)
-  gloss: ['rgba(255,255,255,0.62)', 'rgba(255,255,255,0.0)'] as const,
-  // frosted glass panel wash (diagonal)
+  backdrop: ['#1A1A1A', '#131313'] as const,
+  warm: ['#242424', '#1A1A1A'] as const,
+  green: ['#2ff801', '#00c800'] as const,
+  purple: ['#bb86fc', '#9c5fe8'] as const,
+  gold: ['#FFD700', '#ffab00'] as const,
+  gem: ['#00dbe9', '#00b8d4'] as const,
+  red: ['#ff1744', '#d50000'] as const,
+  blue: ['#00f0ff', '#00bcd4'] as const,
+  pink: ['#ffccd6', '#ff4081'] as const,
+  gloss: ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.0)'] as const,
   glassPanel: [
-    'rgba(255,255,255,0.58)',
-    'rgba(255,255,255,0.30)',
-    'rgba(255,255,255,0.14)',
+    'rgba(255,255,255,0.03)',
+    'rgba(255,255,255,0.01)',
+    'rgba(255,255,255,0.0)',
   ] as const,
-  // progress fill
-  spend: ['#58C832', '#2FC6E4'] as const,
+  spend: ['#00dbe9', '#2ff801'] as const,
+  /** Power Orb gradient: Electric Blue → Neon Green */
+  powerOrb: ['#00f0ff', '#2ae500'] as const,
 };
 
 export type AppColors = typeof colors;
 
-/**
- * Per-domain identity colors. Each entry carries an `accent` (solid), a `deep`
- * (the darker 3D base / pressed shade), a `soft` (tint for chips) and a glossy
- * `gradient` pair for buttons / rings / headers.
- */
 export interface DomainPalette {
   accent: string;
   deep: string;
@@ -130,68 +138,65 @@ export interface DomainPalette {
 
 export const domains = {
   today: {
-    accent: colors.purple,
-    deep: colors.purpleDeep,
-    soft: tint(colors.purple),
-    gradient: gradients.purple,
+    accent: '#00dbe9', // primary-fixed-dim (teal)
+    deep: '#00b8d4',
+    soft: tint('#00dbe9'),
+    gradient: gradients.gem,
   },
   tasks: {
-    accent: colors.blue,
-    deep: colors.blueDeep,
-    soft: tint(colors.blue),
+    accent: '#00f0ff', // primary-container (Electric Blue)
+    deep: '#00bcd4',
+    soft: tint('#00f0ff'),
     gradient: gradients.blue,
   },
   finance: {
-    accent: colors.gold,
-    deep: colors.goldDeep,
-    soft: tint(colors.gold),
+    accent: '#FFD700', // Gold
+    deep: '#ffab00',
+    soft: tint('#FFD700'),
     gradient: gradients.gold,
   },
   health: {
-    accent: colors.red,
-    deep: colors.redDeep,
-    soft: tint(colors.red),
-    gradient: gradients.red,
+    accent: '#ffccd6', // tertiary-container (Hot Pink)
+    deep: '#ff4081',
+    soft: tint('#ffccd6'),
+    gradient: gradients.pink,
   },
   journal: {
-    accent: colors.pink,
-    deep: colors.pinkDeep,
-    soft: tint(colors.pink),
+    accent: '#ffccd6',
+    deep: '#ff4081',
+    soft: tint('#ffccd6'),
     gradient: gradients.pink,
   },
   habits: {
-    accent: colors.orange,
-    deep: colors.orangeDeep,
-    soft: tint(colors.orange),
-    gradient: gradients.gold,
-  },
-  goals: {
-    accent: colors.green,
-    deep: colors.greenDeep,
-    soft: tint(colors.green),
+    accent: '#2ff801', // secondary-container (Neon Green)
+    deep: '#00c800',
+    soft: tint('#2ff801'),
     gradient: gradients.green,
   },
+  goals: {
+    accent: '#FFD700', // Gold
+    deep: '#ffab00',
+    soft: tint('#FFD700'),
+    gradient: gradients.gold,
+  },
   notes: {
-    accent: colors.yellow,
-    deep: colors.yellowDeep,
-    soft: tint(colors.yellow),
+    accent: '#FFD700',
+    deep: '#e0b800',
+    soft: tint('#FFD700'),
     gradient: gradients.gold,
   },
   inbox: {
-    accent: colors.purple,
-    deep: colors.purpleDeep,
-    soft: tint(colors.purple),
+    accent: '#bb86fc', // purple
+    deep: '#9c5fe8',
+    soft: tint('#bb86fc'),
     gradient: gradients.purple,
   },
 } as const satisfies Record<string, DomainPalette>;
 
 export type DomainKey = keyof typeof domains;
 
-/**
- * Colored drop-shadow "glow" preset — a soft tinted halo around an element.
- * iOS uses shadow*, Android falls back to `elevation`.
- */
-export const glow = (hex: string, opacity = 0.45, radius = 18) =>
+/** Neon glow drop-shadow — 15-20px blur of accent color at 30% opacity */
+export const glow = (hex: string, opacity = 0.3, radius = 18) =>
   ({
     shadowColor: hex,
     shadowOffset: { width: 0, height: 0 },
@@ -200,11 +205,7 @@ export const glow = (hex: string, opacity = 0.45, radius = 18) =>
     elevation: Math.round(radius / 2),
   }) as const;
 
-/**
- * The signature game "3D base" shadow: a HARD (zero-blur) coloured shadow
- * offset straight down, making a button look like a thick pressable slab
- * sitting on a darker base. Pair with `deep` colours.
- */
+/** 3D base shadow for pressable elements */
 export const base3D = (deepHex: string, height = 5) =>
   ({
     shadowColor: deepHex,
@@ -215,39 +216,30 @@ export const base3D = (deepHex: string, height = 5) =>
   }) as const;
 
 const ACCENT_FACES: readonly string[] = [
-  colors.purple,
-  colors.gold,
-  colors.teal,
-  colors.green,
-  colors.orange,
-  colors.yellow,
-  colors.red,
-  colors.blue,
-  colors.pink,
+  '#bb86fc', '#FFD700', '#00dbe9', '#2ff801', '#ff8c00',
+  '#FFD700', '#ff1744', '#00f0ff', '#ffccd6',
 ];
 
 const ACCENT_DEEP: Record<string, string> = {
-  [colors.purple]: colors.purpleDeep,
-  [colors.gold]: colors.goldDeep,
-  [colors.teal]: colors.tealDeep,
-  [colors.green]: colors.greenDeep,
-  [colors.orange]: colors.orangeDeep,
-  [colors.yellow]: colors.yellowDeep,
-  [colors.red]: colors.redDeep,
-  [colors.blue]: colors.blueDeep,
-  [colors.pink]: colors.pinkDeep,
+  '#bb86fc': '#9c5fe8',
+  '#FFD700': '#ffab00',
+  '#00dbe9': '#00b8d4',
+  '#2ff801': '#00c800',
+  '#ff8c00': '#e07000',
+  '#ff1744': '#d50000',
+  '#00f0ff': '#00bcd4',
+  '#ffccd6': '#ff4081',
 };
 
 const ACCENT_GRADIENT: Record<string, readonly [string, string]> = {
-  [colors.purple]: gradients.purple,
-  [colors.gold]: gradients.gold,
-  [colors.teal]: gradients.gem,
-  [colors.green]: gradients.green,
-  [colors.orange]: gradients.gold,
-  [colors.yellow]: gradients.gold,
-  [colors.red]: gradients.red,
-  [colors.blue]: gradients.blue,
-  [colors.pink]: gradients.pink,
+  '#bb86fc': gradients.purple,
+  '#FFD700': gradients.gold,
+  '#00dbe9': gradients.gem,
+  '#2ff801': gradients.green,
+  '#ff8c00': gradients.gold,
+  '#ff1744': gradients.red,
+  '#00f0ff': gradients.blue,
+  '#ffccd6': gradients.pink,
 };
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -256,17 +248,10 @@ function hexToRgb(hex: string): [number, number, number] | null {
   return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
 }
 
-/**
- * Map an arbitrary hex color to the nearest theme accent face, so any
- * category/domain color always resolves to a real `deep` 3D-base pairing —
- * even for legacy/custom hexes that aren't an exact palette match.
- */
 export function resolveAccent(hex: string): { face: string; deep: string } {
   if (ACCENT_DEEP[hex]) return { face: hex, deep: ACCENT_DEEP[hex] };
-
   const rgb = hexToRgb(hex);
-  if (!rgb) return { face: colors.purple, deep: colors.purpleDeep };
-
+  if (!rgb) return { face: '#bb86fc', deep: '#9c5fe8' };
   let best = ACCENT_FACES[0];
   let bestDist = Infinity;
   for (const face of ACCENT_FACES) {
@@ -284,34 +269,34 @@ export function resolveAccent(hex: string): { face: string; deep: string } {
   return { face: best, deep: ACCENT_DEEP[best] };
 }
 
-/** Glossy 2-stop gradient matched to a resolved accent face. */
 export function gradientFor(face: string): readonly [string, string] {
   return ACCENT_GRADIENT[face] ?? gradients.gem;
 }
 
-/** Neutral soft elevation for floating glass panels/cards. */
+/** Dark elevation for floating glass panels */
 export const elevation = {
   card: {
-    shadowColor: '#1E5E7A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
+    shadowOpacity: 0.5,
     shadowRadius: 18,
     elevation: 6,
   },
   panel: {
-    shadowColor: '#1E5E7A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 5,
   },
 } as const;
 
-/** Border radius scale — chunky, jelly-rounded corners. */
+/** Border radius — extreme pill-shaped. Converted from rem (1rem = 16px). */
 export const radius = {
-  sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 30,
-  pill: 999,
+  sm: 8,    // 0.5rem
+  md: 16,   // 1rem (DEFAULT)
+  lg: 24,   // 1.5rem
+  xl: 32,   // 2rem  — primary cards
+  xxl: 48,  // 3rem
+  pill: 9999, // full
 } as const;

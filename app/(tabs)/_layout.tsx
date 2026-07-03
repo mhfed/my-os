@@ -10,16 +10,8 @@ import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import {
-  base3D,
-  colors,
-  glass,
-  glassy,
-  gradients,
-  glow,
-  radius,
-} from '@/theme/colors';
-import { fonts, textShadow } from '@/theme/typography';
+import { colors, gradients, radius } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 import { Ucon } from '@/theme/icons';
 import { useGymStore } from '@/store/gymStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -29,55 +21,40 @@ import { useSettingsStore } from '@/store/settingsStore';
 function TabBarBackground() {
   return (
     <View style={StyleSheet.absoluteFill}>
-      <BlurView tint='light' intensity={42} style={styles.tabBarBlur} />
+      <BlurView tint='dark' intensity={40} style={styles.tabBarBlur} />
       <View style={styles.tabBarTint} />
-      <LinearGradient
-        colors={['rgba(255,255,255,0.65)', 'rgba(255,255,255,0.05)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.tabBarGloss}
-        pointerEvents='none'
-      />
     </View>
   );
 }
 
-// ─── 3D Game tab icon ─────────────────────────────────────────────────────
+// ─── Tab icon ─────────────────────────────────────────────────────
 
-interface GameTabIconProps {
+interface TabIconProps {
   iconName: 'home' | 'clipboard-notes' | 'heartbeat' | 'wallet';
   color: string;
   focused: boolean;
 }
 
-function GameTabIcon({ iconName, color, focused }: GameTabIconProps) {
+function TabIcon({ iconName, color, focused }: TabIconProps) {
   return (
     <View style={styles.tabIconWrap}>
-      {/* 3D base shadow when active */}
       {focused && (
-        <View style={[styles.tabIconGlow, { backgroundColor: color + '30' }]} />
-      )}
-      {/* Glass background when active */}
-      {focused && (
-        <LinearGradient
-          colors={[color + '20', color + '08']}
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.7, y: 1 }}
-          style={styles.tabIconBg}
-        />
+        <View style={[styles.activeTabBg, { backgroundColor: colors.secondaryContainer + '18' }]} />
       )}
       <Ucon
         name={iconName}
         size={focused ? 24 : 22}
-        color={focused ? color : colors.tabInactive}
+        color={focused ? colors.secondaryContainer : colors.onSurfaceVariant + '99'}
       />
     </View>
   );
 }
 
-// ─── Magic center button ──────────────────────────────────────────────────
+// ─── Power Orb (FAB) ──────────────────────────────────────────────────────
+// Exact spec: 64px, Electric Blue (#00f0ff) → Neon Green (#2ae500) gradient
+// with 25px blue glow shadow
 
-function MagicTabButton() {
+function PowerOrbButton() {
   const isOpen = useSettingsStore((s) => s.superAppOpen);
   const open = useSettingsStore((s) => s.openSuperApp);
   const close = useSettingsStore((s) => s.closeSuperApp);
@@ -97,46 +74,36 @@ function MagicTabButton() {
         useNativeDriver: true,
       }),
     ]).start();
-    if (isOpen) {
-      close();
-    } else {
-      open();
-    }
+    if (isOpen) close();
+    else open();
   };
 
   return (
-    <Pressable style={styles.magicContainer} onPress={handlePress}>
-      {/* Outer glow ring - pulses when active */}
-      <View style={[styles.magicGlow, isOpen && styles.magicGlowActive]} />
-      {/* 3D jelly button */}
+    <Pressable style={styles.orbContainer} onPress={handlePress}>
+      {/* Glow ring — 25px spread Electric Blue per spec */}
+      <View style={[styles.orbGlow, isOpen && styles.orbGlowActive]} />
       <Animated.View
         style={[
-          styles.magicButton,
-          isOpen && styles.magicButtonActive,
+          styles.orbButton,
+          {
+            shadowColor: colors.primaryContainer,
+            shadowOpacity: isOpen ? 0.3 : 0.5,
+          },
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
+        {/* Power Orb gradient: Electric Blue → Neon Green */}
         <LinearGradient
-          colors={
-            isOpen
-              ? [glassy(colors.purpleDeep, 'E8'), glassy(colors.purple, 'E0')]
-              : [
-                  glassy(gradients.purple[0], 'D6'),
-                  glassy(gradients.purple[1], 'E8'),
-                ]
-          }
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.7, y: 1 }}
+          colors={gradients.powerOrb}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <LinearGradient
-          colors={gradients.gloss}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.7 }}
-          style={styles.magicGloss}
-          pointerEvents='none'
+        <Ucon
+          name={isOpen ? 'times' : 'apps'}
+          size={26}
+          color={colors.white}
         />
-        <Ucon name={isOpen ? 'times' : 'apps'} size={24} color='#fff' />
       </Animated.View>
     </Pressable>
   );
@@ -149,32 +116,32 @@ export default function TabsLayout() {
 
   const sharedTabOptions = {
     headerShown: false,
-    tabBarActiveTintColor: colors.purple,
-    tabBarInactiveTintColor: colors.tabInactive,
+    tabBarActiveTintColor: colors.secondaryContainer,
+    tabBarInactiveTintColor: colors.onSurfaceVariant + '99',
     tabBarBackground: () => <TabBarBackground />,
     tabBarStyle: {
       position: 'absolute' as const,
-      height: 82,
-      marginHorizontal: 12,
-      marginBottom: 12,
-      borderRadius: 28,
-      paddingTop: 10,
-      paddingBottom: 22,
-      borderTopWidth: 0,
+      height: 78,
+      marginHorizontal: 0,
+      marginBottom: 0,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255,255,255,0.08)',
+      paddingTop: 8,
+      paddingBottom: 24,
+      paddingHorizontal: 16,
       backgroundColor: 'transparent',
       overflow: 'visible' as const,
-      // 3D game shadow — hard coloured base + soft premium glow
-      shadowColor: '#5C3A0E',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.35,
-      shadowRadius: 20,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
       elevation: 12,
     } as ViewStyle,
-    tabBarItemStyle: { gap: 3, paddingTop: 2 },
+    tabBarItemStyle: { gap: 2, paddingTop: 2 },
     tabBarLabelStyle: {
-      fontFamily: fonts.displayBold,
-      fontSize: 10,
-      letterSpacing: 0.2,
+      fontFamily: fonts.display,
+      fontSize: 11,
+      letterSpacing: 0.3,
     },
   };
 
@@ -183,9 +150,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name='index'
         options={{
-          title: 'Home',
+          title: 'Today',
           tabBarIcon: ({ color, focused }) => (
-            <GameTabIcon iconName='home' color={color} focused={focused} />
+            <TabIcon iconName='home' color={color} focused={focused} />
           ),
         }}
       />
@@ -194,7 +161,7 @@ export default function TabsLayout() {
         options={{
           title: 'Tasks',
           tabBarIcon: ({ color, focused }) => (
-            <GameTabIcon
+            <TabIcon
               iconName='clipboard-notes'
               color={color}
               focused={focused}
@@ -205,7 +172,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name='magic'
         options={{
-          tabBarButton: () => <MagicTabButton />,
+          tabBarButton: () => <PowerOrbButton />,
           tabBarLabel: () => null,
         }}
       />
@@ -214,7 +181,7 @@ export default function TabsLayout() {
         options={{
           title: 'Health',
           tabBarIcon: ({ color, focused }) => (
-            <GameTabIcon iconName='heartbeat' color={color} focused={focused} />
+            <TabIcon iconName='heartbeat' color={color} focused={focused} />
           ),
           ...(isWorkoutActive
             ? { tabBarStyle: { display: 'none' as const } }
@@ -226,12 +193,12 @@ export default function TabsLayout() {
         options={{
           title: 'Finance',
           tabBarIcon: ({ color, focused }) => (
-            <GameTabIcon iconName='wallet' color={color} focused={focused} />
+            <TabIcon iconName='wallet' color={color} focused={focused} />
           ),
         }}
       />
 
-      {/* Hidden routes — accessible via Super App or other flows */}
+      {/* Hidden routes */}
       <Tabs.Screen name='more' options={{ href: null }} />
       <Tabs.Screen name='inbox' options={{ href: null }} />
       <Tabs.Screen name='journal' options={{ href: null }} />
@@ -245,86 +212,58 @@ export default function TabsLayout() {
 // ─── Styles ────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // Tab bar surfaces — a floating pane of frosted glass over the farm scene
   tabBarBlur: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
+    borderRadius: 0,
     overflow: 'hidden',
   },
   tabBarTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(245,235,220,0.42)',
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: glass.rim,
-  },
-  tabBarGloss: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
+    backgroundColor: 'rgba(14,14,14,0.9)', // surface-container-lowest/90
   },
 
-  // Tab icon
   tabIconWrap: {
     width: 44,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tabIconGlow: {
+  activeTabBg: {
     position: 'absolute',
-    width: 36,
+    width: 44,
     height: 28,
-    borderRadius: 14,
-  },
-  tabIconBg: {
-    position: 'absolute',
-    width: 36,
-    height: 28,
-    borderRadius: 14,
+    borderRadius: 12, // rounded-xl
   },
 
-  // Magic center button — 3D glossy purple jelly slab
-  magicContainer: {
+  // Power Orb — exact spec: 64px, Electric Blue → Neon Green, 25px glow
+  orbContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 4,
   },
-  magicGlow: {
+  orbGlow: {
     position: 'absolute',
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: colors.gold,
-    opacity: 0.18,
+    backgroundColor: colors.primaryContainer,
+    opacity: 0.15,
   },
-  magicGlowActive: {
-    opacity: 0.35,
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+  orbGlowActive: {
+    opacity: 0.3,
+    backgroundColor: colors.purple,
   },
-  magicButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+  orbButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.white,
-    ...base3D(colors.purpleDeep, 5),
-    marginBottom: 4,
     overflow: 'hidden',
-  },
-  magicButtonActive: {
-    ...base3D('#3B2FAF', 4),
-  },
-  magicGloss: {
-    position: 'absolute',
-    top: 2,
-    left: 3,
-    right: 3,
-    height: '56%',
-    borderRadius: 27,
+    // glow: 0 0 25px rgba(0,240,255,0.5)
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 25,
+    elevation: 8,
   },
 });

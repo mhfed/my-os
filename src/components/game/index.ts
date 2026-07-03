@@ -1,11 +1,9 @@
 /**
- * Game UI kit — the "Sunny Farm Glass" design layer.
+ * Lumina OS game UI kit — dark glass design layer.
  * Import from '@/components/game' across features.
- *
- * See `.claude/skills/design-system/SKILL.md` for usage & design rules.
  */
 export { GameButton } from './GameButton';
-export type { GameButtonVariant, GameButtonSize, ButtonMaterial } from './GameButton';
+export type { GameButtonVariant, GameButtonSize } from './GameButton';
 export { GameIconButton } from './GameIconButton';
 export { IconBadge } from './IconBadge';
 export { GamePanel } from './GamePanel';

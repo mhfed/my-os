@@ -1,2 +1,2 @@
-export { FarmBackground, SCENES } from './FarmBackground';
-export type { SceneConfig, DomainKey } from './FarmBackground';
+export { FarmBackground } from './FarmBackground';
+export type { DomainKey } from './FarmBackground';
