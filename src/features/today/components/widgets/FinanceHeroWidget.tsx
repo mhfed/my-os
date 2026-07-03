@@ -42,7 +42,7 @@ export const FinanceHeroWidget = memo(function FinanceHeroWidget() {
   const netWorth = overview.saved - (debtSummary.totalPayable - debtSummary.totalReceivable);
 
   return (
-    <AnimatedCard index={0} style={styles.wrapper}>
+    <AnimatedCard index={0}>
       <PressableScale onPress={() => router.push('/finance')} scaleTo={0.98} haptic='light'>
         <GamePanel style={styles.panel} flush>
           {/* Background gradient accent bar */}
@@ -185,9 +185,6 @@ export const FinanceHeroWidget = memo(function FinanceHeroWidget() {
 });
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: 4,
-  },
   panel: {
     paddingTop: 0,
     overflow: 'hidden',

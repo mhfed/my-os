@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -17,33 +17,14 @@ import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
-import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { todayKey } from '@/utils/day';
 
 import { TodayHud } from './components/TodayHud';
+import { StatsBar } from './components/StatsBar';
+import { DualProgress } from './components/DualProgress';
+import { ModuleShortcuts } from './components/ModuleShortcuts';
 import { QuickCapture } from './components/QuickCapture';
-import { WidgetGrid } from './components/WidgetGrid';
-import { FinanceHeroWidget } from './components/widgets/FinanceHeroWidget';
-import { PersonStatsWidget } from './components/widgets/PersonStatsWidget';
-import { TasksWidget } from './components/widgets/TasksWidget';
-import { HabitsWidget } from './components/widgets/HabitsWidget';
-import { FinanceWidget } from './components/widgets/FinanceWidget';
-import { HealthWidget } from './components/widgets/HealthWidget';
-import { InboxWidget } from './components/widgets/InboxWidget';
-import { JournalWidget } from './components/widgets/JournalWidget';
-import { NotesWidget } from './components/widgets/NotesWidget';
-import { GoalsWidget } from './components/widgets/GoalsWidget';
-
-const WIDGET_MAP: Partial<Record<SuperAppItemKey, React.ComponentType>> = {
-  tasks: TasksWidget,
-  habits: HabitsWidget,
-  finance: FinanceWidget,
-  health: HealthWidget,
-  inbox: InboxWidget,
-  journal: JournalWidget,
-  notes: NotesWidget,
-  goals: GoalsWidget,
-};
 
 export function TodayScreen() {
   const router = useRouter();
@@ -56,7 +37,6 @@ export function TodayScreen() {
   const journalReady = useJournalStore((s) => s.ready);
   const inboxReady = useInboxStore((s) => s.ready);
   const settingsReady = useSettingsStore((s) => s.ready);
-
   const tasks = useTasksStore((s) => s.tasks);
 
   // Init every store Today reads
@@ -127,16 +107,6 @@ export function TodayScreen() {
     }
   }, []);
 
-  // Render widget for a given key — stable reference, widgets read their own data
-  const renderWidget = useCallback(
-    (key: SuperAppItemKey, index: number) => {
-      const Widget = WIDGET_MAP[key];
-      if (!Widget) return null;
-      return <Widget />;
-    },
-    [],
-  );
-
   if (!allReady) {
     return <View style={styles.placeholder} />;
   }
@@ -166,7 +136,7 @@ export function TodayScreen() {
           />
         }
       >
-        {/* HUD bar with greeting, level, streak */}
+        {/* ─── HUD: greeting, level, streak ─── */}
         <TodayHud
           score={score}
           doneTodayCount={doneTodayCount}
@@ -174,17 +144,25 @@ export function TodayScreen() {
           onOpenInbox={openInbox}
         />
 
-        {/* Hero widgets — full-width premium cards */}
-        <View style={styles.heroSection}>
-          <FinanceHeroWidget />
-          <PersonStatsWidget />
-        </View>
+        {/* ─── Stats bar: key metrics ─── */}
+        <StatsBar
+          taskDone={todayDoneTasks}
+          taskTotal={todaySection.length}
+          habitDone={doneTodayCount}
+          habitTotal={useHabitsStore.getState().views().length}
+          inboxOpen={openCount}
+          streak={streak}
+          journalDone={journalToday > 0}
+        />
 
-        {/* Widget grid — glanceable summaries of pinned modules */}
-        <WidgetGrid renderWidget={renderWidget} />
+        {/* ─── Dual progress: tasks + habits side by side ─── */}
+        <DualProgress />
 
-        {/* Quick capture bar */}
-        <AnimatedCard index={8} style={styles.section}>
+        {/* ─── Module shortcuts: pinned modules ─── */}
+        <ModuleShortcuts />
+
+        {/* ─── Quick capture bar ─── */}
+        <AnimatedCard index={3} style={styles.section}>
           <GamePanel alt>
             <QuickCapture
               onCapture={(text: string) => useInboxStore.getState().capture(text)}
@@ -217,9 +195,5 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 16,
-  },
-  heroSection: {
-    gap: 14,
-    marginTop: 4,
   },
 });

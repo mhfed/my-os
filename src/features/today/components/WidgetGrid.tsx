@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   gridItem: {
-    flex: 1,
-    minWidth: '45%',
+    width: '48%',
   },
 });

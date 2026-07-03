@@ -57,14 +57,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 14,
-    borderWidth: 2,
+    borderWidth: 1,
   },
   pillActive: {
     backgroundColor: tint(colors.blue, '2A'),
     borderColor: colors.blue,
   },
   pillInactive: {
-    backgroundColor: 'rgba(252,253,255,0.82)',
+    backgroundColor: colors.cardAlt,
     borderColor: colors.border,
   },
   label: {

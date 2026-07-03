@@ -70,7 +70,7 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
 
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}> 
-          <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
+          <BlurView tint='dark' intensity={28} style={StyleSheet.absoluteFill} />
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -165,11 +165,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(20,29,48,0.34)',
   },
   sheet: {
-    backgroundColor: 'rgba(244,248,255,0.92)',
+    backgroundColor: colors.cardAlt,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: 22,
     paddingTop: 12,
     ...elevation.panel,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(110,122,150,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignSelf: 'center',
     marginBottom: 14,
   },
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.track,
-    backgroundColor: 'rgba(252,253,255,0.86)',
+    backgroundColor: colors.cardAlt,
   },
   categoryText: {
     fontFamily: fonts.semibold,
@@ -236,9 +236,9 @@ const styles = StyleSheet.create({
   },
   input: {
     borderRadius: radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.track,
-    backgroundColor: 'rgba(252,253,255,0.92)',
+    backgroundColor: colors.card,
     paddingVertical: 13,
     paddingHorizontal: 20,
     fontFamily: fonts.monoSemibold,
@@ -257,9 +257,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 52,
     borderRadius: radius.lg,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.track,
-    backgroundColor: 'rgba(252,253,255,0.86)',
+    backgroundColor: colors.cardAlt,
   },
   cancelText: {
     fontFamily: fonts.displayBold,

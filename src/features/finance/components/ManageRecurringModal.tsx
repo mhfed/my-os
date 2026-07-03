@@ -84,7 +84,7 @@ export function ManageRecurringModal({
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
-          <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
+          <BlurView tint='dark' intensity={28} style={StyleSheet.absoluteFill} />
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -294,11 +294,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: 'rgba(244,248,255,0.92)',
+    backgroundColor: colors.cardAlt,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: colors.border,
     ...elevation.panel,
     paddingHorizontal: 20,
     paddingTop: 10,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(110,122,150,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignSelf: 'center',
     marginBottom: 10,
   },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 2,
-    borderBottomColor: 'rgba(200,213,238,0.8)',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   backBtn: {
     width: 36,
@@ -366,8 +366,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     padding: 12,
     borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     ...elevation.card,
   },
   itemIconWrap: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
   },
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.card,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 13,

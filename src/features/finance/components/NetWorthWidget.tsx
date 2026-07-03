@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
   mainRow: {
     borderRadius: radius.md,
     backgroundColor: colors.cardAlt,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 14,
     overflow: 'hidden',
   },
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.6)',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   breakdownRow: {
     flexDirection: 'row',

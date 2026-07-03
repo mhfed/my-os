@@ -187,7 +187,7 @@ export function AddTransactionSheet({
           style={styles.kav}
         >
           <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}> 
-            <BlurView tint='light' intensity={46} style={StyleSheet.absoluteFill} />
+            <BlurView tint='dark' intensity={28} style={StyleSheet.absoluteFill} />
             <View style={styles.handle} />
 
             <View style={styles.headerRow}>
@@ -430,11 +430,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sheet: {
-    backgroundColor: 'rgba(244,248,255,0.92)',
+    backgroundColor: colors.cardAlt,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: colors.border,
     ...elevation.panel,
     paddingHorizontal: 20,
     paddingTop: 10,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(110,122,150,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     marginBottom: 10,
   },
   headerRow: {
@@ -463,9 +463,9 @@ const styles = StyleSheet.create({
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(252,253,255,0.92)',
+    backgroundColor: colors.card,
     borderRadius: radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.track,
     padding: 4,
     gap: 4,
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radius.pill,
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'transparent',
   },
   segmentText: {
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
   },
   newChip: {
     backgroundColor: tint(colors.purple, '1A'),
@@ -544,8 +544,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginTop: 12,
-    backgroundColor: 'rgba(252,253,255,0.92)',
-    borderWidth: 2,
+    backgroundColor: colors.card,
+    borderWidth: 1,
     borderColor: colors.track,
     borderRadius: radius.lg,
     padding: 10,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 7,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'transparent',
   },
   swatchPicked: {
@@ -574,8 +574,8 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(252,253,255,0.92)',
-    borderWidth: 2,
+    backgroundColor: colors.card,
+    borderWidth: 1,
     borderColor: colors.track,
     borderRadius: radius.pill,
     paddingHorizontal: 6,
@@ -600,8 +600,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: 'rgba(252,253,255,0.92)',
-    borderWidth: 2,
+    backgroundColor: colors.card,
+    borderWidth: 1,
     borderColor: colors.track,
     borderRadius: radius.lg,
     paddingHorizontal: 14,

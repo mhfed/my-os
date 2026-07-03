@@ -206,8 +206,8 @@ const styles = StyleSheet.create({
   tooltip: {
     backgroundColor: colors.cardAlt,
     borderRadius: radius.sm,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 8,

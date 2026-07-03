@@ -196,9 +196,9 @@ export function SuperAppSheet() {
           },
         ]}
       >
-        <BlurView tint='light' intensity={50} style={StyleSheet.absoluteFill} />
+        <BlurView tint='dark' intensity={40} style={StyleSheet.absoluteFill} />
         <LinearGradient
-          colors={['rgba(255,255,255,0.34)', 'rgba(255,255,255,0.04)']}
+          colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
           style={styles.sheetGloss}
@@ -372,11 +372,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(244,248,255,0.9)',
+    backgroundColor: 'rgba(28,27,27,0.96)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    borderColor: 'rgba(255,255,255,0.08)',
     ...elevation.panel,
     maxHeight: '82%',
     justifyContent: 'flex-end',
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(110,122,150,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignSelf: 'center',
     marginTop: 12,
     marginBottom: 6,
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(200,213,238,0.8)',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   title: {
     fontFamily: fonts.displayBold,
@@ -446,10 +446,10 @@ const styles = StyleSheet.create({
     aspectRatio: 1.1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(252,253,255,0.88)',
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: 8,
     padding: 12,
     ...elevation.card,
@@ -468,8 +468,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   gridLabel: {
     fontFamily: fonts.semibold,
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 10,
     borderTopWidth: 2,
-    borderTopColor: 'rgba(200,213,238,0.8)',
-    backgroundColor: 'rgba(252,253,255,0.72)',
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(28,27,27,0.85)',
     marginTop: 8,
   },
   footerText: {
@@ -529,9 +529,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(252,253,255,0.88)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.96)',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: 14,
     marginBottom: 10,
@@ -547,8 +547,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   editLabel: {
     flex: 1,

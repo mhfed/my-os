@@ -53,7 +53,6 @@ export const WidgetCard = memo(function WidgetCard({
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    minWidth: '45%',
   },
   panel: {
     paddingBottom: 12,

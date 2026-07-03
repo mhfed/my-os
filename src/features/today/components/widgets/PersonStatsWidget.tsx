@@ -105,7 +105,7 @@ export const PersonStatsWidget = memo(function PersonStatsWidget() {
   ];
 
   return (
-    <AnimatedCard index={1} style={styles.wrapper}>
+    <AnimatedCard index={1}>
       <PressableScale onPress={() => router.push('/health')} scaleTo={0.98} haptic='light'>
         <GamePanel style={styles.panel} flush>
           {/* Background accent bar */}
@@ -148,6 +148,7 @@ export const PersonStatsWidget = memo(function PersonStatsWidget() {
                 onPress={() => router.push(stat.route)}
                 scaleTo={0.95}
                 haptic='light'
+                style={{ width: '48%' }}
               >
                 <View style={styles.statCard}>
                   <LinearGradient
@@ -185,9 +186,6 @@ export const PersonStatsWidget = memo(function PersonStatsWidget() {
 });
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: 4,
-  },
   panel: {
     paddingTop: 0,
     overflow: 'hidden',
@@ -249,12 +247,11 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 12,
+    paddingHorizontal: 18,
     paddingBottom: 16,
     gap: 8,
   },
   statCard: {
-    width: '48%',
     padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -262,7 +259,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     overflow: 'hidden',
     gap: 6,
-    minWidth: 140,
   },
   statBg: {
     ...StyleSheet.absoluteFillObject,

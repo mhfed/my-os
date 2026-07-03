@@ -538,25 +538,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     ...elevation.card,
   },
   editLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginBottom: 8 },
   iconRow: { gap: 8, paddingBottom: 4, marginBottom: 14 },
   iconChip: {
-    width: 46, height: 46, borderRadius: radius.md, borderWidth: 2,
+    width: 46, height: 46, borderRadius: radius.md, borderWidth: 1,
     borderColor: colors.track, backgroundColor: colors.white,
     alignItems: 'center', justifyContent: 'center',
   },
   palette: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   swatch: {
-    width: 32, height: 32, borderRadius: radius.sm, borderWidth: 2, borderColor: 'transparent',
+    width: 32, height: 32, borderRadius: radius.sm, borderWidth: 1, borderColor: 'transparent',
   },
   swatchSelected: { borderColor: colors.white, transform: [{ scale: 1.15 }], ...elevation.card },
   editInput: {
     fontFamily: fonts.regular, fontSize: 14, color: colors.text,
-    backgroundColor: colors.white, borderWidth: 2, borderColor: colors.track,
+    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 12, marginBottom: 14,
   },
   editNoteInput: { textAlignVertical: 'top', minHeight: 60, borderRadius: radius.md },
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   toggleThumbOn: { alignSelf: 'flex-end' },
   editDateRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white,
-    borderWidth: 2, borderColor: colors.track, borderRadius: radius.pill,
+    borderWidth: 1, borderColor: colors.track, borderRadius: radius.pill,
     paddingHorizontal: 18, paddingVertical: 12, marginBottom: 14, gap: 10,
   },
   editDateLabel: { flex: 1, fontFamily: fonts.medium, fontSize: 14, color: colors.text },
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
 
   // Main content
   progressCard: {
-    backgroundColor: colors.card, borderWidth: 2, borderRadius: radius.lg, padding: 18, gap: 12,
+    backgroundColor: colors.card, borderWidth: 1, borderRadius: radius.lg, padding: 18, gap: 12,
     ...elevation.card,
   },
   iconRow2: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   noteBox: {
     flexDirection: 'row', gap: 8, backgroundColor: colors.card,
     borderRadius: radius.md, padding: 12, alignItems: 'flex-start',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
   noteText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
   sectionTitle: {
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   contribRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: colors.card, borderRadius: radius.md, padding: 12,
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
   contribLeft: { flex: 1 },
   contribDate: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
@@ -639,8 +639,8 @@ const styles = StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(24,32,51,0.72)' },
   kav: { width: '100%' },
   paySheet: {
-    backgroundColor: 'rgba(244,248,255,0.92)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl,
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40,
+    backgroundColor: colors.cardAlt, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40,
     ...elevation.panel,
   },
   handle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: colors.border, marginBottom: 14 },
@@ -657,19 +657,19 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginBottom: 8 },
   dateRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white,
-    borderWidth: 2, borderColor: colors.track, borderRadius: radius.pill,
+    borderWidth: 1, borderColor: colors.track, borderRadius: radius.pill,
     paddingHorizontal: 6, paddingVertical: 8, marginBottom: 18,
   },
   dateArrow: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   dateLabel: { flex: 1, textAlign: 'center', fontFamily: fonts.medium, fontSize: 14, color: colors.text },
   noteInput: {
     fontFamily: fonts.regular, fontSize: 14, color: colors.text,
-    backgroundColor: colors.white, borderWidth: 2, borderColor: colors.track,
+    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 12, marginBottom: 16,
   },
   linkTxnRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.white, borderWidth: 2, borderColor: colors.track,
+    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 10, marginBottom: 20,
   },
   linkTxnLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
