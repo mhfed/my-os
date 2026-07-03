@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FlashList } from '@shopify/flash-list';
 
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
@@ -10,6 +11,7 @@ import { GamePanel } from '@/components/game';
 import { AnimatedCard } from '@/components/motion';
 import { FarmBackground } from '@/components/skia';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
+import type { Task } from '@/types/task';
 
 import { AddTaskModal } from './components/AddTaskModal';
 import { FilterPills } from './components/FilterPills';
@@ -18,7 +20,36 @@ import { TaskCard } from './components/TaskCard';
 
 const FAB_GRADIENT = [colors.purple, '#5D52C9'] as const;
 
-/** Phase 2 Tasks screen — header, filters, sectioned task list + add FAB. */
+// ---------------------------------------------------------------------------
+// FlashList flattened list types
+// ---------------------------------------------------------------------------
+
+type SectionTone = 'overdue' | 'today' | 'completed';
+
+interface SectionItem {
+  kind: 'section';
+  id: string;
+  label: string;
+  count: number;
+  tone: SectionTone;
+}
+
+interface TaskItem {
+  kind: 'task';
+  id: string;
+  task: Task;
+  timeLabel: string;
+  overdue: boolean;
+}
+
+type ListItem = SectionItem | TaskItem;
+
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+/** Tasks screen with FlashList -- virtualized, sectioned list + add FAB. */
 export function TasksScreen() {
   const tasks = useTasksStore((s) => s.tasks);
   const ready = useTasksStore((s) => s.ready);
@@ -27,10 +58,6 @@ export function TasksScreen() {
   const toggleTask = useTasksStore((s) => s.toggleTask);
   const toggleSubtask = useTasksStore((s) => s.toggleSubtask);
   const setFilter = useTasksStore((s) => s.setFilter);
-  const sectionOf = useTasksStore((s) => s.sectionOf);
-  const todayTasksFn = useTasksStore((s) => s.todayTasks);
-  const activeCountFn = useTasksStore((s) => s.activeCount);
-  const overdueCountFn = useTasksStore((s) => s.overdueCount);
 
   const [addVisible, setAddVisible] = useState(false);
 
@@ -38,20 +65,153 @@ export function TasksScreen() {
     void init();
   }, [init]);
 
+  // --- Derived data (all memo'd) ---
+  const activeCount = useMemo(
+    () => useTasksStore.getState().activeCount(),
+    [tasks],
+  );
+  const overdueCount = useMemo(
+    () => useTasksStore.getState().overdueCount(),
+    [tasks],
+  );
+
+  const flattenedList = useMemo<ListItem[]>(() => {
+    const items: ListItem[] = [];
+    const showOverdue = activeFilter !== 'Today';
+
+    // Overdue section
+    const overdueTasks = tasks.filter(
+      (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'overdue',
+    );
+    if (showOverdue && overdueTasks.length > 0) {
+      items.push({
+        kind: 'section',
+        id: 'section-overdue',
+        label: 'OVERDUE',
+        count: overdueTasks.length,
+        tone: 'overdue',
+      });
+      for (const task of overdueTasks) {
+        items.push({
+          kind: 'task',
+          id: task.id,
+          task,
+          timeLabel: taskTimeLabel(task),
+          overdue: true,
+        });
+      }
+    }
+
+    // Today section
+    const todayTasks = tasks.filter(
+      (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'today',
+    );
+    items.push({
+      kind: 'section',
+      id: 'section-today',
+      label: 'TODAY',
+      count: todayTasks.length,
+      tone: 'today',
+    });
+    for (const task of todayTasks) {
+      items.push({
+        kind: 'task',
+        id: task.id,
+        task,
+        timeLabel: taskTimeLabel(task),
+        overdue: false,
+      });
+    }
+
+    // Completed section
+    const completedTasks = tasks
+      .filter((t) => t.done)
+      .sort(
+        (a, b) => (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt),
+      );
+    if (completedTasks.length > 0) {
+      items.push({
+        kind: 'section',
+        id: 'section-completed',
+        label: 'COMPLETED',
+        count: completedTasks.length,
+        tone: 'completed',
+      });
+      for (const task of completedTasks) {
+        items.push({
+          kind: 'task',
+          id: task.id,
+          task,
+          timeLabel: taskTimeLabel(task),
+          overdue: false,
+        });
+      }
+    }
+
+    return items;
+  }, [tasks, activeFilter]);
+
+  const getItemType = useCallback(
+    (item: ListItem): string => item.kind,
+    [],
+  );
+
+  const keyExtractor = useCallback((item: ListItem): string => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: ListItem }) => {
+      if (item.kind === 'section') {
+        return (
+          <SectionHeader
+            label={item.label}
+            count={item.count}
+            tone={item.tone}
+          />
+        );
+      }
+      return (
+        <TaskCard
+          task={item.task}
+          timeLabel={item.timeLabel}
+          overdue={item.overdue}
+          onToggle={toggleTask}
+          onToggleSubtask={toggleSubtask}
+        />
+      );
+    },
+    [toggleTask, toggleSubtask],
+  );
+
+  const renderListHeader = useCallback(
+    () => (
+      <>
+        <AnimatedCard index={0} style={styles.headerWrap}>
+          <GamePanel style={styles.headerPanel}>
+            <View style={styles.header}>
+              <View>
+                <Text style={styles.title}>Tasks</Text>
+                <Text style={styles.subtitle}>
+                  {activeCount} active · {overdueCount} overdue
+                </Text>
+              </View>
+              <Pressable
+                style={styles.addButton}
+                onPress={() => setAddVisible(true)}
+              >
+                <Icon name='plus' size={22} color={colors.screenBg} />
+              </Pressable>
+            </View>
+          </GamePanel>
+        </AnimatedCard>
+        <FilterPills active={activeFilter} onSelect={setFilter} />
+      </>
+    ),
+    [activeCount, overdueCount, activeFilter, setFilter],
+  );
+
   if (!ready) {
     return <View style={styles.screen} />;
   }
-
-  const activeCount = activeCountFn();
-  const overdueCount = overdueCountFn();
-  const overdueTasks = tasks.filter((task) => sectionOf(task) === 'overdue');
-  const todayTasks = todayTasksFn();
-
-  const completedTasks = tasks
-    .filter((t) => t.done)
-    .sort((a, b) => (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt));
-
-  const showOverdue = activeFilter !== 'Today';
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -64,92 +224,15 @@ export function TasksScreen() {
         pointerEvents='none'
       />
 
-      <AnimatedCard index={0} style={styles.headerWrap}>
-        <GamePanel style={styles.headerPanel}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Tasks</Text>
-              <Text style={styles.subtitle}>
-                {activeCount} active · {overdueCount} overdue
-              </Text>
-            </View>
-            <Pressable
-              style={styles.addButton}
-              onPress={() => setAddVisible(true)}
-            >
-              <Icon name='plus' size={22} color={colors.screenBg} />
-            </Pressable>
-          </View>
-        </GamePanel>
-      </AnimatedCard>
-
-      <FilterPills active={activeFilter} onSelect={setFilter} />
-
-      <ScrollView
+      <FlashList
+        data={flattenedList}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        getItemType={getItemType}
+        ListHeaderComponent={renderListHeader}
         showsVerticalScrollIndicator={false}
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-      >
-        {showOverdue && overdueTasks.length > 0 && (
-          <View style={styles.overdueSection}>
-            <SectionHeader
-              label='OVERDUE'
-              count={overdueTasks.length}
-              tone='overdue'
-            />
-            <View style={styles.list}>
-              {overdueTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  timeLabel={taskTimeLabel(task)}
-                  overdue
-                  onToggle={toggleTask}
-                  onToggleSubtask={toggleSubtask}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-
-        <View>
-          <SectionHeader label='TODAY' count={todayTasks.length} tone='today' />
-          <View style={styles.list}>
-            {todayTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                timeLabel={taskTimeLabel(task)}
-                overdue={false}
-                onToggle={toggleTask}
-                onToggleSubtask={toggleSubtask}
-              />
-            ))}
-          </View>
-        </View>
-
-        {completedTasks.length > 0 && (
-          <View style={styles.completedSection}>
-            <SectionHeader
-              label='COMPLETED'
-              count={completedTasks.length}
-              tone='completed'
-            />
-            <View style={styles.list}>
-              {completedTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  timeLabel={taskTimeLabel(task)}
-                  overdue={false}
-                  onToggle={toggleTask}
-                  onToggleSubtask={toggleSubtask}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-      </ScrollView>
+        contentContainerStyle={styles.listContent}
+      />
 
       <Pressable style={styles.fab} onPress={() => setAddVisible(true)}>
         <LinearGradient
@@ -178,6 +261,7 @@ const styles = StyleSheet.create({
   headerWrap: {
     paddingTop: 8,
     paddingHorizontal: 18,
+    marginBottom: 12,
   },
   headerPanel: {
     paddingVertical: 2,
@@ -208,23 +292,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingTop: 18,
-    paddingHorizontal: 22,
+  listContent: {
     paddingBottom: 110,
-  },
-  overdueSection: {
-    marginBottom: 28,
-  },
-  list: {
-    gap: 10,
-  },
-  completedSection: {
-    marginTop: 28,
-    marginBottom: 12,
   },
   fab: {
     position: 'absolute',

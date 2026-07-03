@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -8,7 +9,7 @@ import { WidgetCard } from '../WidgetCard';
 import { useJournalStore } from '@/store/journalStore';
 import { todayKey } from '@/utils/day';
 
-export function JournalWidget() {
+export const JournalWidget = memo(function JournalWidget() {
   const router = useRouter();
   const ready = useJournalStore((s) => s.ready);
 
@@ -52,7 +53,7 @@ export function JournalWidget() {
       </View>
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   statusRow: {

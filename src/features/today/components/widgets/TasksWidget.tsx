@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -12,7 +13,7 @@ import { TaskRow } from '../TaskRow';
 
 const HIGH_PRIORITIES: Priority[] = ['P0', 'P1'];
 
-export function TasksWidget() {
+export const TasksWidget = memo(function TasksWidget() {
   const router = useRouter();
   const tasks = useTasksStore((s) => s.tasks);
   const tasksReady = useTasksStore((s) => s.ready);
@@ -95,7 +96,7 @@ export function TasksWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   headerRow: {

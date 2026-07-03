@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -7,7 +8,7 @@ import { Icon } from '@/theme/icons';
 import { WidgetCard } from '../WidgetCard';
 import { useGoalStore } from '@/store/goalStore';
 
-export function GoalsWidget() {
+export const GoalsWidget = memo(function GoalsWidget() {
   const router = useRouter();
   const ready = useGoalStore((s) => s.ready);
 
@@ -88,7 +89,7 @@ export function GoalsWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 function formatMilestoneText(done: number, total: number): string {
   if (total === 0) return 'Chưa có mốc';

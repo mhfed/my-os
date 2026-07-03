@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -12,13 +13,12 @@ import { useHabitsStore } from '@/store/habitsStore';
 import { useGymStore } from '@/store/gymStore';
 import { useGoalStore } from '@/store/goalStore';
 
-export function PersonStatsWidget() {
+export const PersonStatsWidget = memo(function PersonStatsWidget() {
   const router = useRouter();
   const tasksReady = useTasksStore((s) => s.ready);
   const habitsReady = useHabitsStore((s) => s.ready);
   const gymReady = useGymStore((s) => s.ready);
   const goalsReady = useGoalStore((s) => s.ready);
-
 
   if (!tasksReady || !habitsReady || !gymReady || !goalsReady) return null;
 
@@ -182,7 +182,7 @@ export function PersonStatsWidget() {
       </PressableScale>
     </AnimatedCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {

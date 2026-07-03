@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
@@ -40,7 +41,7 @@ function priorityIcon(priority: Priority): IconName {
 }
 
 /** A single task row: checkbox, title + time, priority badge. Toggles on press. */
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
   task,
   timeLabel,
   overdue,
@@ -118,7 +119,7 @@ export function TaskCard({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

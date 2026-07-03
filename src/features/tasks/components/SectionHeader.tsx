@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, tint } from '@/theme/colors';
@@ -11,7 +12,7 @@ interface SectionHeaderProps {
 }
 
 /** Section heading: colored dot + uppercase label + muted mono count. */
-export function SectionHeader({ label, count, tone }: SectionHeaderProps) {
+export const SectionHeader = memo(function SectionHeader({ label, count, tone }: SectionHeaderProps) {
   const isOverdue = tone === 'overdue';
   const isCompleted = tone === 'completed';
   const badgeBg = isOverdue
@@ -52,7 +53,7 @@ export function SectionHeader({ label, count, tone }: SectionHeaderProps) {
       <Text style={styles.count}>{count}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

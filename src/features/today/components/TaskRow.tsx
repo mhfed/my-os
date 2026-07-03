@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { TaskCard } from '@/features/tasks/components/TaskCard';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
 import type { Task } from '@/types/task';
@@ -7,7 +8,7 @@ interface TaskRowProps {
   onToggle: (id: string) => void;
 }
 
-export function TaskRow({ task, onToggle }: TaskRowProps) {
+export const TaskRow = memo(function TaskRow({ task, onToggle }: TaskRowProps) {
   const toggleSubtask = useTasksStore((s) => s.toggleSubtask);
 
   return (
@@ -19,4 +20,4 @@ export function TaskRow({ task, onToggle }: TaskRowProps) {
       onToggleSubtask={toggleSubtask}
     />
   );
-}
+})

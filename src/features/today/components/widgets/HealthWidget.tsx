@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -10,7 +11,7 @@ import { WidgetCard } from '../WidgetCard';
 import { useGymStore } from '@/store/gymStore';
 import { useHabitsStore } from '@/store/habitsStore';
 
-export function HealthWidget() {
+export const HealthWidget = memo(function HealthWidget() {
   const router = useRouter();
   const ready = useGymStore((s) => s.ready);
   const habitsReady = useHabitsStore((s) => s.ready);
@@ -122,7 +123,7 @@ export function HealthWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   statusRow: {

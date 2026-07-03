@@ -68,3 +68,50 @@ quickly and safely in this repo.
 - UDID (devicectl): `2FCAE322-7871-5D3B-97E8-0B7CCA0CDD0F`
 - ⚠️ Current signing uses Development Provisioning Profile → expires in 7 days, must rebuild after expiry.
 - For permanent standalone builds, need Apple Developer account ($99/yr) + EAS Build.
+
+## AI gotchas — lessons learned
+
+### 1. Zustand selectors vs `getState()`
+
+**Don't use function selectors** for derived values that return new object/array references:
+
+```
+// ❌ BAD — creates infinite re-render loop
+const overview = useFinanceStore((s) => s.getOverview());
+const habitViews = useHabitsStore((s) => s.views());
+
+// ✅ GOOD — read plain state properties via hooks
+const tasks = useTasksStore((s) => s.tasks);
+const ready = useTasksStore((s) => s.ready);
+
+// ✅ GOOD — derived functions via getState() (place after early returns)
+const overview = useFinanceStore.getState().getOverview();
+const habitViews = useHabitsStore.getState().views();
+```
+
+**Why:** Zustand selectors run on every store state change and compare results via `Object.is`. Functions that return new `{}` or `[]` every call are always "changed" → infinite re-render.
+
+### 2. Rules of Hooks — don't put selectors after early return
+
+```
+// ❌ BAD — hooks after conditional return
+if (!ready) return null;
+const tasks = useTasksStore((s) => s.tasks);  // Crash: "Rendered more hooks"
+
+// ✅ GOOD — all store hooks before any return
+const tasks = useTasksStore((s) => s.tasks);
+const ready = useTasksStore((s) => s.ready);
+if (!ready) return null;
+// ... use tasks here
+```
+
+**Why:** React requires hooks to run in the same order every render. When the component returns early on first render but doesn't on the second, the hook count changes → error.
+
+### 3. When to use what pattern
+
+| Data type | Hook selector | `getState()` |
+|-----------|:---:|:---:|
+| Plain state (`tasks[]`, `items[]`, `notes[]`) | ✅ before early return | ✅ if behind early return |
+| Function returning new ref (`getOverview()`, `views()`) | ❌ never | ✅ always |
+| Stable function reference (`sectionOf`, `toggleTask`) | ✅ safe (reference stable) | ✅ safe |
+| Booleans/strings (`ready`, `isWorkoutActive`) | ✅ best | ✅ OK |

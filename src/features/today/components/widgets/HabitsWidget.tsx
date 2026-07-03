@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -9,7 +10,7 @@ import { useHabitsStore } from '@/store/habitsStore';
 import { StreakIndicator } from '../StreakIndicator';
 import { HabitPill } from '../HabitPill';
 
-export function HabitsWidget() {
+export const HabitsWidget = memo(function HabitsWidget() {
   const router = useRouter();
   const habitsReady = useHabitsStore((s) => s.ready);
   const toggleToday = useHabitsStore((s) => s.toggleToday);
@@ -78,7 +79,7 @@ export function HabitsWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   headerRow: {

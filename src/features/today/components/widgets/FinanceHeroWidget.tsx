@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,7 +13,7 @@ import { useSavingsStore } from '@/store/savingsStore';
 import { useDebtStore } from '@/store/debtStore';
 import { formatCompactVND } from '@/utils/currency';
 
-export function FinanceHeroWidget() {
+export const FinanceHeroWidget = memo(function FinanceHeroWidget() {
   const router = useRouter();
   const financeReady = useFinanceStore((s) => s.ready);
   const savingsReady = useSavingsStore((s) => s.ready);
@@ -182,7 +182,7 @@ export function FinanceHeroWidget() {
       </PressableScale>
     </AnimatedCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {

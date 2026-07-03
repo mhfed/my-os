@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -9,7 +10,7 @@ import { useFinanceStore } from '@/store/financeStore';
 import { useDebtStore } from '@/store/debtStore';
 import { formatCompactVND } from '@/utils/currency';
 
-export function FinanceWidget() {
+export const FinanceWidget = memo(function FinanceWidget() {
   const router = useRouter();
   const ready = useFinanceStore((s) => s.ready);
 
@@ -103,7 +104,7 @@ export function FinanceWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   spent: {

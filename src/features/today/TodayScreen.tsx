@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -34,7 +34,7 @@ import { JournalWidget } from './components/widgets/JournalWidget';
 import { NotesWidget } from './components/widgets/NotesWidget';
 import { GoalsWidget } from './components/widgets/GoalsWidget';
 
-const WIDGET_MAP: Partial<Record<SuperAppItemKey, () => React.ReactNode>> = {
+const WIDGET_MAP: Partial<Record<SuperAppItemKey, React.ComponentType>> = {
   tasks: TasksWidget,
   habits: HabitsWidget,
   finance: FinanceWidget,
@@ -58,9 +58,6 @@ export function TodayScreen() {
   const settingsReady = useSettingsStore((s) => s.ready);
 
   const tasks = useTasksStore((s) => s.tasks);
-  const habitsLogs = useHabitsStore((s) => s.logs);
-  const journalEntries = useJournalStore((s) => s.entries);
-  const inboxItems = useInboxStore((s) => s.items);
 
   // Init every store Today reads
   const [initStarted, setInitStarted] = useState(false);
@@ -89,17 +86,22 @@ export function TodayScreen() {
 
   const taskRatio = todayDoneTasks / Math.max(1, todaySection.length);
   const habitRatio = doneTodayCount / Math.max(1, useHabitsStore.getState().views().length);
-  const score = Math.round(
-    100 * (0.5 * taskRatio + 0.4 * habitRatio + 0.1 * journalToday),
+
+  const score = useMemo(
+    () =>
+      Math.round(
+        100 * (0.5 * taskRatio + 0.4 * habitRatio + 0.1 * journalToday),
+      ),
+    [taskRatio, habitRatio, journalToday],
   );
 
-  const [streak, setStreak] = useState(0);
-  useEffect(() => {
-    setStreak(todayDoneTasks >= 1 || doneTodayCount >= 1 ? 1 : 0);
-  }, [todayDoneTasks, doneTodayCount]);
+  const streak = useMemo(
+    () => (todayDoneTasks >= 1 || doneTodayCount >= 1 ? 1 : 0),
+    [todayDoneTasks, doneTodayCount],
+  );
 
   const openCount = useInboxStore.getState().openCount();
-  const openInbox = () => router.push('/inbox');
+  const openInbox = useCallback(() => router.push('/inbox'), [router]);
 
   // Pull-to-refresh
   const [refreshing, setRefreshing] = useState(false);
@@ -125,14 +127,14 @@ export function TodayScreen() {
     }
   }, []);
 
-  // Render widget for a given key
+  // Render widget for a given key — stable reference, widgets read their own data
   const renderWidget = useCallback(
     (key: SuperAppItemKey, index: number) => {
       const Widget = WIDGET_MAP[key];
       if (!Widget) return null;
       return <Widget />;
     },
-    [tasks, habitsLogs, journalEntries, inboxItems],
+    [],
   );
 
   if (!allReady) {
@@ -185,7 +187,7 @@ export function TodayScreen() {
         <AnimatedCard index={8} style={styles.section}>
           <GamePanel alt>
             <QuickCapture
-              onCapture={(text) => useInboxStore.getState().capture(text)}
+              onCapture={(text: string) => useInboxStore.getState().capture(text)}
               openCount={openCount}
               onOpenInbox={openInbox}
             />

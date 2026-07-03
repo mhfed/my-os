@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radius } from '@/theme/colors';
@@ -12,7 +12,7 @@ interface QuickCaptureProps {
   onOpenInbox: () => void;
 }
 
-export function QuickCapture({
+export const QuickCapture = memo(function QuickCapture({
   onCapture,
   openCount,
   onOpenInbox,
@@ -53,7 +53,7 @@ export function QuickCapture({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

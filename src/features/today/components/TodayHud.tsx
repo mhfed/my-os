@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -17,7 +17,7 @@ interface TodayHudProps {
   onOpenInbox: () => void;
 }
 
-export function TodayHud({ score, doneTodayCount, streak, onOpenInbox }: TodayHudProps) {
+export const TodayHud = memo(function TodayHud({ score, doneTodayCount, streak, onOpenInbox }: TodayHudProps) {
   const level = Math.max(1, Math.ceil(score / 20));
 
   const [greeting, setGreeting] = useState(getGreeting());
@@ -65,7 +65,7 @@ export function TodayHud({ score, doneTodayCount, streak, onOpenInbox }: TodayHu
       </View>
     </AnimatedCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   hud: {

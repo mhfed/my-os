@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -7,7 +8,7 @@ import { Icon } from '@/theme/icons';
 import { WidgetCard } from '../WidgetCard';
 import { useNoteStore } from '@/store/noteStore';
 
-export function NotesWidget() {
+export const NotesWidget = memo(function NotesWidget() {
   const router = useRouter();
   const ready = useNoteStore((s) => s.ready);
 
@@ -55,7 +56,7 @@ export function NotesWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   headerRow: {

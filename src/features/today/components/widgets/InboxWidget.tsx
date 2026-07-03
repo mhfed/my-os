@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -7,7 +8,7 @@ import { Icon } from '@/theme/icons';
 import { WidgetCard } from '../WidgetCard';
 import { useInboxStore } from '@/store/inboxStore';
 
-export function InboxWidget() {
+export const InboxWidget = memo(function InboxWidget() {
   const router = useRouter();
   const ready = useInboxStore((s) => s.ready);
 
@@ -56,7 +57,7 @@ export function InboxWidget() {
       )}
     </WidgetCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   countRow: {

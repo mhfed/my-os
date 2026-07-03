@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +28,7 @@ const LIFT = 5;
  * base with a check badge; undone = bright tile with an inset icon bubble.
  * Presses spring the cap down into its base for a tactile click.
  */
-export function HabitPill({ habit, onToggle }: HabitPillProps) {
+export const HabitPill = memo(function HabitPill({ habit, onToggle }: HabitPillProps) {
   const done = habit.doneToday;
   const iconName = habit.icon as IconName;
   const press = useSharedValue(0);
@@ -95,7 +96,7 @@ export function HabitPill({ habit, onToggle }: HabitPillProps) {
       </Animated.View>
     </AnimatedPressable>
   );
-}
+});
 
 const SIZE_W = 76;
 const SIZE_H = 86;

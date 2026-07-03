@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
@@ -11,7 +11,7 @@ interface WidgetGridProps {
   renderWidget: (key: SuperAppItemKey, index: number) => ReactNode;
 }
 
-export function WidgetGrid({ renderWidget }: WidgetGridProps) {
+export const WidgetGrid = memo(function WidgetGrid({ renderWidget }: WidgetGridProps) {
   const pinnedItems = useSettingsStore((s) => s.pinnedItems);
   const settingsReady = useSettingsStore((s) => s.ready);
 
@@ -30,7 +30,7 @@ export function WidgetGrid({ renderWidget }: WidgetGridProps) {
       ))}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   grid: {
