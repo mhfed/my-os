@@ -1,0 +1,310 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&amp;family=Be+Vietnam+Pro:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .orb-glow {
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
+        }
+        .flame-glow {
+            filter: drop-shadow(0 0 8px rgba(255, 87, 127, 0.5));
+        }
+        .squishy:active {
+            transform: scale(0.92);
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pulse-glow {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+            100% { opacity: 0.4; transform: scale(1); }
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#131313",
+                        "on-error": "#690005",
+                        "on-primary-fixed-variant": "#004f54",
+                        "secondary": "#d7ffc5",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#022100",
+                        "on-tertiary-container": "#bb0058",
+                        "secondary-fixed-dim": "#2ae500",
+                        "on-secondary-fixed-variant": "#095300",
+                        "surface-dim": "#131313",
+                        "outline": "#849495",
+                        "secondary-fixed": "#79ff5b",
+                        "primary-container": "#00f0ff",
+                        "on-tertiary": "#66002c",
+                        "primary-fixed": "#7df4ff",
+                        "error-container": "#93000a",
+                        "tertiary": "#fff3f4",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-fixed-dim": "#ffb1c3",
+                        "on-secondary": "#053900",
+                        "surface-bright": "#393939",
+                        "on-tertiary-fixed": "#3f0019",
+                        "on-background": "#e5e2e1",
+                        "on-secondary-container": "#0f6d00",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary": "#00363a",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "tertiary-container": "#ffccd6",
+                        "on-primary-fixed": "#002022",
+                        "outline-variant": "#3b494b",
+                        "surface-container-high": "#2a2a2a",
+                        "on-primary-container": "#006970",
+                        "surface": "#131313",
+                        "primary": "#dbfcff",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "primary-fixed-dim": "#00dbe9",
+                        "inverse-primary": "#006970",
+                        "surface-tint": "#00dbe9",
+                        "secondary-container": "#2ff801",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#353534",
+                        "on-surface-variant": "#b9cacb",
+                        "inverse-on-surface": "#313030",
+                        "on-tertiary-fixed-variant": "#8f0041",
+                        "tertiary-fixed": "#ffd9e0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-x": "20px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Quicksand"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "label-md": ["Quicksand"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "headline-lg": ["Quicksand"],
+                        "currency-display": ["Quicksand"],
+                        "headline-xl": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                        "currency-display": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="bg-background/80 backdrop-blur-xl w-full top-0 sticky flex justify-between items-center px-margin-x h-16 w-full z-40">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-quality studio portrait of a modern, stylish young professional with a friendly expression. The background is a clean, dark minimalist workspace with soft cyan ambient lighting that matches a futuristic personal operating system aesthetic. High-end photography with sharp focus and cinematic depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6HkZRVH0VBlAy9bZMSHR8zpfXBv0IHVJxog6L-uCji_X8Y6LqkSmOE5FcvjV2yojEAw8fx1I2ghJ6cJrjk9VfK39CHMGcSDFL5YMzCOJa1NP0ZEHqSEE4aUJp5MLFX5KVgb1eFBq7154GmVD_wgUibhW9e6p37cVKf7v8ejavLSNUFf4QPUtYJCpxduSTW7cpXsxTyvDrvptx7T5XfzJsrrb4hQYXKeSwi_NuvThOhmyreDfTA2_0oxAxvAtgd_ktj7HuYX3Nxds">
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary-container dark:text-primary-fixed-dim tracking-tight">Personal OS</h1>
+</div>
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity p-2 squishy" data-icon="notifications">notifications</button>
+</header>
+<main class="px-margin-x mt-stack-md space-y-stack-lg">
+<!-- Daily Life Score Progress Ring -->
+<section class="flex flex-col items-center justify-center py-6 relative transition-all duration-700 opacity-100">
+<div class="absolute w-48 h-48 bg-primary-container/10 rounded-full blur-3xl animate-pulse-glow"></div>
+<div class="relative w-56 h-56 flex items-center justify-center">
+<div class="w-full h-full flex items-center justify-center p-2"><img src="https://lh3.googleusercontent.com/aida/AP1WRLvqO5t6jgcttUsKbOhCbLwmSpyjoWJw4Fe50qzJfUwjAxW4anFyL3R1_YYa4MTCAHKYDuzaStsawBg1CE4o2yDvV7gWNA0CUbliZdlE8HAYEFpdlU0m6rgTgrR6z_MOXxM6pn8sTKOquOQwmK7i2V-wDDQcm2SRu4lD0KZxFrKFVakMlHyhidj0JC1zM4Ic-5XQgEbt_ZCwBn7NIiA9GI_GbTs0rdrN8Y2C09wvLBqgD7OGf9g7_QEETuI" class="w-full h-full object-contain" alt="Daily Score Progress Ring"></div>
+<div class="absolute text-center">
+<span class="font-headline-xl text-headline-xl block text-primary-container">75</span>
+<span class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">Daily Score</span>
+</div>
+</div>
+</section>
+<!-- Habit Pills -->
+<section class="flex gap-stack-sm overflow-x-auto no-scrollbar pb-2 transition-all duration-700 opacity-100">
+<div class="flex-shrink-0 flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full border border-white/5 squishy">
+<span class="material-symbols-outlined text-orange-500 flame-glow" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-md text-label-md">Meditation 12</span>
+</div>
+<div class="flex-shrink-0 flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full border border-white/5 squishy">
+<span class="material-symbols-outlined text-pink-500 flame-glow" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-md text-label-md">Read 5</span>
+</div>
+<div class="flex-shrink-0 flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full border border-white/5 squishy">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+<span class="font-label-md text-label-md">Hydrate 8/10</span>
+</div>
+</section>
+<!-- Today's Tasks -->
+<section class="space-y-stack-md transition-all duration-700 opacity-100">
+<div class="flex justify-between items-end px-2">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">Today's Tasks</h2>
+<span class="font-label-md text-label-md text-primary-container">View all</span>
+</div>
+<div class="glass-card rounded-lg p-stack-md space-y-stack-md">
+<div class="flex items-center gap-4 group">
+<button class="w-8 h-8 rounded-lg border-2 border-outline flex items-center justify-center squishy group-hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-transparent group-hover:text-primary-container text-sm">check</span>
+</button>
+<span class="font-body-md text-body-md flex-1">Weekly system audit</span>
+<span class="font-label-md text-label-md text-on-surface-variant">09:00</span>
+</div>
+<div class="flex items-center gap-4 group">
+<button class="w-8 h-8 rounded-lg border-2 border-primary-container bg-primary-container/20 flex items-center justify-center squishy">
+<span class="material-symbols-outlined text-primary-container text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</button>
+<span class="font-body-md text-body-md flex-1 line-through text-on-surface-variant">Morning focus session</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Done</span>
+</div>
+<div class="flex items-center gap-4 group">
+<button class="w-8 h-8 rounded-lg border-2 border-outline flex items-center justify-center squishy group-hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-transparent group-hover:text-primary-container text-sm">check</span>
+</button>
+<span class="font-body-md text-body-md flex-1">Pick up fresh ingredients</span>
+<span class="font-label-md text-label-md text-on-surface-variant">17:30</span>
+</div>
+</div>
+</section>
+<!-- Journal Shortcut -->
+<section class="transition-all duration-700 opacity-100">
+<div class="relative overflow-hidden rounded-lg p-stack-lg glass-card flex items-center justify-between border-l-4 border-l-primary-container">
+<div class="z-10">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile mb-1">Morning Reflection</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">How's the energy today?</p>
+</div>
+<button class="z-10 bg-primary-container text-on-primary-container p-3 rounded-full squishy shadow-xl">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<div class="absolute right-[-10%] top-[-20%] w-32 h-32 bg-primary-container/5 rounded-full blur-2xl"></div>
+</div>
+</section>
+<!-- 2-Column Bento Grid Widgets -->
+<section class="grid grid-cols-2 gap-gutter transition-all duration-700 opacity-100">
+<!-- Finance -->
+<div class="glass-card p-4 rounded-lg flex flex-col justify-between aspect-square group squishy cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 flex-shrink-0"><img src="https://lh3.googleusercontent.com/aida/AP1WRLsVzRCuuizVxmAw-bp0csjfUuYu-OWRa72aLtEZ_vVxCWoBMlTk0RD4ukFy2qkk5zy43oEtyTU39w-o2QjpUY_2Sx442woNnntau5M6DtQsVR3GtfWWy-XaqFegpi7vK52_XO57aR4BuygwaJsqgq72vKtz24FzJEamib7UKLS3ZrzUHMhUeMStiNZ1wEyT8oU7edP-e11wjm3Aci9hcXQLnyTFnlHgCSUyq4U9KzevonOPXfKkny8s1g" class="w-full h-full object-contain" alt="Finance"></div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">north_east</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Finance</p>
+<p class="font-currency-display text-currency-display text-primary">12.5M <span class="text-sm">₫</span></p>
+</div>
+</div>
+<!-- Health -->
+<div class="glass-card p-4 rounded-lg flex flex-col justify-between aspect-square squishy cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 flex-shrink-0"><img src="https://lh3.googleusercontent.com/aida/AP1WRLsJsrSEm71fEam7scVdZAa9zhu9FRZY4KpnFfEkd5GOy7Q9oGV4jITj0mS1x4507aIRzOFdBzAgORt3xoPeRCTd06_U--ANYzuhKKD1n-iWMlqt0_mkTj9aT1jVMVwRadKv2jKVqEYb0vi-zGHFawfff9abO_CiHa3Pf1YhR_-johhzB8m1QEMnMOavcfGDdvmxXuKlp0IFy4RRbrND6uYkkZpAefjEzNZ2VI7W9Q49gnegrRjEfemVo7Y" class="w-full h-full object-contain" alt="Health"></div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">more_horiz</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Health</p>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-primary">8,420</span>
+<span class="font-label-md text-label-md text-on-surface-variant">steps</span>
+</div>
+</div>
+</div>
+<!-- Goals -->
+<div class="glass-card p-4 rounded-lg flex flex-col justify-between aspect-square squishy cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 flex-shrink-0"><img src="https://lh3.googleusercontent.com/aida/AP1WRLtdQir1K-KhqYUmLRLkkvCZtV9ks0cOipOfDIksYCSw-9Og8MWxZte_oncV0wHpg67lNfkTxPniU-zt4FiYx-iZQg6PLiGtu5EG-pDA07iFdACtoHCP90vILwwIl-G4lS9mQPrW9v4Z5eZVgESEIuacTY4-t70H4F38D6OjkIeY1EekVVZ5nBNTPiPvTbBCJJmU0IJfxaL9l5_iXB1jTxALQVWNkb90nl6_qRKD0hFOFJPVN4CXK9i5pyY" class="w-full h-full object-contain" alt="Goals"></div>
+
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Goals</p>
+<p class="font-headline-lg text-headline-lg text-primary">68%</p>
+</div>
+</div>
+<!-- Notes -->
+<div class="glass-card p-4 rounded-lg flex flex-col justify-between aspect-square squishy cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 flex items-center justify-center"><span class="material-symbols-outlined text-yellow-400 text-3xl" data-icon="description">description</span></div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Recent Note</p>
+<p class="font-body-md text-body-md truncate text-on-surface">App ideas for 2024...</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Orb -->
+<button class="fixed bottom-28 right-margin-x w-16 h-16 rounded-full bg-gradient-to-tr from-primary-container to-secondary-fixed-dim shadow-[0_0_25px_rgba(0,240,255,0.5)] flex items-center justify-center text-on-primary-container z-50 squishy group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-lg bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-white/10 shadow-lg flex justify-around items-center px-4 pb-8 pt-2 w-full">
+<a class="flex flex-col items-center justify-center text-secondary-container dark:text-secondary-fixed-dim bg-secondary/10 rounded-xl px-3 py-1 squishy" href="#">
+<span class="material-symbols-outlined" data-icon="today" style="font-variation-settings: 'FILL' 1;">today</span>
+<span class="font-label-md text-label-md">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors squishy" href="#">
+<span class="material-symbols-outlined" data-icon="checklist">checklist</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors squishy" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="font-label-md text-label-md">Health</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors squishy" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Finance</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors squishy" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+<span class="font-label-md text-label-md">More</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions and haptics simulation
+        document.querySelectorAll('.squishy').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                if (window.navigator.vibrate) window.navigator.vibrate(10);
+            });
+        });
+
+        // Simple visibility observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section').forEach(el => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-4');
+            observer.observe(el);
+        });
+    </script>
+
+
+</body></html>

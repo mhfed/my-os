@@ -1,0 +1,331 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Personal OS - More</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#131313",
+                    "on-error": "#690005",
+                    "on-primary-fixed-variant": "#004f54",
+                    "secondary": "#d7ffc5",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed": "#022100",
+                    "on-tertiary-container": "#bb0058",
+                    "secondary-fixed-dim": "#2ae500",
+                    "on-secondary-fixed-variant": "#095300",
+                    "surface-dim": "#131313",
+                    "outline": "#849495",
+                    "secondary-fixed": "#79ff5b",
+                    "primary-container": "#00f0ff",
+                    "on-tertiary": "#66002c",
+                    "primary-fixed": "#7df4ff",
+                    "error-container": "#93000a",
+                    "tertiary": "#fff3f4",
+                    "on-surface": "#e5e2e1",
+                    "tertiary-fixed-dim": "#ffb1c3",
+                    "on-secondary": "#053900",
+                    "surface-bright": "#393939",
+                    "on-tertiary-fixed": "#3f0019",
+                    "on-background": "#e5e2e1",
+                    "on-secondary-container": "#0f6d00",
+                    "surface-container-low": "#1c1b1b",
+                    "on-primary": "#00363a",
+                    "inverse-surface": "#e5e2e1",
+                    "surface-container-lowest": "#0e0e0e",
+                    "tertiary-container": "#ffccd6",
+                    "on-primary-fixed": "#002022",
+                    "outline-variant": "#3b494b",
+                    "surface-container-high": "#2a2a2a",
+                    "on-primary-container": "#006970",
+                    "surface": "#131313",
+                    "primary": "#dbfcff",
+                    "surface-variant": "#353534",
+                    "surface-container": "#201f1f",
+                    "primary-fixed-dim": "#00dbe9",
+                    "inverse-primary": "#006970",
+                    "surface-tint": "#00dbe9",
+                    "secondary-container": "#2ff801",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-highest": "#353534",
+                    "on-surface-variant": "#b9cacb",
+                    "inverse-on-surface": "#313030",
+                    "on-tertiary-fixed-variant": "#8f0041",
+                    "tertiary-fixed": "#ffd9e0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-x": "20px",
+                    "stack-md": "16px",
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "stack-lg": "32px",
+                    "stack-sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Quicksand"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "label-md": ["Quicksand"],
+                    "body-md": ["Be Vietnam Pro"],
+                    "headline-lg": ["Quicksand"],
+                    "currency-display": ["Quicksand"],
+                    "headline-xl": ["Quicksand"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                    "currency-display": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-orb {
+            filter: blur(60px);
+            z-index: -1;
+            opacity: 0.4;
+            position: absolute;
+        }
+
+        .active-scale:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease-out;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom animation for the background orbs */
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .animate-float {
+            animation: float 20s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient Background Elements -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none">
+<div class="glow-orb animate-float bg-primary-container w-64 h-64 top-[-5%] left-[-10%]" style="animation-delay: 0s;"></div>
+<div class="glow-orb animate-float bg-secondary-fixed-dim w-80 h-80 bottom-[10%] right-[-15%]" style="animation-delay: -5s;"></div>
+<div class="glow-orb animate-float bg-tertiary-container w-72 h-72 top-[40%] left-[60%]" style="animation-delay: -10s;"></div>
+</div>
+<!-- Top App Bar -->
+<header class="w-full top-0 sticky bg-background/80 backdrop-blur-xl flex justify-between items-center px-margin-x h-16 w-full z-40">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+<img class="w-full h-full object-cover" data-alt="A professional close-up portrait of a user with a friendly expression, styled as a high-fidelity digital avatar. The lighting is dramatic and colorful, with neon blue and cyan rim lighting against a dark, tech-focused background. The overall aesthetic is clean, modern, and perfectly suited for a high-end Personal OS interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5XF1Q2_Op3msHUucnNA6LJYcICw2jeyoIcefeVWWA6PmGAW5uv1hjAFuZs68CvXYPMokLhgERAONbUYhTPxV4OAbMKs76TYznG9k7eHM3ByKFB07TBoDC3xTORIBYFJ1nqTgskWZpq1zpxFKZc6N-wDaEHKUlPOfPFN0E8hiBfDtm2lEWCFs9v4wNV0iLq-LTpjXfSY0Ee0shQkp_jOxvcrjbxmkrAq_nvTePnrW-psIBor19XiKFoDvhSc1MG5vbbD4TLRwXstk">
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Personal OS</h1>
+</div>
+<button class="active-scale hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl">notifications</span>
+</button>
+</header>
+<main class="px-margin-x pb-32 pt-6">
+<!-- Section Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-xl text-headline-xl tracking-tight">Super Menu</h2>
+<p class="text-on-surface-variant font-body-md opacity-80">Explore all OS modules</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full border border-white/5 active-scale">
+<span class="text-secondary font-currency-display text-[18px]">₫</span>
+<span class="font-label-md text-label-md font-bold">12,450</span>
+</div>
+</div>
+<!-- Bento Grid Menu -->
+<div class="grid grid-cols-2 gap-gutter">
+<!-- Inbox (Large Span) -->
+<div class="col-span-2 glass-card rounded-lg p-stack-md flex flex-row items-center justify-between active-scale cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-primary-container/20 flex items-center justify-center text-primary-container shadow-[0_0_20px_-5px_rgba(0,240,255,0.4)]"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR7icgd85kL_1DwJqfcc9Bll6GSandPYyfZAxxfuEZf8RyvPvHqzHt8qTOKHOq6LKqqTnTOp_smKW1tuXBjVzbKE8axyojsFo9Llyc0GuZHZTuAiupSiGgCLD-h1zrybfYrd1iob9cdNCeXej07yIggHadXOtIS-Pr7xVHBIKgLd6HTA7c5YwFM3Ti5h1A15TR_10VHCr5dS49qZThoWXqL56bmu6gk1wb29lrldwXT24f6LQ5DOiKx-D5FpNlAsSkzSwtTqaKRMs" class="w-full h-full object-cover rounded-2xl" alt="Tasks"></div>
+<div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile">Inbox</p>
+<p class="font-label-md text-label-md text-on-surface-variant/70">Triage incoming life data</p>
+</div>
+</div>
+<div class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-md font-bold text-xs">
+                    12 New
+                </div>
+</div>
+<!-- Journal -->
+<div class="glass-card rounded-lg p-stack-md flex flex-col items-start gap-4 active-scale cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed-dim/20 flex items-center justify-center text-tertiary-fixed-dim"><span class="material-symbols-outlined text-3xl shadow-[0_0_15px_rgba(255,177,195,0.4)]" style="font-variation-settings: &quot;FILL&quot; 1;">menu_book</span></div>
+<div>
+<p class="font-label-md text-label-md font-bold">Journal</p>
+<p class="text-[12px] text-on-surface-variant/60 leading-tight">Daily reflections &amp; logs</p>
+</div>
+</div>
+<!-- Habits -->
+<div class="glass-card rounded-lg p-stack-md flex flex-col items-start gap-4 active-scale cursor-pointer overflow-hidden relative">
+<div class="absolute -right-2 -top-2 opacity-10">
+<span class="material-symbols-outlined text-6xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<div class="w-12 h-12 rounded-2xl bg-secondary-fixed-dim/20 flex items-center justify-center text-secondary-fixed-dim shadow-[0_0_15px_-5px_rgba(42,229,0,0.3)]"><span class="material-symbols-outlined text-3xl shadow-[0_0_20px_rgba(42,229,0,0.5)]" style="font-variation-settings: &quot;FILL&quot; 1;">local_fire_department</span></div>
+<div>
+<p class="font-label-md text-label-md font-bold">Habits</p>
+<div class="flex items-center gap-1">
+<div class="h-1.5 w-16 bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-fixed-dim w-3/4"></div>
+</div>
+<span class="text-[10px] text-secondary-fixed-dim">75%</span>
+</div>
+</div>
+</div>
+<!-- Notes -->
+<div class="glass-card rounded-lg p-stack-md flex flex-col items-start gap-4 active-scale cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">sticky_note_2</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold">Notes</p>
+<p class="text-[12px] text-on-surface-variant/60 leading-tight">24 active brain dumps</p>
+</div>
+</div>
+<!-- Goals -->
+<div class="glass-card rounded-lg p-stack-md flex flex-col items-start gap-4 active-scale cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-error/10 flex items-center justify-center text-error"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA18kefmKXBjvl54GPaGcvglLKX-inUCkLcCnfw36KPrWBp7kF1TOf3fP1_Eyas3decUHp-1I8uL3zrTpDfxT1z9BI-0ioNFp39TvfzlnLeGfPPTV6H2Nqs9EB5alrcdbP8M7IIuDD5GqLwz1YtLQSy2OvGMAMt48NpM5urcv2pLvNCsWe6xOtEKnC5BNU10p4FLlQ3kRgp6KWk6kXYwSBRsY-GKKT9U6x6PlBKFx4RXXDKjEyJY2y6XXr3DsE9e0M6qMMe8sWsIj8" class="w-full h-full object-cover rounded-2xl" alt="Goals"></div>
+<div>
+<p class="font-label-md text-label-md font-bold">Goals</p>
+<p class="text-[12px] text-on-surface-variant/60 leading-tight">3 milestones pending</p>
+</div>
+</div>
+</div>
+<!-- Utility List -->
+<div class="mt-stack-lg space-y-3">
+<button class="w-full glass-card rounded-lg px-6 py-4 flex items-center justify-between active-scale">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+<span class="font-label-md text-label-md">System Settings</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-40">chevron_right</span>
+</button>
+<button class="w-full glass-card rounded-lg px-6 py-4 flex items-center justify-between active-scale">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+<span class="font-label-md text-label-md">Profile &amp; Identity</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-40">chevron_right</span>
+</button>
+<button class="w-full glass-card rounded-lg px-6 py-4 flex items-center justify-between active-scale">
+<div class="flex items-center gap-4 text-error">
+<span class="material-symbols-outlined">cloud_download</span>
+<span class="font-label-md text-label-md">Backup All Data</span>
+</div>
+<div class="text-[10px] text-on-surface-variant/40">Last: 2h ago</div>
+</button>
+</div>
+<!-- System Stats / Footer Graphic -->
+<div class="mt-stack-lg p-6 bg-surface-container-low rounded-lg border border-white/5 relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-[12px] text-on-surface-variant uppercase tracking-widest font-bold mb-2">Memory Utilization</p>
+<div class="flex items-center gap-4">
+<div class="font-headline-lg-mobile text-headline-lg-mobile">2.4 TB <span class="text-label-md font-normal opacity-40">/ 5 TB</span></div>
+</div>
+<div class="mt-4 h-2 bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary-fixed-dim w-1/2"></div>
+</div>
+</div>
+<!-- Decorative wave or graphic -->
+<div class="absolute bottom-[-20%] right-[-10%] opacity-20 rotate-12">
+<span class="material-symbols-outlined text-[120px] text-primary">data_usage</span>
+</div>
+</div>
+</main>
+<!-- Navigation Shell -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-lg bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-white/10 shadow-lg flex justify-around items-center px-4 pb-8 pt-2 w-full">
+<!-- Today -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl">today</span>
+<span class="font-label-md text-label-md">Today</span>
+</a>
+<!-- Tasks -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl">checklist</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<!-- Health -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl">fitness_center</span>
+<span class="font-label-md text-label-md">Health</span>
+</a>
+<!-- Finance -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl">payments</span>
+<span class="font-label-md text-label-md">Finance</span>
+</a>
+<!-- More (Active) -->
+<a class="flex flex-col items-center justify-center text-secondary-container dark:text-secondary-fixed-dim bg-secondary/10 rounded-xl px-3 py-1 active:scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">more_horiz</span>
+<span class="font-label-md text-label-md">More</span>
+</a>
+</nav>
+<!-- Floating Action Orb (Power Orb) -->
+<button class="fixed bottom-24 right-6 w-16 h-16 rounded-full bg-gradient-to-br from-primary-container via-primary-fixed-dim to-secondary-fixed-dim shadow-[0_0_30px_rgba(0,240,255,0.4)] flex items-center justify-center text-on-primary-container z-40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl font-bold">add</span>
+</button>
+<script>
+        // Micro-interaction for currency chip
+        const currencyChip = document.querySelector('.flex.items-center.gap-2.bg-surface-container-high');
+        currencyChip.addEventListener('click', () => {
+            const count = currencyChip.querySelector('span:last-child');
+            const currentVal = parseInt(count.innerText.replace(',', ''));
+            const newVal = currentVal + Math.floor(Math.random() * 10) + 1;
+            count.innerText = newVal.toLocaleString();
+            
+            // Pulse effect
+            currencyChip.classList.add('scale-105', 'shadow-[0_0_15px_rgba(255,215,0,0.2)]');
+            setTimeout(() => {
+                currencyChip.classList.remove('scale-105', 'shadow-[0_0_15px_rgba(255,215,0,0.2)]');
+            }, 200);
+        });
+
+        // Haptic feedback simulation for menu items
+        document.querySelectorAll('.active-scale').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.navigator.vibrate) {
+                    window.navigator.vibrate(5);
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

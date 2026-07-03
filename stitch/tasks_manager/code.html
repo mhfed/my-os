@@ -1,0 +1,359 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Personal OS - Tasks</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;family=Be+Vietnam+Pro:wght@100;300;400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .priority-high {
+            box-shadow: 0 0 15px rgba(255, 180, 171, 0.2);
+            border-left: 4px solid #ffb4ab;
+        }
+
+        .priority-med {
+            border-left: 4px solid #00dbe9;
+        }
+
+        .priority-low {
+            border-left: 4px solid #849495;
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .active-ring {
+            background: conic-gradient(from 0deg, #00dbe9, #2ae500, #00dbe9);
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        .active-task-glow {
+            box-shadow: 0 0 20px rgba(0, 219, 233, 0.15);
+            animation: pulse-subtle 3s infinite ease-in-out;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#131313",
+                        "on-error": "#690005",
+                        "on-primary-fixed-variant": "#004f54",
+                        "secondary": "#d7ffc5",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#022100",
+                        "on-tertiary-container": "#bb0058",
+                        "secondary-fixed-dim": "#2ae500",
+                        "on-secondary-fixed-variant": "#095300",
+                        "surface-dim": "#131313",
+                        "outline": "#849495",
+                        "secondary-fixed": "#79ff5b",
+                        "primary-container": "#00f0ff",
+                        "on-tertiary": "#66002c",
+                        "primary-fixed": "#7df4ff",
+                        "error-container": "#93000a",
+                        "tertiary": "#fff3f4",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-fixed-dim": "#ffb1c3",
+                        "on-secondary": "#053900",
+                        "surface-bright": "#393939",
+                        "on-tertiary-fixed": "#3f0019",
+                        "on-background": "#e5e2e1",
+                        "on-secondary-container": "#0f6d00",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary": "#00363a",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "tertiary-container": "#ffccd6",
+                        "on-primary-fixed": "#002022",
+                        "outline-variant": "#3b494b",
+                        "surface-container-high": "#2a2a2a",
+                        "on-primary-container": "#006970",
+                        "surface": "#131313",
+                        "primary": "#dbfcff",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "primary-fixed-dim": "#00dbe9",
+                        "inverse-primary": "#006970",
+                        "surface-tint": "#00dbe9",
+                        "secondary-container": "#2ff801",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#353534",
+                        "on-surface-variant": "#b9cacb",
+                        "inverse-on-surface": "#313030",
+                        "on-tertiary-fixed-variant": "#8f0041",
+                        "tertiary-fixed": "#ffd9e0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-x": "20px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Quicksand"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "label-md": ["Quicksand"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "headline-lg": ["Quicksand"],
+                        "currency-display": ["Quicksand"],
+                        "headline-xl": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                        "currency-display": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient Orbs -->
+<div class="glow-orb bg-primary-container top-[-10%] left-[-10%]"></div>
+<div class="glow-orb bg-secondary-fixed-dim bottom-[20%] right-[-10%]"></div>
+<!-- Top App Bar (Shared Component) -->
+<header class="w-full top-0 sticky bg-background/80 backdrop-blur-xl z-40 flex justify-between items-center px-margin-x h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A stylish, futuristic profile avatar of a young professional with neon accent lighting reflecting on their face, set against a dark minimalist studio background. The aesthetic is high-tech and sleek with a cool electric blue and charcoal grey color palette, emphasizing the Personal OS theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfb1AQtUjsDV7BNcatlYhZW9qRt6fHtbmotE1mlF1YnJ5weurt28G12J_yCoWq3SKHZPEvtL56vwv-5oQD3KOq2nyHzseFWq02MZoIK5mvIGlMXN5mUlwJQz44airVgBW7q7P4xZjGtzZzttmIHLf7TOqnl69RH_Ps5G56ecVAReEeqlxgs7nOmlOZow7hsbaxTBXHdmAO2rTRdzafzd0jPkal9Qad5MkMzVUM3kVB7b7-7CZT3Uk37DFLGNzvPtV9igNn5JkDjPU">
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary-container tracking-tight">Personal OS</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity">notifications</button>
+</div>
+</header>
+<main class="px-margin-x pt-stack-md pb-32">
+<!-- Filter Pills -->
+<div class="flex gap-3 mb-stack-lg overflow-x-auto pb-2 scrollbar-hide">
+<button class="bg-secondary-container text-on-secondary-container px-6 py-2 rounded-full font-label-md text-label-md flex items-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[18px]">today</span>
+                Today
+            </button>
+<button class="bg-surface-container text-on-surface-variant px-6 py-2 rounded-full font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">event_upcoming</span>
+                Upcoming
+            </button>
+<button class="bg-surface-container text-on-surface-variant px-6 py-2 rounded-full font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">folder</span>
+                Projects
+            </button>
+</div>
+<!-- Section: Today -->
+<section class="mb-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">Due Today</h2>
+<span class="text-secondary-fixed-dim font-label-md text-label-md">3 Active</span>
+</div>
+<div class="space-y-4">
+<!-- Task Card: High Priority -->
+<div class="glass-card p-4 rounded-lg priority-high active-task-glow relative group cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="mt-1">
+<div class="w-6 h-6 rounded-md border-2 border-primary-fixed-dim flex items-center justify-center group-hover:bg-primary-fixed-dim/20 transition-colors"></div>
+</div>
+<div>
+<h3 class="font-headline-lg-mobile text-[18px] text-primary mb-1">Finalize OS Architecture</h3>
+<p class="text-on-surface-variant/70 font-body-md text-label-md mb-3">Sync with the engineering team on the core kernel structure.</p>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">account_tree</span>
+<span class="font-label-md text-[12px]">3/5 done</span>
+</div>
+<div class="flex items-center gap-1 text-error">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span class="font-label-md text-[12px]">High</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-background bg-surface-container"><img class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR7icgd85kL_1DwJqfcc9Bll6GSandPYyfZAxxfuEZf8RyvPvHqzHt8qTOKHOq6LKqqTnTOp_smKW1tuXBjVzbKE8axyojsFo9Llyc0GuZHZTuAiupSiGgCLD-h1zrybfYrd1iob9cdNCeXej07yIggHadXOtIS-Pr7xVHBIKgLd6HTA7c5YwFM3Ti5h1A15TR_10VHCr5dS49qZThoWXqL56bmu6gk1wb29lrldwXT24f6LQ5DOiKx-D5FpNlAsSkzSwtTqaKRMs" alt="3D Checklist Icon"></div>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="mt-4 h-1 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-fixed-dim to-secondary-fixed-dim w-[60%]"></div>
+</div>
+</div>
+<!-- Task Card: Med Priority -->
+<div class="glass-card p-4 rounded-lg priority-med hover:border-white/20 transition-all cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<div class="w-6 h-6 rounded-md border-2 border-outline flex items-center justify-center"></div>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-lg-mobile text-[18px] text-on-background mb-1">Morning Gym Session</h3>
+<p class="text-on-surface-variant/70 font-body-md text-label-md mb-3">Cardio and upper body focused routine.</p>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<img class="w-4 h-4 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR7icgd85kL_1DwJqfcc9Bll6GSandPYyfZAxxfuEZf8RyvPvHqzHt8qTOKHOq6LKqqTnTOp_smKW1tuXBjVzbKE8axyojsFo9Llyc0GuZHZTuAiupSiGgCLD-h1zrybfYrd1iob9cdNCeXej07yIggHadXOtIS-Pr7xVHBIKgLd6HTA7c5YwFM3Ti5h1A15TR_10VHCr5dS49qZThoWXqL56bmu6gk1wb29lrldwXT24f6LQ5DOiKx-D5FpNlAsSkzSwtTqaKRMs" alt="3D Checklist Icon">
+<span class="font-label-md text-[12px]">0/1 done</span>
+</div>
+<div class="flex items-center gap-1 text-primary-fixed-dim">
+<span class="material-symbols-outlined text-[16px]">stat_1</span>
+<span class="font-label-md text-[12px]">Med</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Tomorrow -->
+<section class="mb-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background/60">Tomorrow</h2>
+<span class="text-outline font-label-md text-label-md">1 Task</span>
+</div>
+<!-- Task Card: Low Priority -->
+<div class="glass-card p-4 rounded-lg priority-low opacity-80 hover:opacity-100 transition-all cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<div class="w-6 h-6 rounded-md border-2 border-outline flex items-center justify-center"></div>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-lg-mobile text-[18px] text-on-background mb-1">Grocery Shopping</h3>
+<p class="text-on-surface-variant/70 font-body-md text-label-md mb-3">Weekly restock of essentials and meal prep ingredients.</p>
+<div class="flex items-center gap-1 text-outline"><img class="w-4 h-4 object-contain mr-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR7icgd85kL_1DwJqfcc9Bll6GSandPYyfZAxxfuEZf8RyvPvHqzHt8qTOKHOq6LKqqTnTOp_smKW1tuXBjVzbKE8axyojsFo9Llyc0GuZHZTuAiupSiGgCLD-h1zrybfYrd1iob9cdNCeXej07yIggHadXOtIS-Pr7xVHBIKgLd6HTA7c5YwFM3Ti5h1A15TR_10VHCr5dS49qZThoWXqL56bmu6gk1wb29lrldwXT24f6LQ5DOiKx-D5FpNlAsSkzSwtTqaKRMs" alt="3D Checklist Icon">
+<span class="material-symbols-outlined text-[16px]">stat_minus_1</span>
+<span class="font-label-md text-[12px]">Low</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Add Form -->
+<div class="mt-8 glass-card p-4 rounded-lg border-primary-fixed-dim/30">
+<div class="flex items-center gap-3">
+<div class="flex-1">
+<input class="w-full bg-transparent border-none focus:ring-0 text-body-md text-on-background placeholder:text-on-surface-variant/40 py-1" placeholder="I want to..." type="text">
+</div>
+<button class="w-10 h-10 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex items-center gap-4 mt-3">
+<button class="flex items-center gap-1 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="text-[12px] font-label-md">Today</span>
+</button>
+<button class="flex items-center gap-1 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">flag</span>
+<span class="text-[12px] font-label-md">Priority</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar (Shared Component) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-lg bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-white/10 shadow-lg flex justify-around items-center px-4 pb-8 pt-2">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined">today</span>
+<span class="font-label-md text-label-md">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary-container dark:text-secondary-fixed-dim bg-secondary/10 rounded-xl px-3 py-1 scale-100 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">checklist</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-label-md text-label-md">Health</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Finance</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined">more_horiz</span>
+<span class="font-label-md text-label-md">More</span>
+</a>
+</nav>
+<!-- Floating Action Orb -->
+<button class="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary-fixed-dim to-secondary-fixed-dim flex items-center justify-center shadow-2xl shadow-primary-fixed-dim/20 active:scale-95 transition-transform z-50" style="transform: translateY(4.29558px);">
+<span class="material-symbols-outlined text-background text-[32px]">bolt</span>
+</button>
+<script>
+        // Micro-interaction for task completion
+        document.querySelectorAll('.glass-card').forEach(card => {
+            const checkbox = card.querySelector('.w-6.h-6');
+            if(checkbox) {
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    checkbox.classList.toggle('bg-primary-fixed-dim');
+                    checkbox.classList.toggle('border-primary-fixed-dim');
+                    
+                    const icon = checkbox.querySelector('span');
+                    if(!icon) {
+                        checkbox.innerHTML = '<span class="material-symbols-outlined text-background text-[16px]">check</span>';
+                        card.style.opacity = '0.5';
+                        card.style.transform = 'scale(0.98)';
+                    } else {
+                        checkbox.innerHTML = '';
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }
+                });
+            }
+        });
+
+        // Floating orb subtle rotation/float
+        const orb = document.querySelector('.fixed.bottom-24.right-6');
+        let floatVal = 0;
+        function animateOrb() {
+            floatVal += 0.05;
+            const y = Math.sin(floatVal) * 5;
+            orb.style.transform = `translateY(${y}px)`;
+            requestAnimationFrame(animateOrb);
+        }
+        animateOrb();
+    </script>
+
+
+</body></html>
