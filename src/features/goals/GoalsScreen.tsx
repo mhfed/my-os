@@ -1,25 +1,29 @@
-import { useState, useEffect } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { FarmBackground } from '@/components/skia';
-import { colors, tint } from '@/theme/colors';
+import { colors, glass, radius } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { EmptyState, GameIconButton } from '@/components/game';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useGoalStore } from '@/store/goalStore';
-import { formatTxnDate } from '@/utils/date';
-
-import { GoalCreatorModal } from './components/GoalCreatorModal';
 import type { Goal } from '@/types/goal';
 
+import { GoalCard } from './components/GoalCard';
+import { GoalCreatorModal } from './components/GoalCreatorModal';
+
+/** Sort by soonest deadline; goals with no deadline sink to the bottom. */
+function bySoonestDeadline(a: Goal, b: Goal): number {
+  const da = a.deadline ?? Number.POSITIVE_INFINITY;
+  const db = b.deadline ?? Number.POSITIVE_INFINITY;
+  return da - db;
+}
+
+/** Goals screen (DESIGN_SPEC §5.6) — goal cards with milestone tracking. */
 export function GoalsScreen() {
   const router = useRouter();
   const ready = useGoalStore((s) => s.ready);
@@ -28,48 +32,78 @@ export function GoalsScreen() {
 
   const [creatorOpen, setCreatorOpen] = useState(false);
 
-  if (!ready) {
-    return (
-      <View style={[styles.screen, styles.center]}>
-        <ActivityIndicator color={colors.red} />
-      </View>
-    );
-  }
+  const sorted = useMemo(() => [...goals].sort(bySoonestDeadline), [goals]);
 
   const handleBack = () => router.navigate('/more');
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FarmBackground domain='goals' />
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-          style={{ position: 'absolute', left: 22, zIndex: 1, top: 12 }}
-        >
-          <Icon name='arrow-left' size={24} color={colors.text} />
-        </Pressable>
-        <Text style={styles.title}>Goals</Text>
-      </View>
-
-      <FlatList
-        data={goals}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <GoalCard
-            goal={item}
-            onToggle={(mId) => toggleMilestone(item.id, mId)}
-          />
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No goals set yet. Aim high!</Text>
-        }
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
       />
 
-      <Pressable style={styles.fab} onPress={() => setCreatorOpen(true)}>
-        <Icon name='target' size={24} color={colors.screenBg} />
-      </Pressable>
+      {/* Header */}
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <View style={styles.headerCard}>
+          <View style={styles.header}>
+            <PressableScale
+              onPress={handleBack}
+              haptic='light'
+              hitSlop={8}
+              style={styles.back}
+              accessibilityRole='button'
+              accessibilityLabel='Quay lại'
+            >
+              <Icon name='arrow-left' size={24} color={colors.text} />
+            </PressableScale>
+            <Text style={styles.title}>Mục tiêu</Text>
+          </View>
+        </View>
+      </AnimatedCard>
+
+      {!ready ? (
+        <GoalsSkeleton />
+      ) : (
+        <FlatList
+          data={sorted}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={
+            sorted.length === 0 ? styles.emptyContent : styles.listContent
+          }
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <AnimatedCard index={index + 1}>
+              <GoalCard
+                goal={item}
+                onToggle={(mId) => toggleMilestone(item.id, mId)}
+              />
+            </AnimatedCard>
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon='target'
+              title='Đặt mục tiêu lớn đầu tiên 🎯'
+              subtitle='Chia nhỏ ước mơ thành các cột mốc và theo dõi tiến độ mỗi ngày.'
+              actionLabel='Tạo mục tiêu'
+              actionVariant='gold'
+              onAction={() => setCreatorOpen(true)}
+            />
+          }
+        />
+      )}
+
+      <GameIconButton
+        icon='target'
+        variant='gold'
+        size={60}
+        style={styles.fab}
+        onPress={() => setCreatorOpen(true)}
+        accessibilityLabel='Tạo mục tiêu mới'
+      />
 
       <GoalCreatorModal
         visible={creatorOpen}
@@ -79,56 +113,23 @@ export function GoalsScreen() {
   );
 }
 
-function GoalCard({
-  goal,
-  onToggle,
-}: {
-  goal: Goal;
-  onToggle: (mId: string) => void;
-}) {
-  const completedStats = goal.milestones.filter((m) => m.done).length;
-  const totalStats = goal.milestones.length;
-  const pct =
-    totalStats > 0 ? Math.round((completedStats / totalStats) * 100) : 0;
-
+/** Skeleton matching the goal list layout while the store hydrates. */
+function GoalsSkeleton() {
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{goal.title}</Text>
-          {goal.deadline && (
-            <Text style={styles.cardDeadline}>
-              Due: {formatTxnDate(goal.deadline)}
-            </Text>
-          )}
-        </View>
-        <View style={styles.scoreBox}>
-          <Text style={styles.scoreText}>{pct}%</Text>
-        </View>
-      </View>
-
-      {goal.description ? (
-        <Text style={styles.cardDesc}>{goal.description}</Text>
-      ) : null}
-
-      <View style={styles.milestonesBox}>
-        {goal.milestones.map((m) => (
-          <Pressable
-            key={m.id}
-            style={styles.mRow}
-            onPress={() => onToggle(m.id)}
-          >
-            <View style={[styles.mCheckbox, m.done && styles.mCheckboxDone]}>
-              {m.done && (
-                <Icon name='check' size={12} color={colors.screenBg} />
-              )}
+    <View style={styles.listContent}>
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={styles.skeletonCard}>
+          <View style={styles.skeletonRow}>
+            <View style={styles.skeletonLines}>
+              <View style={[styles.skeletonBar, { width: '70%' }]} />
+              <View style={[styles.skeletonBar, { width: '40%', height: 12 }]} />
             </View>
-            <Text style={[styles.mTitle, m.done && styles.mTitleDone]}>
-              {m.title}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+            <View style={styles.skeletonRing} />
+          </View>
+          <View style={[styles.skeletonBar, { width: '90%', marginTop: 16 }]} />
+          <View style={[styles.skeletonBar, { width: '55%' }]} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -138,124 +139,83 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerWrap: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  headerCard: {
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.track,
-    position: 'relative',
+  },
+  back: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -spacing.xs,
   },
   title: {
-    fontFamily: fonts.semibold,
-    fontSize: 20,
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    lineHeight: 28,
     color: colors.text,
   },
   listContent: {
-    padding: 22,
-    gap: 16,
-    paddingBottom: 110,
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingBottom: spacing.tabClear,
   },
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  cardTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  cardDeadline: {
-    fontFamily: fonts.monoRegular,
-    fontSize: 12,
-    color: colors.red,
-  },
-  scoreBox: {
-    backgroundColor: tint(colors.red),
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  scoreText: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 13,
-    color: colors.red,
-  },
-  cardDesc: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: 12,
-  },
-  milestonesBox: {
-    backgroundColor: colors.screenBg,
-    borderRadius: 12,
-    padding: 12,
-    gap: 10,
-  },
-  mRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  mCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
+  emptyContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-  },
-  mCheckboxDone: {
-    backgroundColor: colors.red,
-    borderColor: colors.red,
-  },
-  mTitle: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: colors.text,
-    flex: 1,
-  },
-  mTitleDone: {
-    color: colors.tabInactive,
-    textDecorationLine: 'line-through',
-  },
-  emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 40,
+    padding: spacing.lg,
   },
   fab: {
     position: 'absolute',
-    right: 22,
-    bottom: 40,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.red,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.red,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    right: spacing.lg,
+    bottom: spacing.xxl,
+  },
+  // ---- skeleton ----------------------------------------------------------
+  skeletonCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    backgroundColor: glass.fill,
+    padding: spacing.md,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  skeletonLines: {
+    flex: 1,
+    gap: spacing.sm,
+    paddingRight: spacing.md,
+  },
+  skeletonBar: {
+    height: 18,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceContainerHigh,
+    marginBottom: spacing.xs,
+  },
+  skeletonRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 8,
+    borderColor: colors.surfaceContainerHigh,
   },
 });

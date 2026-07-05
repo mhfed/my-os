@@ -14,24 +14,17 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 
-import {
-  colors,
-  gradients,
-  tint,
-  radius,
-  elevation,
-  base3D,
-} from '@/theme/colors';
-import { fonts, textShadow } from '@/theme/typography';
+import { colors, gradients, tint, radius, base3D, glass } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
-import { FarmBackground } from '@/components/skia';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_PADDING = 16;
 const ITEM_GAP = 10;
-const ITEM_MIN_WIDTH = 100; // Minimum width for flex items
+const ITEM_MIN_WIDTH = 100;
 
 interface ItemConfig {
   key: SuperAppItemKey;
@@ -42,71 +35,18 @@ interface ItemConfig {
 }
 
 const ALL_ITEMS: ItemConfig[] = [
-  {
-    key: 'inbox',
-    label: 'Inbox',
-    icon: 'inbox',
-    color: colors.purple,
-    route: '/inbox',
-  },
-  {
-    key: 'journal',
-    label: 'Journal',
-    icon: 'notebook',
-    color: colors.teal,
-    route: '/journal',
-  },
-  {
-    key: 'habits',
-    label: 'Habits',
-    icon: 'chart-box',
-    color: colors.purple,
-    route: '/habits',
-  },
-  {
-    key: 'notes',
-    label: 'Notes',
-    icon: 'brain',
-    color: colors.orange,
-    route: '/notes',
-  },
-  {
-    key: 'goals',
-    label: 'Goals',
-    icon: 'target',
-    color: colors.red,
-    route: '/goals',
-  },
-  {
-    key: 'today',
-    label: 'Today',
-    icon: 'view-grid',
-    color: colors.purple,
-    route: '/',
-  },
-  {
-    key: 'tasks',
-    label: 'Tasks',
-    icon: 'checkbox-marked-outline',
-    color: colors.teal,
-    route: '/tasks',
-  },
-  {
-    key: 'health',
-    label: 'Health',
-    icon: 'heart-pulse',
-    color: colors.red,
-    route: '/health',
-  },
-  {
-    key: 'finance',
-    label: 'Finance',
-    icon: 'wallet',
-    color: colors.orange,
-    route: '/finance',
-  },
+  { key: 'inbox', label: 'Inbox', icon: 'inbox', color: colors.purple, route: '/inbox' },
+  { key: 'journal', label: 'Journal', icon: 'notebook', color: colors.teal, route: '/journal' },
+  { key: 'habits', label: 'Habits', icon: 'chart-box', color: colors.purple, route: '/habits' },
+  { key: 'notes', label: 'Notes', icon: 'brain', color: colors.orange, route: '/notes' },
+  { key: 'goals', label: 'Goals', icon: 'target', color: colors.red, route: '/goals' },
+  { key: 'today', label: 'Today', icon: 'view-grid', color: colors.purple, route: '/' },
+  { key: 'tasks', label: 'Tasks', icon: 'checkbox-marked-outline', color: colors.teal, route: '/tasks' },
+  { key: 'health', label: 'Health', icon: 'heart-pulse', color: colors.red, route: '/health' },
+  { key: 'finance', label: 'Finance', icon: 'wallet', color: colors.orange, route: '/finance' },
 ];
 
+/** Super App sheet (DESIGN_SPEC §4.2) — bottom sheet launcher for all modules. */
 export function SuperAppSheet() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -126,31 +66,13 @@ export function SuperAppSheet() {
     if (isOpen) {
       setModalVisible(true);
       Animated.parallel([
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          damping: 22,
-          stiffness: 240,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
+        Animated.spring(slideAnim, { toValue: 0, damping: 22, stiffness: 240, useNativeDriver: true }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.spring(slideAnim, {
-          toValue: 600,
-          damping: 24,
-          stiffness: 260,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 140,
-          useNativeDriver: true,
-        }),
+        Animated.spring(slideAnim, { toValue: 600, damping: 24, stiffness: 260, useNativeDriver: true }),
+        Animated.timing(fadeAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
       ]).start(() => setModalVisible(false));
     }
   }, [isOpen]);
@@ -182,7 +104,6 @@ export function SuperAppSheet() {
         style={[styles.backdrop, { opacity: fadeAnim }]}
         pointerEvents='box-none'
       >
-        <FarmBackground domain='today' />
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       </Animated.View>
 
@@ -204,156 +125,99 @@ export function SuperAppSheet() {
           style={styles.sheetGloss}
           pointerEvents='none'
         />
+
         {/* Handle */}
         <View style={styles.handle} />
 
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {editMode ? 'Customize' : 'Super App'}
-          </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Super App</Text>
           <Pressable
-            style={styles.editBtn}
             onPress={() => setEditMode(!editMode)}
+            style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.7 }]}
           >
-            <Text style={styles.editBtnText}>{editMode ? 'Done' : 'Edit'}</Text>
+            <Text style={styles.editBtnText}>{editMode ? 'Xong' : 'Sửa'}</Text>
           </Pressable>
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps='handled'
+          bounces={false}
         >
-          {!editMode ? (
-            /* Grid view */
-            <>
+          {editMode ? (
+            /* Edit mode */
+            <View style={styles.editList}>
+              <Text style={styles.editSectionLabel}>Đã ghim</Text>
+              {pinned.length === 0 ? (
+                <Text style={styles.editEmptyLabel}>Chưa có mục nào được ghim</Text>
+              ) : (
+                pinned.map((item) => (
+                  <Pressable
+                    key={item.key}
+                    style={({ pressed }) => [styles.editRow, pressed && { opacity: 0.7 }]}
+                    onPress={() => togglePinned(item.key)}
+                  >
+                    <View style={[styles.editIcon, { backgroundColor: tint(item.color) }]}>
+                      <Icon name={item.icon} size={22} color={item.color} />
+                    </View>
+                    <Text style={styles.editLabel}>{item.label}</Text>
+                    <Icon name='pin-off-outline' size={20} color={colors.red} />
+                  </Pressable>
+                ))
+              )}
+
+              <Text style={[styles.editSectionLabel, { marginTop: spacing.sm }]}>Thêm mục</Text>
+              {unpinned.map((item) => (
+                <Pressable
+                  key={item.key}
+                  style={({ pressed }) => [styles.editRow, pressed && { opacity: 0.7 }]}
+                  onPress={() => togglePinned(item.key)}
+                >
+                  <View style={[styles.editIcon, { backgroundColor: tint(item.color) }]}>
+                    <Icon name={item.icon} size={22} color={item.color} />
+                  </View>
+                  <Text style={styles.editLabel}>{item.label}</Text>
+                  <Icon name='pin-outline' size={20} color={colors.teal} />
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            /* Normal mode: grid */
+            <View>
               {pinned.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <Icon name='apps' size={32} color={colors.muted} />
-                  <Text style={styles.emptyText}>
-                    Tap Edit to add apps to Super App
-                  </Text>
+                  <Icon name='view-grid-plus' size={48} color={colors.muted} />
+                  <Text style={styles.emptyText}>Nhấn "Sửa" để chọn module cho Super App</Text>
                 </View>
               ) : (
                 <View style={styles.grid}>
                   {pinned.map((item) => (
                     <Pressable
                       key={item.key}
-                      style={({ pressed }) => [
-                        styles.gridItem,
-                        pressed && styles.gridItemPressed,
-                      ]}
+                      style={({ pressed }) => [styles.gridItem, pressed && styles.gridItemPressed]}
                       onPress={() => handleItemPress(item)}
                     >
-                      <View style={styles.gridIconWrap}>
-                        <LinearGradient
-                          colors={[item.color, item.color]}
-                          start={{ x: 0.3, y: 0 }}
-                          end={{ x: 0.7, y: 1 }}
-                          style={styles.gridIcon}
-                        >
-                          <Icon
-                            name={item.icon}
-                            size={26}
-                            color={colors.white}
-                          />
-                        </LinearGradient>
+                      <View style={[styles.gridIcon, { backgroundColor: tint(item.color) }]}>
+                        <Icon name={item.icon} size={26} color={item.color} />
                       </View>
-                      <Text style={styles.gridLabel} numberOfLines={1}>
-                        {item.label}
-                      </Text>
+                      <Text style={styles.gridLabel}>{item.label}</Text>
                     </Pressable>
                   ))}
                 </View>
-              )}
-            </>
-          ) : (
-            /* Edit view */
-            <View style={styles.editList}>
-              {/* Pinned section */}
-              {pinned.length > 0 && (
-                <>
-                  <Text style={styles.editSectionLabel}>Pinned</Text>
-                  {pinned.map((item) => (
-                    <Pressable
-                      key={item.key}
-                      style={({ pressed }) => [
-                        styles.editRow,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                      onPress={() => togglePinned(item.key)}
-                    >
-                      <View style={styles.editIconWrap}>
-                        <LinearGradient
-                          colors={[item.color, item.color]}
-                          style={styles.editIcon}
-                        >
-                          <Icon
-                            name={item.icon}
-                            size={18}
-                            color={colors.white}
-                          />
-                        </LinearGradient>
-                      </View>
-                      <Text style={styles.editLabel}>{item.label}</Text>
-                      <Icon name='minus-circle' size={24} color={colors.red} />
-                    </Pressable>
-                  ))}
-                </>
-              )}
-
-              {/* Unpinned section */}
-              {unpinned.length > 0 && (
-                <>
-                  <Text style={[styles.editSectionLabel, { marginTop: 16 }]}>
-                    Add to Super App
-                  </Text>
-                  {unpinned.map((item) => (
-                    <Pressable
-                      key={item.key}
-                      style={({ pressed }) => [
-                        styles.editRow,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                      onPress={() => togglePinned(item.key)}
-                    >
-                      <View style={styles.editIconWrap}>
-                        <LinearGradient
-                          colors={[item.color, item.color]}
-                          style={styles.editIcon}
-                        >
-                          <Icon
-                            name={item.icon}
-                            size={18}
-                            color={colors.white}
-                          />
-                        </LinearGradient>
-                      </View>
-                      <Text style={styles.editLabel}>{item.label}</Text>
-                      <Icon name='plus-circle' size={24} color={colors.green} />
-                    </Pressable>
-                  ))}
-                </>
               )}
             </View>
           )}
         </ScrollView>
 
-        {/* Footer: navigate to More settings */}
+        {/* Footer */}
         {!editMode && (
           <Pressable
-            style={({ pressed }) => [
-              styles.footer,
-              pressed && { opacity: 0.6 },
-            ]}
-            onPress={() => {
-              handleClose();
-              setTimeout(() => router.push('/more' as any), 50);
-            }}
+            style={({ pressed }) => [styles.footer, pressed && { opacity: 0.6 }]}
+            onPress={() => { handleClose(); setTimeout(() => router.push('/more' as any), 50); }}
           >
             <Icon name='cog-outline' size={15} color={colors.muted} />
-            <Text style={styles.footerText}>More settings</Text>
+            <Text style={styles.footerText}>Tuỳ chỉnh thêm</Text>
             <Icon name='chevron-right' size={15} color={colors.tabInactive} />
           </Pressable>
         )}
@@ -375,68 +239,63 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(28,27,27,0.96)',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.08)',
-    ...elevation.panel,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
     maxHeight: '82%',
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
-  sheetGloss: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  sheetGloss: { ...StyleSheet.absoluteFillObject },
   handle: {
     width: 44,
     height: 5,
     borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 6,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    borderBottomColor: glass.rim,
   },
   title: {
     fontFamily: fonts.displayBold,
     fontSize: 22,
     color: colors.text,
-    ...textShadow.emboss,
   },
   editBtn: {
-    backgroundColor: colors.purple,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: colors.primaryContainer,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm - 4,
     borderRadius: radius.pill,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    ...base3D(colors.purpleDeep, 3),
   },
   editBtnText: {
     fontFamily: fonts.semibold,
     fontSize: 13,
-    color: colors.textOnDark,
-    ...textShadow.button,
+    color: colors.onPrimaryContainer,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'flex-end',
-    paddingBottom: 16,
+    paddingBottom: spacing.sm,
   },
-
-  /* Grid (normal mode) */
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: SHEET_PADDING,
     gap: ITEM_GAP,
-    paddingTop: 12,
+    paddingTop: spacing.sm,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -446,22 +305,14 @@ const styles = StyleSheet.create({
     aspectRatio: 1.1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    gap: 8,
-    padding: 12,
-    ...elevation.card,
+    borderColor: glass.rim,
+    gap: spacing.sm,
+    padding: spacing.sm,
   },
-  gridItemPressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.95 }],
-  },
-  gridIconWrap: {
-    ...base3D(colors.purpleDeep, 3),
-    borderRadius: radius.md,
-  },
+  gridItemPressed: { opacity: 0.75, transform: [{ scale: 0.95 }] },
   gridIcon: {
     width: 52,
     height: 52,
@@ -477,32 +328,29 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
-
-  /* Empty state */
   emptyState: {
     alignItems: 'center',
     paddingVertical: 48,
-    gap: 12,
+    gap: spacing.sm,
   },
   emptyText: {
     fontFamily: fonts.medium,
     fontSize: 15,
     color: colors.muted,
     textAlign: 'center',
+    paddingHorizontal: spacing.xl,
   },
-
-  /* Footer */
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderTopWidth: 2,
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: glass.rim,
     backgroundColor: 'rgba(28,27,27,0.85)',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   footerText: {
     flex: 1,
@@ -510,11 +358,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
   },
-
-  /* Edit mode */
   editList: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
   },
   editSectionLabel: {
     fontFamily: fonts.displayBold,
@@ -522,24 +368,24 @@ const styles = StyleSheet.create({
     color: colors.muted,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: 10,
-    ...textShadow.emboss,
+    marginBottom: spacing.sm,
+  },
+  editEmptyLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    marginBottom: spacing.sm,
   },
   editRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.card,
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.rim,
     borderRadius: radius.md,
-    padding: 14,
-    marginBottom: 10,
-    ...elevation.card,
-  },
-  editIconWrap: {
-    ...base3D(colors.purpleDeep, 2),
-    borderRadius: radius.sm,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
   },
   editIcon: {
     width: 40,

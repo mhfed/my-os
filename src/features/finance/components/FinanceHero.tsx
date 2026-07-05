@@ -1,347 +1,126 @@
-import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, domains, glow, gradients, radius, tint } from '@/theme/colors';
+import { colors, glass } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { timing } from '@/theme/motion';
-import { Counter, PressableScale, ShimmerView } from '@/components/motion';
-import { IconBadge } from '@/components/game';
-import { formatCompactVND } from '@/utils/currency';
+import { formatVND, formatCompactVND } from '@/utils/currency';
 
 interface FinanceHeroProps {
-  /** Budget used fraction (0-1, may exceed 1 when over). */
-  budgetUsed: number;
-  /** Amount spent this month. */
-  spent: number;
-  /** Amount saved this month (income - spent). */
-  saved: number;
-  /** Income this month. */
+  /** Total net worth / balance */
+  totalBalance: number;
+  /** Income for this period */
   income: number;
-  /** Total budget for the month (sum of category budgets). */
-  budget: number;
-  /** budget - spent (can be negative). */
-  remaining: number;
-  /** Called when the "Set budget" tip is tapped. */
-  onSetBudget?: () => void;
+  /** Spent for this period */
+  spent: number;
 }
 
 /**
- * Finance hero — a budget dashboard: a big "remaining" headline, a chunky 3D
- * jelly progress bar (spent vs budget), and an Income/Spent/Saved stat footer.
- * The bar + headline + status carry the budget-health colour (teal → gold →
- * red). Replaces the old circular coin/orb.
+ * Hero balance card — glass card with total balance + income/spent mini cards.
+ * Matches the mockup "Tổng số dư" section.
  */
-export function FinanceHero({
-  budgetUsed,
-  spent,
-  saved,
-  income,
-  budget,
-  remaining,
-  onSetBudget,
-}: FinanceHeroProps) {
-  const reduce = useReducedMotion();
-  const hasBudget = budget > 0;
-  const clamped = Math.max(0, Math.min(1, budgetUsed));
-  const pct = Math.round(budgetUsed * 100);
-
-  const isOver = hasBudget && remaining < 0;
-  const isWarning = hasBudget && !isOver && clamped >= 0.9;
-  const healthColor = !hasBudget
-    ? domains.finance.accent
-    : isOver
-      ? colors.red
-      : isWarning
-        ? colors.orange
-        : domains.finance.accent;
-  const barGradient = isOver
-    ? gradients.red
-    : isWarning
-      ? gradients.gold
-      : gradients.gold;
-
-  // Headline: remaining budget, or the overspend amount, or (no budget) spend.
-  const headLabel = !hasBudget
-    ? 'ĐÃ CHI THÁNG NÀY'
-    : isOver
-      ? 'VƯỢT NGÂN SÁCH'
-      : 'CÒN LẠI';
-  const headValue = !hasBudget ? spent : isOver ? spent - budget : remaining;
-
-  const fill = useSharedValue(reduce ? clamped : 0);
-  useEffect(() => {
-    if (reduce) {
-      fill.value = clamped;
-      return;
-    }
-    fill.value = withDelay(180, withTiming(clamped, timing.reveal));
-  }, [clamped, reduce, fill]);
-
-  const fillStyle = useAnimatedStyle(() => ({
-    width: `${fill.value * 100}%`,
-  }));
-
+export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
   return (
-    <View style={styles.panel}>
-      <LinearGradient
-        colors={['rgba(30,202,211,0.16)', 'rgba(79,140,255,0.04)']}
-        start={{ x: 0.08, y: 0.08 }}
-        end={{ x: 0.92, y: 1 }}
-        style={styles.aura}
-        pointerEvents='none'
-      />
-      <View style={styles.halo} pointerEvents='none' />
-      <ShimmerView width={340} height={260} duration={3500} />
-      <LinearGradient
-        colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.6 }}
-        style={styles.gloss}
-        pointerEvents='none'
-      />
+    <View style={styles.card}>
+      {/* Decorative glow blob */}
+      <View style={styles.glowBlob} pointerEvents="none" />
 
-      {/* Headline */}
-      <View style={styles.head}>
-        <View style={styles.headText}>
-          <Text style={styles.headLabel}>{headLabel}</Text>
-          <Counter
-            value={headValue}
-            prefix='₫'
-            separator=','
-            duration={timing.reveal.duration}
-            style={[styles.headAmount, { color: healthColor }]}
-          />
-        </View>
-        {hasBudget ? (
-          <View
-            style={[styles.pctChip, { backgroundColor: tint(healthColor, '22') }]}
-          >
-            <Text style={[styles.pctText, { color: healthColor }]}>{pct}%</Text>
+      <View style={styles.content}>
+        <Text style={styles.label}>Tổng số dư</Text>
+        <Text style={styles.balance}>{formatVND(totalBalance)}</Text>
+
+        <View style={styles.subRow}>
+          <View style={styles.subCard}>
+            <View style={styles.subHeader}>
+              <Text style={styles.subIcon}>↓</Text>
+              <Text style={[styles.subLabel, { color: colors.secondaryFixedDim }]}>Thu nhập</Text>
+            </View>
+            <Text style={[styles.subAmount, { color: colors.secondaryFixedDim }]}>
+              {formatCompactVND(income)}
+            </Text>
           </View>
-        ) : null}
-      </View>
 
-      {/* 3D jelly budget bar */}
-      <View style={styles.barBlock}>
-        <View style={styles.barTrack}>
-          <Animated.View style={[styles.barFillWrap, fillStyle]}>
-            <LinearGradient
-              colors={barGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.barFillGrad}
-            >
-              <LinearGradient
-                colors={gradients.gloss}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.barGloss}
-                pointerEvents='none'
-              />
-            </LinearGradient>
-          </Animated.View>
-        </View>
-        <View style={styles.barCaptions}>
-          <Text style={styles.barCap}>{formatCompactVND(spent)}</Text>
-          <Text style={styles.barCap}>
-            {hasBudget ? formatCompactVND(budget) : 'Chưa đặt ngân sách'}
-          </Text>
+          <View style={styles.subCard}>
+            <View style={styles.subHeader}>
+              <Text style={styles.subIcon}>↑</Text>
+              <Text style={[styles.subLabel, { color: colors.error }]}>Chi tiêu</Text>
+            </View>
+            <Text style={[styles.subAmount, { color: colors.error }]}>
+              {formatCompactVND(spent)}
+            </Text>
+          </View>
         </View>
       </View>
-
-      {/* Stat footer */}
-      <View style={styles.footer}>
-        <View style={styles.statItem}>
-          <IconBadge icon='arrow-bottom-left' color={colors.teal} size={34} iconSize={17} />
-          <Text style={styles.statLabel}>Income</Text>
-          <Text style={[styles.statValue, { color: colors.teal }]}>
-            {formatCompactVND(income)}
-          </Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <IconBadge icon='arrow-top-right' color={colors.red} size={34} iconSize={17} />
-          <Text style={styles.statLabel}>Spent</Text>
-          <Text style={[styles.statValue, { color: colors.red }]}>
-            {formatCompactVND(spent)}
-          </Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <IconBadge icon='piggy-bank' color={colors.green} size={34} iconSize={17} />
-          <Text style={styles.statLabel}>Saved</Text>
-          <Text
-            style={[
-              styles.statValue,
-              { color: saved >= 0 ? colors.green : colors.red },
-            ]}
-          >
-            {formatCompactVND(saved)}
-          </Text>
-        </View>
-      </View>
-
-      {!hasBudget && onSetBudget ? (
-        <PressableScale onPress={onSetBudget} haptic='light'>
-          <Text style={[styles.status, { color: healthColor }]}>
-            💡 Đặt ngân sách để theo dõi
-          </Text>
-        </PressableScale>
-      ) : (
-        <Text style={[styles.status, { color: healthColor }]}>
-          {!hasBudget
-            ? '💡 Đặt ngân sách để theo dõi'
-            : isOver
-              ? '⚠️ Vượt ngân sách'
-              : isWarning
-                ? '⚡ Sắp đến giới hạn'
-                : '✨ Đúng kế hoạch'}
-        </Text>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: {
-    overflow: 'hidden',
-    borderRadius: 24,
-    backgroundColor: colors.card,
+  card: {
+    borderRadius: 16,
+    backgroundColor: glass.fillStrong,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 16,
-    ...glow(domains.finance.accent, 0.18, 20),
+    borderColor: glass.rim,
+    overflow: 'hidden',
   },
-  aura: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  halo: {
+  glowBlob: {
     position: 'absolute',
-    top: 18,
-    right: 18,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(30,202,211,0.1)',
+    top: -40,
+    right: -40,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: 'rgba(0, 240, 255, 0.12)',
   },
-  gloss: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 60,
+  content: {
+    padding: 24,
+    position: 'relative',
+    zIndex: 1,
   },
-  head: {
+  label: {
+    fontFamily: fonts.display,
+    fontSize: 14,
+    letterSpacing: 0.7,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  balance: {
+    fontFamily: fonts.displayBold,
+    fontSize: 36,
+    lineHeight: 42,
+    color: colors.primaryContainer,
+    letterSpacing: -0.5,
+  },
+  subRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 24,
   },
-  headText: {
+  subCard: {
     flex: 1,
-  },
-  headLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    color: colors.muted,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  headAmount: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 32,
-    letterSpacing: -1,
-    padding: 0,
-  },
-  pctChip: {
-    paddingHorizontal: 14,
-    height: 34,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pctText: {
-    fontFamily: fonts.displayExtra,
-    fontSize: 16,
-  },
-  barBlock: {
-    marginTop: 14,
-  },
-  barTrack: {
-    height: 20,
-    borderRadius: radius.pill,
-    backgroundColor: colors.track,
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  barFillWrap: {
-    height: '100%',
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  barFillGrad: {
-    flex: 1,
-    borderRadius: radius.pill,
-  },
-  barGloss: {
-    position: 'absolute',
-    top: 1,
-    left: 3,
-    right: 3,
-    height: '46%',
-    borderRadius: radius.pill,
-  },
-  barCaptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  barCap: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 11,
-    color: colors.muted,
-  },
-  footer: {
+  subHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 18,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    gap: 4,
+    marginBottom: 4,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 5,
+  subIcon: {
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
   },
-  statLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 10.5,
-    color: colors.muted,
+  subLabel: {
+    fontFamily: fonts.display,
+    fontSize: 14,
+    letterSpacing: 0.7,
   },
-  statValue: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 13,
-  },
-  statDivider: {
-    width: 1,
-    height: 38,
-    backgroundColor: colors.border,
-  },
-  status: {
-    fontFamily: fonts.displayMedium,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 14,
+  subAmount: {
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    lineHeight: 28,
   },
 });

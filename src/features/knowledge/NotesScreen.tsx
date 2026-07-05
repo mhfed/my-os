@@ -1,25 +1,33 @@
-import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { FarmBackground } from '@/components/skia';
-import { colors } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { EmptyState, GameIconButton, ListRow } from '@/components/game';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useNoteStore } from '@/store/noteStore';
-import { formatTxnDate } from '@/utils/date';
-
-import { NoteEditorModal } from './components/NoteEditorModal';
 import type { Note } from '@/types/note';
 
+import { NoteEditorModal } from './components/NoteEditorModal';
+
+/** Date label — "Hôm nay" / "Hôm qua" / "dd/mm". */
+function noteDate(updatedAt: number): string {
+  const now = new Date();
+  const d = new Date(updatedAt);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const noteDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = (today.getTime() - noteDay.getTime()) / 86_400_000;
+  if (diff === 0) return 'Hôm nay';
+  if (diff === 1) return 'Hôm qua';
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
+
+/** Notes screen (DESIGN_SPEC §5.9) — second brain with searchable note cards. */
 export function NotesScreen() {
   const router = useRouter();
   const ready = useNoteStore((s) => s.ready);
@@ -28,78 +36,102 @@ export function NotesScreen() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | undefined>(undefined);
 
+  const handleBack = () => router.navigate('/more');
+
   if (!ready) {
     return (
       <View style={[styles.screen, styles.center]}>
-        <ActivityIndicator color={colors.purple} />
+        <View />
       </View>
     );
   }
 
-  function handleOpenNew() {
-    setEditingNote(undefined);
-    setEditorOpen(true);
-  }
-
-  function handleOpenEdit(note: Note) {
-    setEditingNote(note);
-    setEditorOpen(true);
-  }
-
-  const handleBack = () => router.navigate('/more');
-
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FarmBackground domain='notes' />
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-          style={{ position: 'absolute', left: 22, zIndex: 1, top: 12 }}
-        >
-          <Icon name='arrow-left' size={24} color={colors.text} />
-        </Pressable>
-        <Text style={styles.title}>Second Brain</Text>
-      </View>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
+
+      {/* Header */}
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <View style={styles.headerCard}>
+          <View style={styles.header}>
+            <PressableScale
+              onPress={handleBack}
+              haptic='light'
+              hitSlop={8}
+              style={styles.back}
+              accessibilityRole='button'
+              accessibilityLabel='Quay lại'
+            >
+              <Icon name='arrow-left' size={24} color={colors.text} />
+            </PressableScale>
+            <Text style={styles.title}>Second Brain</Text>
+          </View>
+        </View>
+      </AnimatedCard>
 
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <Pressable style={styles.card} onPress={() => handleOpenEdit(item)}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <Text style={styles.cardDate}>
-                {formatTxnDate(item.updatedAt)}
-              </Text>
-            </View>
-            <Text style={styles.cardPreview} numberOfLines={2}>
-              {item.content || 'Empty note...'}
-            </Text>
-            {item.tags && item.tags.length > 0 && (
-              <View style={styles.tagRow}>
-                {item.tags.map((t) => (
-                  <View key={t} style={styles.tagPill}>
-                    <Text style={styles.tagText}>#{t}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </Pressable>
+        contentContainerStyle={
+          notes.length === 0 ? styles.emptyContent : styles.listContent
+        }
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item, index }) => (
+          <AnimatedCard index={index + 1}>
+            <PressableScale
+              onPress={() => { setEditingNote(item); setEditorOpen(true); }}
+              haptic='light'
+              style={styles.card}
+            >
+              <ListRow
+                icon='note-text-outline'
+                title={item.title || 'Chưa có tiêu đề'}
+                subtitle={noteDate(item.updatedAt)}
+                trailing={item.content ? undefined : 'empty'}
+              />
+              {item.content ? (
+                <Text style={styles.preview} numberOfLines={2}>
+                  {item.content}
+                </Text>
+              ) : null}
+              {item.tags && item.tags.length > 0 ? (
+                <View style={styles.tagRow}>
+                  {item.tags.map((t) => (
+                    <View key={t} style={styles.tagPill}>
+                      <Text style={styles.tagText}>#{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </PressableScale>
+          </AnimatedCard>
         )}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            No notes yet. Create one to capture ideas.
-          </Text>
+          <EmptyState
+            icon='brain'
+            title='Chưa có ghi chú nào 🧠'
+            subtitle='Tạo ghi chú đầu tiên để lưu giữ ý tưởng.'
+            actionLabel='Tạo ghi chú'
+            actionVariant='gem'
+            onAction={() => { setEditingNote(undefined); setEditorOpen(true); }}
+          />
         }
       />
 
-      <Pressable style={styles.fab} onPress={handleOpenNew}>
-        <Icon name='plus' size={24} color={colors.white} />
-      </Pressable>
+      <GameIconButton
+        icon='plus'
+        variant='gem'
+        size={60}
+        style={styles.fab}
+        onPress={() => { setEditingNote(undefined); setEditorOpen(true); }}
+        accessibilityLabel='Tạo ghi chú mới'
+      />
 
       <NoteEditorModal
         visible={editorOpen}
@@ -115,96 +147,91 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   center: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerWrap: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  headerCard: {
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.track,
-    position: 'relative',
+  },
+  back: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -spacing.xs,
   },
   title: {
-    fontFamily: fonts.semibold,
-    fontSize: 20,
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    lineHeight: 28,
     color: colors.text,
   },
   listContent: {
-    padding: 22,
-    gap: 12,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    paddingBottom: spacing.tabClear,
+  },
+  emptyContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: spacing.lg,
   },
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.fillStrong,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: 16,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    padding: spacing.md,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  cardTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    color: colors.text,
-    flex: 1,
-    marginRight: 10,
-  },
-  cardDate: {
-    fontFamily: fonts.monoRegular,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  cardPreview: {
+  preview: {
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.muted,
     lineHeight: 20,
+    marginTop: spacing.xs,
+    paddingLeft: 48,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    marginTop: 10,
+    marginTop: spacing.sm,
+    paddingLeft: 48,
   },
   tagPill: {
-    backgroundColor: colors.track,
+    backgroundColor: tint(colors.purple, '18'),
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: tint(colors.purple, '30'),
   },
   tagText: {
     fontFamily: fonts.monoMedium,
     fontSize: 11,
-    color: colors.teal,
-  },
-  emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 40,
+    color: colors.purple,
   },
   fab: {
     position: 'absolute',
-    right: 22,
-    bottom: 40,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.purple,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    right: spacing.lg,
+    bottom: spacing.xxl,
   },
 });

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
 interface SectionHeaderProps {
@@ -12,43 +12,32 @@ interface SectionHeaderProps {
 }
 
 /** Section heading: colored dot + uppercase label + muted mono count. */
-export const SectionHeader = memo(function SectionHeader({ label, count, tone }: SectionHeaderProps) {
+export const SectionHeader = memo(function SectionHeader({
+  label,
+  count,
+  tone,
+}: SectionHeaderProps) {
   const isOverdue = tone === 'overdue';
   const isCompleted = tone === 'completed';
-  const badgeBg = isOverdue
-    ? tint(colors.red, '22')
-    : isCompleted
-    ? tint(colors.green, '22')
-    : tint(colors.blue, '22');
-  const badgeBorder = isOverdue
-    ? tint(colors.red, '44')
-    : isCompleted
-    ? tint(colors.green, '44')
-    : tint(colors.blue, '44');
-  const dotColor = isOverdue
+  const accentColor = isOverdue
     ? colors.red
     : isCompleted
     ? colors.green
     : colors.blue;
-  const labelStyle = isOverdue
-    ? styles.labelOverdue
-    : isCompleted
-    ? styles.labelCompleted
-    : styles.labelToday;
+
   return (
     <View style={styles.row}>
       <View
         style={[
           styles.badge,
-          { backgroundColor: badgeBg, borderColor: badgeBorder },
+          {
+            backgroundColor: tint(accentColor, '18'),
+            borderColor: tint(accentColor, '30'),
+          },
         ]}
       >
-        <View
-          style={[styles.dot, { backgroundColor: dotColor }]}
-        />
-        <Text style={[styles.label, labelStyle]}>
-          {label}
-        </Text>
+        <View style={[styles.dot, { backgroundColor: accentColor }]} />
+        <Text style={[styles.label, { color: accentColor }]}>{label}</Text>
       </View>
       <Text style={styles.count}>{count}</Text>
     </View>
@@ -60,16 +49,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 8,
+    paddingHorizontal: 18,
+    paddingTop: 8,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1.5,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
   },
   dot: {
     width: 7,
@@ -79,18 +70,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.displayBold,
     fontSize: 12,
-  },
-  labelOverdue: {
-    color: colors.red,
-    letterSpacing: 0.3,
-  },
-  labelToday: {
-    color: colors.blue,
-    letterSpacing: 0.3,
-  },
-  labelCompleted: {
-    color: colors.green,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   count: {
     fontFamily: fonts.monoRegular,

@@ -3,15 +3,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, glass, gradients, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
 import { AnimatedCard } from '@/components/motion';
-import { FarmBackground } from '@/components/skia';
 import { useGymStore } from '@/store/gymStore';
 import { formatTxnDate } from '@/utils/date';
 
+/** Health Dashboard (DESIGN_SPEC §5.4) — workout history, start session, run tracker. */
 export function HealthDashboard() {
   const ready = useGymStore((s) => s.ready);
   const init = useGymStore((s) => s.init);
@@ -22,13 +23,10 @@ export function HealthDashboard() {
     void init();
   }, [init]);
 
-  if (!ready) {
-    return <View style={styles.screen} />;
-  }
+  if (!ready) return <View style={styles.screen} />;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FarmBackground domain='health' />
       <LinearGradient
         colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
         start={{ x: 0.5, y: 0 }}
@@ -36,33 +34,38 @@ export function HealthDashboard() {
         style={styles.screenGlow}
         pointerEvents='none'
       />
+
+      {/* Header */}
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <GamePanel style={styles.headerPanel}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Sức khỏe</Text>
+            <Text style={styles.subtitle}>Tập luyện, phục hồi và chuỗi ngày</Text>
+          </View>
+        </GamePanel>
+      </AnimatedCard>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <AnimatedCard index={0}>
-          <GamePanel style={styles.headerPanel}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Health</Text>
-              <Text style={styles.subtitle}>Training, recovery, and streaks</Text>
-            </View>
-          </GamePanel>
-        </AnimatedCard>
-
+        {/* Start Workout card */}
         <AnimatedCard index={1} style={styles.section}>
           <Pressable onPress={() => startWorkout('Chest & Triceps')}>
             <LinearGradient
-              colors={[colors.purple, '#5D52C9']}
+              colors={gradients.gem}
               start={{ x: 0, y: 0 }}
               end={{ x: 0.9, y: 0.3 }}
               style={styles.startCard}
             >
               <View style={styles.startContent}>
-                <Icon name='dumbbell' size={24} color={colors.white} />
+                <View style={styles.startIconWrap}>
+                  <Icon name='dumbbell' size={24} color={colors.white} />
+                </View>
                 <View>
-                  <Text style={styles.startTitle}>Start Workout</Text>
+                  <Text style={styles.startTitle}>Bắt đầu tập</Text>
                   <Text style={styles.startSub}>
-                    Empty session or pick template
+                    Buổi trống hoặc chọn giáo án
                   </Text>
                 </View>
               </View>
@@ -71,29 +74,27 @@ export function HealthDashboard() {
           </Pressable>
         </AnimatedCard>
 
+        {/* Run Tracker (placeholder) */}
         <AnimatedCard index={2} style={styles.section}>
           <GamePanel>
             <View style={styles.mockRow}>
-              <View
-                style={[styles.iconBox, { backgroundColor: tint(colors.orange) }]}
-              >
+              <View style={[styles.iconBox, { backgroundColor: tint(colors.orange) }]}>
                 <Icon name='shoe-sneaker' size={20} color={colors.orange} />
               </View>
               <View style={styles.mockTextWrap}>
-                <Text style={styles.mockTitle}>Run Tracker</Text>
-                <Text style={styles.mockSub}>
-                  Connect to Strava (Coming soon)
-                </Text>
+                <Text style={styles.mockTitle}>Theo dõi chạy bộ</Text>
+                <Text style={styles.mockSub}>Kết nối Strava (Sắp ra mắt)</Text>
               </View>
             </View>
           </GamePanel>
         </AnimatedCard>
 
+        {/* Workout History */}
         <AnimatedCard index={3} style={styles.section}>
-          <GamePanel title='Workout History'>
+          <GamePanel title='Lịch sử tập'>
             <View style={styles.historyList}>
               {history.length === 0 ? (
-                <Text style={styles.emptyText}>No workouts logged yet.</Text>
+                <Text style={styles.emptyText}>Chưa có buổi tập nào.</Text>
               ) : (
                 history.map((workout) => (
                   <View key={workout.id} style={styles.historyCard}>
@@ -104,12 +105,10 @@ export function HealthDashboard() {
                       </Text>
                     </View>
                     <Text style={styles.historyStats}>
-                      {workout.exercises.length} exercises ·{' '}
+                      {workout.exercises.length} bài tập ·{' '}
                       {workout.endTime
-                        ? Math.round(
-                            (workout.endTime - workout.startTime) / 60000,
-                          ) + ' min'
-                        : 'Unknown'}
+                        ? Math.round((workout.endTime - workout.startTime) / 60000) + ' phút'
+                        : 'Không rõ'}
                     </Text>
                   </View>
                 ))
@@ -130,19 +129,19 @@ const styles = StyleSheet.create({
   screenGlow: {
     ...StyleSheet.absoluteFillObject,
   },
-  content: {
-    paddingTop: 8,
-    paddingHorizontal: 18,
-    paddingBottom: 110,
+  headerWrap: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
   },
   headerPanel: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   header: {
     gap: 2,
   },
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 26,
     color: colors.text,
     letterSpacing: -0.4,
@@ -152,22 +151,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
   },
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.tabClear,
+  },
   section: {
-    marginTop: 16,
+    marginTop: spacing.md,
   },
   startCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
-    borderRadius: 24,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.34)',
   },
   startContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: spacing.md,
+  },
+  startIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   startTitle: {
     fontFamily: fonts.displayBold,
@@ -183,7 +194,7 @@ const styles = StyleSheet.create({
   mockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.sm,
   },
   mockTextWrap: {
     flex: 1,
@@ -191,7 +202,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -207,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   historyList: {
-    gap: 12,
+    gap: spacing.sm,
   },
   emptyText: {
     fontFamily: fonts.regular,
@@ -215,11 +226,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   historyCard: {
-    backgroundColor: colors.cardAlt,
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: 16,
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    padding: spacing.md,
   },
   historyHeader: {
     flexDirection: 'row',
@@ -240,6 +251,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.muted,
-    marginTop: 6,
+    marginTop: spacing.xs,
   },
 });

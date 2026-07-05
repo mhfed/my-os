@@ -11,12 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, radius } from '@/theme/colors';
+import { colors, glass, radius } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { Icon } from '@/theme/icons';
-import { fonts, textShadow } from '@/theme/typography';
+import { fonts } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
-import { GameIconButton } from '@/components/game';
-import { FarmBackground } from '@/components/skia';
+import { GameIconButton, EmptyState } from '@/components/game';
 import { useFinanceStore } from '@/store/financeStore';
 import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
@@ -30,300 +30,192 @@ interface TransactionHistorySheetProps {
   onClose: () => void;
 }
 
-type Filter = 'all' | TxnType;
-
-interface Group {
-  dateLabel: string;
-  txns: TransactionView[];
-}
-
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'income', label: 'Thu' },
-  { key: 'expense', label: 'Chi' },
-];
-
+/** Transaction history modal — full-screen searchable log. */
 export function TransactionHistorySheet({
   visible,
   onClose,
 }: TransactionHistorySheetProps) {
-  const transactions = useFinanceStore((s) => s.transactions);
-  const categories = useFinanceStore((s) => s.categories);
-  const activeMonth = useFinanceStore((s) => s.activeMonth);
-  const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
+  const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
+  const allTransactions = useFinanceStore((s) => s.transactions);
 
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
-  const [editTxn, setEditTxn] = useState<TransactionView | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<'all' | TxnType>('all');
+  const [editingTxn, setEditingTxn] = useState<TransactionView | null>(null);
 
-  // Build TransactionView[] for active month — reactive to store changes
-  const allViews = useMemo<TransactionView[]>(() => {
-    const { start, end } = monthRange(activeMonth);
-    const byId = new Map(categories.map((c) => [c.id, c]));
-    return transactions
-      .filter((t) => t.date >= start && t.date < end)
-      .sort((a, b) => b.date - a.date)
-      .map((t) => {
-        const cat = byId.get(t.categoryId);
-        const categoryName = cat?.name ?? 'Uncategorized';
-        return {
-          id: t.id,
-          name: t.note || categoryName,
-          categoryName,
-          color: cat?.color ?? colors.muted,
-          icon: cat?.icon ?? 'cash',
-          amount: t.amount,
-          type: t.type,
-          date: t.date,
-        };
-      });
-  }, [transactions, categories, activeMonth]);
+  const allTxns = useMemo(() => getTransactionViews(9999), [allTransactions, getTransactionViews]);
 
-  const filtered = useMemo<TransactionView[]>(() => {
-    const q = search.trim().toLowerCase();
-    return allViews.filter((t) => {
-      if (filter !== 'all' && t.type !== filter) return false;
-      if (q) {
-        return (
-          t.name.toLowerCase().includes(q) ||
-          t.categoryName.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [allViews, search, filter]);
-
-  // Group filtered transactions by date label
-  const groups = useMemo<Group[]>(() => {
-    const map = new Map<string, TransactionView[]>();
-    for (const txn of filtered) {
-      const label = formatTxnDate(txn.date);
-      const arr = map.get(label) ?? [];
-      arr.push(txn);
-      map.set(label, arr);
+  const filtered = useMemo(() => {
+    let list = allTxns;
+    if (filterType !== 'all') {
+      list = list.filter((t) => t.type === filterType);
     }
-    return Array.from(map.entries()).map(([dateLabel, txns]) => ({
-      dateLabel,
-      txns,
-    }));
-  }, [filtered]);
-
-  function handleClose() {
-    setSearch('');
-    setFilter('all');
-    onClose();
-  }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.name?.toLowerCase().includes(q) ||
+          t.categoryName?.toLowerCase().includes(q) ||
+          t.amount.toString().includes(q),
+      );
+    }
+    return list;
+  }, [allTxns, filterType, searchQuery]);
 
   return (
     <Modal
       visible={visible}
       animationType='slide'
-      presentationStyle='pageSheet'
-      onRequestClose={handleClose}
+      presentationStyle='fullScreen'
+      onRequestClose={onClose}
     >
-      <EditTransactionSheet txn={editTxn} onClose={() => setEditTxn(null)} />
-      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
-        <FarmBackground domain='finance' />
+      <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
         <LinearGradient
-          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+          colors={['rgba(255,255,255,0.04)', 'transparent']}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
-          style={styles.screenGlow}
+          style={styles.gloss}
           pointerEvents='none'
         />
+
         {/* Header */}
         <View style={styles.header}>
+          <PressableScale
+            onPress={onClose}
+            haptic='light'
+            hitSlop={10}
+            style={styles.back}
+            accessibilityRole='button'
+            accessibilityLabel='Đóng'
+          >
+            <Icon name='close' size={24} color={colors.text} />
+          </PressableScale>
           <Text style={styles.title}>Lịch sử giao dịch</Text>
-          <GameIconButton
-            icon='close'
-            variant='red'
-            size={36}
-            iconSize={16}
-            onPress={handleClose}
-          />
         </View>
 
         {/* Search */}
-        <View style={styles.searchRow}>
-          <Icon name='magnify' size={18} color={colors.muted} />
-          <TextInput
-            style={styles.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            placeholder='Tìm kiếm giao dịch...'
-            placeholderTextColor={colors.tabInactive}
-            returnKeyType='search'
-            clearButtonMode='while-editing'
-          />
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Icon name='magnify' size={18} color={colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder='Tìm giao dịch...'
+              placeholderTextColor={colors.tabInactive}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 ? (
+              <PressableScale onPress={() => setSearchQuery('')} haptic='light' hitSlop={8}>
+                <Icon name='close' size={18} color={colors.muted} />
+              </PressableScale>
+            ) : null}
+          </View>
         </View>
 
         {/* Filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {FILTERS.map((f) => {
-            const active = filter === f.key;
-            return (
-              <PressableScale
-                key={f.key}
-                onPress={() => setFilter(f.key)}
-                haptic='selection'
-                style={[styles.filterChip, active && styles.filterChipActive]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    active && styles.filterChipTextActive,
-                  ]}
-                >
-                  {f.label}
-                </Text>
-              </PressableScale>
-            );
-          })}
-        </ScrollView>
-
-        {/* Transaction count */}
-        <Text style={styles.count}>{filtered.length} giao dịch</Text>
+        <View style={styles.filterRow}>
+          {(['all', 'income', 'expense'] as const).map((type) => (
+            <PressableScale
+              key={type}
+              onPress={() => setFilterType(type)}
+              haptic='selection'
+              style={[styles.filterChip, filterType === type && styles.filterChipActive]}
+            >
+              <Text style={[styles.filterLabel, filterType === type && styles.filterLabelActive]}>
+                {type === 'all' ? 'Tất cả' : type === 'income' ? 'Thu nhập' : 'Chi tiêu'}
+              </Text>
+            </PressableScale>
+          ))}
+        </View>
 
         {/* List */}
         <FlatList
-          data={groups}
-          keyExtractor={(item) => item.dateLabel}
-          contentContainerStyle={styles.listContent}
+          data={filtered}
+          keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Icon name='receipt-text-outline' size={40} color={colors.tabInactive} />
-              <Text style={styles.emptyText}>Không có giao dịch</Text>
-            </View>
-          }
+          contentContainerStyle={filtered.length === 0 ? styles.emptyContent : styles.listContent}
           renderItem={({ item }) => (
-            <View style={styles.group}>
-              <Text style={styles.dateHeader}>{item.dateLabel}</Text>
-              <View style={styles.groupRows}>
-                {item.txns.map((txn) => (
-                  <TransactionRow
-                    key={txn.id}
-                    txn={txn}
-                    onDelete={() => deleteTransaction(txn.id)}
-                    onEdit={() => setEditTxn(txn)}
-                  />
-                ))}
-              </View>
-            </View>
+            <PressableScale onPress={() => setEditingTxn(item)} haptic='light' style={styles.txnRow}>
+              <TransactionRow txn={item} />
+            </PressableScale>
           )}
+          ListEmptyComponent={
+            <EmptyState
+              icon='wallet-outline'
+              title='Không có giao dịch'
+              subtitle={searchQuery ? 'Thử tìm kiếm với từ khóa khác.' : 'Chưa có giao dịch nào trong tháng này.'}
+            />
+          }
         />
+
+        {editingTxn && (
+          <EditTransactionSheet
+            txn={editingTxn}
+            onClose={() => setEditingTxn(null)}
+          />
+        )}
       </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.screenBg,
-  },
-  screenGlow: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  screen: { flex: 1, backgroundColor: colors.screenBg },
+  gloss: { ...StyleSheet.absoluteFillObject },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  back: {
+    width: 36, height: 36,
+    alignItems: 'center', justifyContent: 'center',
+    marginLeft: -spacing.xs,
   },
   title: {
-    fontFamily: fonts.displayBold,
-    fontSize: 20,
-    color: colors.text,
-    ...textShadow.emboss,
+    fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.text,
   },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.track,
-    borderRadius: radius.pill,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  searchContainer: {
+    paddingHorizontal: spacing.lg, marginTop: spacing.xs, marginBottom: spacing.sm,
+  },
+  searchBox: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: glass.fill,
+    borderWidth: 1, borderColor: glass.rim,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.sm, paddingVertical: 10, gap: 10,
   },
   searchInput: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.text,
-    padding: 0,
+    flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.text,
   },
   filterRow: {
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 4,
+    flexDirection: 'row', gap: spacing.sm,
+    paddingHorizontal: spacing.lg, marginBottom: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md, paddingVertical: 8,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.track,
-    backgroundColor: colors.cardAlt,
+    backgroundColor: glass.fill,
+    borderWidth: 1, borderColor: glass.rim,
   },
   filterChipActive: {
-    backgroundColor: colors.purple,
-    borderColor: colors.purpleDeep,
+    backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer,
   },
-  filterChipText: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.muted,
+  filterLabel: {
+    fontFamily: fonts.display, fontSize: 13, color: colors.muted,
   },
-  filterChipTextActive: {
-    color: colors.white,
-  },
-  count: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.tabInactive,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 6,
+  filterLabelActive: {
+    color: colors.onPrimaryContainer,
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    paddingTop: 4,
+    paddingHorizontal: spacing.lg, gap: spacing.xs, paddingBottom: spacing.xxl,
   },
-  group: {
-    marginBottom: 20,
+  emptyContent: {
+    flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.lg,
   },
-  dateHeader: {
-    fontFamily: fonts.displayBold,
-    fontSize: 12,
-    color: colors.muted,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  groupRows: {
-    gap: 8,
-  },
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-    gap: 12,
-  },
-  emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.tabInactive,
+  txnRow: {
+    paddingVertical: spacing.xs,
   },
 });

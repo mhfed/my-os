@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius } from '@/theme/colors';
+import { colors, glass, radius } from '@/theme/colors';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 
@@ -30,7 +30,7 @@ export const QuickCapture = memo(function QuickCapture({
   return (
     <View>
       <View style={styles.row}>
-        <Icon name='star-four-points' size={18} color={colors.purple} />
+        <Icon name='star-four-points' size={18} color={colors.gold} />
         <TextInput
           style={styles.input}
           value={text}
@@ -41,14 +41,14 @@ export const QuickCapture = memo(function QuickCapture({
           returnKeyType='done'
         />
         <Pressable style={styles.button} onPress={submit}>
-          <Icon name='arrow-up-bold' size={18} color={colors.white} />
+          <Icon name='arrow-up-bold' size={18} color={colors.black} />
         </Pressable>
       </View>
 
       {openCount > 0 ? (
         <Pressable style={styles.inboxLink} onPress={onOpenInbox}>
           <Text style={styles.inboxText}>{openCount} in inbox</Text>
-          <Icon name='arrow-right' size={13} color={colors.muted} />
+          <Icon name='arrow-right' size={13} color={colors.gold} />
         </Pressable>
       ) : null}
     </View>
@@ -60,12 +60,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.track,
-    borderRadius: radius.pill,
-    paddingTop: 5,
-    paddingBottom: 5,
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingTop: 6,
+    paddingBottom: 6,
     paddingLeft: 16,
     paddingRight: 6,
   },
@@ -79,12 +79,10 @@ const styles = StyleSheet.create({
   button: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.purple,
+    borderRadius: radius.sm,
+    backgroundColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.white,
   },
   inboxLink: {
     flexDirection: 'row',

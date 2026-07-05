@@ -1,116 +1,183 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { colors, tint } from '@/theme/colors';
+import { GamePanel, IconBadge, ProgressRing, StreakFlame } from '@/components/game';
+import { PressableScale } from '@/components/motion';
+import { colors, glass, gradients, glow, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { springs } from '@/theme/motion';
+import { spacing } from '@/theme/spacing';
 import { Icon, type IconName } from '@/theme/icons';
+import { useHabitsStore } from '@/store/habitsStore';
 import type { HabitView } from '@/types/habit';
 
 interface HabitCardProps {
   habit: HabitView;
+  index?: number;
 }
 
-/** A single habit row card: icon chip + name/sub + streak + progress bar. */
-export function HabitCard({ habit }: HabitCardProps) {
+const GOLD_STAR_STREAK = 21;
+
+/**
+ * A single habit card (DESIGN_SPEC §5.5): 3D IconBadge, name, StreakFlame that
+ * heats orange→pink by length, a mini weekly ProgressRing, and a chunky
+ * "Hoàn thành" tap that fires a bounce + success haptic when today is checked.
+ */
+export function HabitCard({ habit, index = 0 }: HabitCardProps) {
+  const toggleToday = useHabitsStore((s) => s.toggleToday);
+  const reduceMotion = useReducedMotion();
+
+  const doneDays = habit.pattern.reduce((sum, v) => sum + v, 0);
+  const done = habit.doneToday;
+
+  // Bounce the ring when today flips to done.
+  const bounce = useSharedValue(1);
+  const prevDone = useRef(done);
+  useEffect(() => {
+    if (done && !prevDone.current && !reduceMotion) {
+      bounce.value = withSequence(
+        withSpring(1.18, springs.bouncy),
+        withSpring(1, springs.bouncy),
+      );
+    }
+    prevDone.current = done;
+  }, [done, reduceMotion, bounce]);
+
+  const ringStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounce.value }],
+  }));
+
+  const handleComplete = useCallback(() => {
+    // Success pulse only when checking on; a lighter tap when unchecking.
+    if (!done) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    void toggleToday(habit.id);
+  }, [done, toggleToday, habit.id]);
+
   return (
-    <View style={styles.card}>
+    <GamePanel>
       <View style={styles.topRow}>
-        <View
-          style={[styles.iconWrap, { backgroundColor: tint(habit.color) }]}
-        >
-          <Icon name={habit.icon as IconName} size={20} color={habit.color} />
-        </View>
+        <IconBadge icon={habit.icon as IconName} color={habit.color} size={44} />
 
         <View style={styles.middle}>
-          <Text style={styles.name}>{habit.name}</Text>
-          {habit.sub ? <Text style={styles.sub}>{habit.sub}</Text> : null}
-        </View>
-
-        <View style={styles.right}>
-          <View style={styles.streakRow}>
-            <Text style={[styles.streak, { color: habit.color }]}>
-              {habit.streak}
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {habit.name}
             </Text>
-            <Text style={styles.flame}>🔥</Text>
+            {habit.streak >= GOLD_STAR_STREAK ? (
+              <View style={glow(colors.gold, 0.6, 8)}>
+                <Icon name='star' size={15} color={colors.gold} />
+              </View>
+            ) : null}
           </View>
-          <Text style={styles.streakLabel}>day streak</Text>
+          {habit.sub ? (
+            <Text style={styles.sub} numberOfLines={1}>
+              {habit.sub}
+            </Text>
+          ) : null}
+          <StreakFlame count={habit.streak} label='ngày' size={16} bare style={styles.flame} />
         </View>
+
+        <Animated.View style={ringStyle}>
+          <ProgressRing
+            progress={habit.pct / 100}
+            size={52}
+            stroke={6}
+            gradient={gradients.green}
+            glow={done}
+          >
+            <Text style={styles.ringValue}>{doneDays}/7</Text>
+          </ProgressRing>
+        </Animated.View>
       </View>
 
-      <View style={styles.track}>
-        <View
-          style={[
-            styles.fill,
-            { width: `${habit.pct}%`, backgroundColor: habit.color },
-          ]}
+      <PressableScale
+        haptic='none'
+        onPress={handleComplete}
+        accessibilityRole='button'
+        accessibilityLabel={done ? `Bỏ hoàn thành ${habit.name}` : `Hoàn thành ${habit.name}`}
+        style={[styles.completeBtn, done ? styles.completeBtnDone : styles.completeBtnIdle]}
+      >
+        <Icon
+          name={done ? 'check-circle' : 'checkbox-blank-circle-outline'}
+          size={20}
+          color={done ? colors.green : colors.muted}
         />
-      </View>
-    </View>
+        <Text style={[styles.completeText, { color: done ? colors.green : colors.text }]}>
+          {done ? 'Đã hoàn thành hôm nay' : 'Hoàn thành'}
+        </Text>
+      </PressableScale>
+    </GamePanel>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: 16,
-  },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    marginBottom: 13,
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   middle: {
     flex: 1,
+    gap: 2,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   name: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
+    fontFamily: fonts.displayBold,
+    fontSize: 16,
     color: colors.text,
+    flexShrink: 1,
   },
   sub: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.muted,
-    marginTop: 2,
-  },
-  right: {
-    alignItems: 'flex-end',
-  },
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 3,
-  },
-  streak: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 24,
   },
   flame: {
-    fontSize: 11,
+    marginTop: 4,
   },
-  streakLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    color: colors.muted,
+  ringValue: {
+    fontFamily: fonts.displayBold,
+    fontSize: 12,
+    color: colors.text,
   },
-  track: {
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.track,
-    overflow: 'hidden',
+  completeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 48,
+    borderRadius: radius.pill,
+    borderWidth: 1,
   },
-  fill: {
-    height: 7,
-    borderRadius: 4,
+  completeBtnIdle: {
+    backgroundColor: glass.fill,
+    borderColor: glass.rim,
+  },
+  completeBtnDone: {
+    backgroundColor: tint(colors.green, '1F'),
+    borderColor: tint(colors.green, '55'),
+  },
+  completeText: {
+    fontFamily: fonts.displayBold,
+    fontSize: 15,
+    letterSpacing: 0.3,
   },
 });

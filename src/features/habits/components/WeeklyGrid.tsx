@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, glass } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
 import type { HabitView } from '@/types/habit';
@@ -56,9 +56,9 @@ export function WeeklyGrid({ views, onToggleLog }: WeeklyGridProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.fillStrong,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.rim,
     borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 14,
@@ -96,6 +96,6 @@ const styles = StyleSheet.create({
   squareEmpty: {
     backgroundColor: colors.track,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.rim,
   },
 });

@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { FarmBackground } from '@/components/skia';
-import { colors } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
+import { AnimatedCard, PressableScale } from '@/components/motion';
+import { GameIconButton } from '@/components/game';
 import { Icon } from '@/theme/icons';
 import { useHabitsStore } from '@/store/habitsStore';
 
@@ -20,21 +16,17 @@ import { WeeklyGrid } from './components/WeeklyGrid';
 import { AddHabitModal } from './components/AddHabitModal';
 
 /**
- * Habits tracker screen.
- *
- * NOTE: The source design renders the completion % as a purple→teal gradient
- * text. RN gradient text requires @react-native-masked-view, which is not
- * installed, so a solid purple is used instead.
+ * Habits tracker screen (DESIGN_SPEC §5.5) — Vietnamese-first: "Thói quen",
+ * completion %, weekly grid, and a scrollable list of HabitCards.
  */
 export function HabitsScreen() {
   const ready = useHabitsStore((s) => s.ready);
   const init = useHabitsStore((s) => s.init);
+  useHabitsStore((s) => s.habits);
+  useHabitsStore((s) => s.logs);
   const views = useHabitsStore((s) => s.views);
   const completion = useHabitsStore((s) => s.completion);
   const toggleLog = useHabitsStore((s) => s.toggleLog);
-  // Subscribe to the raw rows so derived selectors re-run on every change.
-  useHabitsStore((s) => s.habits);
-  useHabitsStore((s) => s.logs);
 
   const [addVisible, setAddVisible] = useState(false);
 
@@ -42,10 +34,12 @@ export function HabitsScreen() {
     void init();
   }, [init]);
 
+  const pct = useMemo(() => completion(), [views, ready]);
+
   if (!ready) {
     return (
       <SafeAreaView style={[styles.screen, styles.center]} edges={['top']}>
-        <ActivityIndicator color={colors.purple} />
+        <View style={styles.center} />
       </SafeAreaView>
     );
   }
@@ -54,38 +48,54 @@ export function HabitsScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FarmBackground domain='habits' />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
+
+      {/* Header */}
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <View style={styles.headerCard}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.title}>Thói quen</Text>
+              <Text style={styles.subtitle}>
+                {habitViews.filter((h) => h.doneToday).length}/{habitViews.length} hôm nay
+              </Text>
+            </View>
+            <View style={styles.headerRight}>
+              <GameIconButton
+                icon='plus'
+                variant='gem'
+                size={38}
+                onPress={() => setAddVisible(true)}
+                accessibilityLabel='Thêm thói quen'
+              />
+              <View style={styles.completionBox}>
+                <Text style={styles.completionValue}>{pct}%</Text>
+                <Text style={styles.completionLabel}>hoàn thành</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </AnimatedCard>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>Habits</Text>
-            <Text style={styles.subtitle}>June 2025</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Pressable
-              style={styles.addButton}
-              onPress={() => setAddVisible(true)}
-            >
-              <Icon name='plus' size={20} color={colors.screenBg} />
-            </Pressable>
-            <View style={styles.completionBox}>
-              <Text style={styles.completionValue}>{completion()}%</Text>
-              <Text style={styles.completionLabel}>completion</Text>
-            </View>
-          </View>
-        </View>
-
         <WeeklyGrid views={habitViews} onToggleLog={toggleLog} />
 
-        <View style={styles.list}>
-          {habitViews.map((habit) => (
-            <HabitCard key={habit.id} habit={habit} />
-          ))}
-        </View>
+        {habitViews.map((habit, index) => (
+          <AnimatedCard key={habit.id} index={index + 1}>
+            <HabitCard habit={habit} index={index} />
+          </AnimatedCard>
+        ))}
       </ScrollView>
+
       <AddHabitModal
         visible={addVisible}
         onClose={() => setAddVisible(false)}
@@ -99,24 +109,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   center: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  content: {
-    paddingTop: 22,
-    paddingHorizontal: 22,
-    paddingBottom: 110,
+  headerWrap: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  headerCard: {
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingTop: 8,
   },
   headerLeft: {},
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 26,
     letterSpacing: -0.4,
     color: colors.text,
@@ -128,18 +148,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   headerRight: {
-    alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 16,
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.purple,
     alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    gap: spacing.sm,
   },
   completionBox: {
     alignItems: 'flex-end',
@@ -148,7 +159,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.monoSemibold,
     fontSize: 30,
     lineHeight: 30,
-    color: colors.purple,
+    color: colors.green,
   },
   completionLabel: {
     fontFamily: fonts.regular,
@@ -156,7 +167,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 3,
   },
-  list: {
-    gap: 12,
+  content: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.tabClear,
+    gap: spacing.sm,
   },
 });

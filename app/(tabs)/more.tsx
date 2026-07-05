@@ -1,10 +1,13 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { spacing } from '@/theme/spacing';
 import { Icon, type IconName } from '@/theme/icons';
+import { AnimatedCard } from '@/components/motion';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 import { exportAllData } from '@/utils/export';
 
@@ -80,13 +83,22 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
+
       <Text style={styles.title}>More</Text>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         {/* Super App settings */}
-        <View style={styles.section}>
+        <AnimatedCard index={0} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name='view-grid-plus' size={16} color={colors.purple} />
             <Text style={styles.sectionTitle}>Super App</Text>
@@ -129,55 +141,57 @@ export default function MoreScreen() {
               );
             })}
           </View>
-        </View>
+        </AnimatedCard>
 
         {/* Feature links */}
-        <View style={styles.section}>
+        <AnimatedCard index={1} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name='apps' size={16} color={colors.muted} />
             <Text style={styles.sectionTitle}>All Features</Text>
           </View>
-          {ITEMS.map((item) => {
-            const enabled = !!item.route;
-            return (
-              <Pressable
-                key={item.label}
-                disabled={!enabled}
-                onPress={() => item.route && router.push(item.route)}
-                style={({ pressed }) => [
-                  styles.row,
-                  pressed && enabled ? styles.rowPressed : null,
-                  !enabled ? styles.rowDisabled : null,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.iconChip,
-                    { backgroundColor: tint(item.color) },
+          <View style={styles.featureList}>
+            {ITEMS.map((item) => {
+              const enabled = !!item.route;
+              return (
+                <Pressable
+                  key={item.label}
+                  disabled={!enabled}
+                  onPress={() => item.route && router.push(item.route)}
+                  style={({ pressed }) => [
+                    styles.row,
+                    pressed && enabled ? styles.rowPressed : null,
+                    !enabled ? styles.rowDisabled : null,
                   ]}
                 >
-                  <Icon name={item.icon} size={20} color={item.color} />
-                </View>
-                <View style={styles.rowText}>
-                  <Text style={styles.rowLabel}>{item.label}</Text>
-                  <Text style={styles.rowSub}>{item.sub}</Text>
-                </View>
-                {enabled ? (
-                  <Icon name='chevron-right' size={20} color={colors.muted} />
-                ) : (
-                  <Icon
-                    name='lock-outline'
-                    size={16}
-                    color={colors.tabInactive}
-                  />
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
+                  <View
+                    style={[
+                      styles.iconChip,
+                      { backgroundColor: tint(item.color) },
+                    ]}
+                  >
+                    <Icon name={item.icon} size={20} color={item.color} />
+                  </View>
+                  <View style={styles.rowText}>
+                    <Text style={styles.rowLabel}>{item.label}</Text>
+                    <Text style={styles.rowSub}>{item.sub}</Text>
+                  </View>
+                  {enabled ? (
+                    <Icon name='chevron-right' size={20} color={colors.muted} />
+                  ) : (
+                    <Icon
+                      name='lock-outline'
+                      size={16}
+                      color={colors.tabInactive}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </AnimatedCard>
 
         {/* Data */}
-        <View style={styles.section}>
+        <AnimatedCard index={2} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name='database' size={16} color={colors.muted} />
             <Text style={styles.sectionTitle}>Data</Text>
@@ -202,7 +216,7 @@ export default function MoreScreen() {
               <Text style={styles.rowSub}>Backup all SQLite tables as JSON</Text>
             </View>
           </Pressable>
-        </View>
+        </AnimatedCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -213,31 +227,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 26,
     letterSpacing: -0.4,
     color: colors.text,
-    paddingHorizontal: 22,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   content: {
-    paddingTop: 16,
-    paddingHorizontal: 22,
-    paddingBottom: 110,
-    gap: 24,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.tabClear,
+    gap: spacing.md,
+  },
+  section: {
+    gap: spacing.sm,
+    backgroundColor: glass.fillStrong,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    padding: spacing.md,
   },
 
-  /* Sections */
-  section: {
-    gap: 10,
-  },
+  /* Section headers */
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 2,
   },
   sectionTitle: {
     fontFamily: fonts.semibold,
@@ -250,7 +270,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.tabInactive,
-    marginBottom: 4,
   },
 
   /* Toggle rows (Super App settings) */
@@ -261,10 +280,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.card,
+    backgroundColor: glass.fill,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -286,7 +305,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: glass.rim,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,14 +315,17 @@ const styles = StyleSheet.create({
   },
 
   /* Feature link rows */
+  featureList: {
+    gap: 6,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
-    backgroundColor: colors.card,
+    backgroundColor: glass.fill,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
     padding: 14,
   },
   rowPressed: {

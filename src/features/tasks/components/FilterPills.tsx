@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
-import { colors, tint } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { FILTERS } from '@/store/tasksStore';
 import type { TaskFilter } from '@/types/task';
@@ -10,7 +10,7 @@ interface FilterPillsProps {
   onSelect: (filter: TaskFilter) => void;
 }
 
-/** Horizontal row of filter pills; the active one is inverted (light bg). */
+/** Horizontal row of filter pills; the active one uses tasks domain blue. */
 export function FilterPills({ active, onSelect }: FilterPillsProps) {
   return (
     <ScrollView
@@ -25,7 +25,10 @@ export function FilterPills({ active, onSelect }: FilterPillsProps) {
           <Pressable
             key={filter}
             onPress={() => onSelect(filter)}
-            style={[styles.pill, isActive ? styles.pillActive : styles.pillInactive]}
+            style={[
+              styles.pill,
+              isActive ? styles.pillActive : styles.pillInactive,
+            ]}
           >
             <Text
               style={[
@@ -48,27 +51,26 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   container: {
-    paddingTop: 18,
     paddingHorizontal: 22,
-    paddingBottom: 4,
+    paddingVertical: 14,
     gap: 8,
   },
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   pillActive: {
-    backgroundColor: tint(colors.blue, '2A'),
+    backgroundColor: tint(colors.blue, '20'),
     borderColor: colors.blue,
   },
   pillInactive: {
-    backgroundColor: colors.cardAlt,
-    borderColor: colors.border,
+    backgroundColor: glass.fill,
+    borderColor: glass.rim,
   },
   label: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.display,
     fontSize: 13,
   },
   labelActive: {

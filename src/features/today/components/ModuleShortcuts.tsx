@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, domains } from '@/theme/colors';
+import { colors, glass, domains, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { spacing } from '@/theme/spacing';
 import { Icon, type IconName } from '@/theme/icons';
 import { PressableScale } from '@/components/motion';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
@@ -141,16 +141,16 @@ export const ModuleShortcuts = memo(function ModuleShortcuts() {
 const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   cell: {
     flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: 14,
+    backgroundColor: glass.fillStrong,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 14,
+    borderColor: glass.rim,
+    paddingVertical: 16,
     paddingHorizontal: 6,
     alignItems: 'center',
     gap: 6,

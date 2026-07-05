@@ -1,9 +1,10 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/theme/colors';
+import { colors, glass, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
+import { spacing } from '@/theme/spacing';
 
 interface StatItem {
   icon: IconName;
@@ -73,11 +74,11 @@ export const StatsBar = memo(function StatsBar({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 16,
+    backgroundColor: glass.fillStrong,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 20,
+    borderColor: glass.rim,
+    marginBottom: spacing.sm,
   },
   cell: {
     flex: 1,

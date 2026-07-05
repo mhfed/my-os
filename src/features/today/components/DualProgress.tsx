@@ -3,8 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, gradients } from '@/theme/colors';
+import { colors, glass, gradients, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { spacing } from '@/theme/spacing';
 import { PressableScale } from '@/components/motion';
 import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
@@ -141,18 +142,19 @@ export const DualProgress = memo(function DualProgress() {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   halfCard: {
     flex: 1,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
+    backgroundColor: glass.fillStrong,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    padding: 14,
-    gap: 8,
+    borderColor: glass.rim,
+    padding: 16,
+    gap: 10,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -191,12 +193,12 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: glass.rim,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxHabit: {
-    borderColor: colors.border,
+    borderColor: glass.rim,
   },
   checkDot: {
     width: 10,

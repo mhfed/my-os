@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,85 +8,96 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { FarmBackground } from '@/components/skia';
-import { colors } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
-import { Icon } from '@/theme/icons';
+import { AnimatedCard } from '@/components/motion';
+import { Icon, IconName } from '@/theme/icons';
 import { useJournalStore } from '@/store/journalStore';
-import { formatTxnDate } from '@/utils/date';
 
 import { CalendarStrip } from './components/CalendarStrip';
 import { EntryCard } from './components/EntryCard';
 import { TimeCapsule } from './components/TimeCapsule';
+import { vnDateHeader, vnTimeAgo } from './format';
 
-/** "03 Journal" screen — daily mood, free-form entry and a time capsule. */
+/** Journal screen (DESIGN_SPEC §5.7) — daily entry, search, time capsule. */
 export function JournalScreen() {
   const ready = useJournalStore((s) => s.ready);
   const init = useJournalStore((s) => s.init);
+  const entries = useJournalStore((s) => s.entries);
   const streak = useJournalStore((s) => s.streak);
-  // Re-render the streak pill whenever entries change.
-  useJournalStore((s) => s.entries);
+  const searchEntries = useJournalStore((s) => s.searchEntries);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const searchEntries = useJournalStore((s) => s.searchEntries);
-
-  const searchResults =
-    isSearching && searchQuery.length > 0 ? searchEntries(searchQuery) : [];
 
   useEffect(() => {
     void init();
   }, [init]);
 
+  const streakCount = useMemo(() => streak(), [entries, ready]);
+  const searchResults = isSearching && searchQuery.length > 0
+    ? searchEntries(searchQuery)
+    : [];
+
   if (!ready) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.purple} />
-        </View>
+      <SafeAreaView style={[styles.screen, styles.center]} edges={['top']}>
+        <View />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FarmBackground domain='journal' />
-      <View style={styles.header}>
-        <Text style={styles.title}>Journal</Text>
-        <View style={styles.streakPill}>
-          <Text style={styles.streakFire}>🔥</Text>
-          <Text style={styles.streakNum}>{streak()}</Text>
-          <Text style={styles.streakDays}>days</Text>
-        </View>
-      </View>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
 
+      {/* Header */}
+      <AnimatedCard index={0} style={styles.headerWrap}>
+        <View style={styles.headerCard}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Nhật ký</Text>
+            {streakCount > 0 ? (
+              <View style={styles.streakPill}>
+                <Text style={styles.streakIcon}>🔥</Text>
+                <Text style={styles.streakNum}>{streakCount}</Text>
+                <Text style={styles.streakLabel}>ngày</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </AnimatedCard>
+
+      {/* Search bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           <Icon name='magnify' size={18} color={colors.muted} />
           <TextInput
             style={styles.searchInput}
-            placeholder='Search entries...'
+            placeholder='Tìm nhật ký...'
             placeholderTextColor={colors.tabInactive}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onFocus={() => setIsSearching(true)}
-            onBlur={() => {
-              if (!searchQuery) setIsSearching(false);
-            }}
+            onBlur={() => { if (!searchQuery) setIsSearching(false); }}
             returnKeyType='search'
           />
-          {isSearching && (
+          {isSearching ? (
             <Pressable
-              onPress={() => {
-                setSearchQuery('');
-                setIsSearching(false);
-              }}
+              onPress={() => { setSearchQuery(''); setIsSearching(false); }}
               hitSlop={8}
             >
               <Icon name='close' size={18} color={colors.muted} />
             </Pressable>
-          )}
+          ) : null}
         </View>
       </View>
 
@@ -98,18 +108,18 @@ export function JournalScreen() {
         >
           {searchQuery.length > 0 ? (
             searchResults.length > 0 ? (
-              searchResults.map((entry) => (
-                <View key={entry.id} style={styles.searchResultCard}>
+              searchResults.map((entry, index) => (
+                <AnimatedCard key={entry.id} index={index + 1} style={styles.searchCard}>
                   <Text style={styles.resultDate}>
-                    {formatTxnDate(new Date(entry.date).getTime())}
+                    {vnDateHeader(entry.date)}
                   </Text>
-                  <Text style={styles.resultText} numberOfLines={4}>
+                  <Text style={styles.resultText} numberOfLines={5}>
                     {entry.text}
                   </Text>
-                </View>
+                </AnimatedCard>
               ))
             ) : (
-              <Text style={styles.noResults}>No entries found.</Text>
+              <Text style={styles.noResults}>Không tìm thấy nhật ký nào.</Text>
             )
           ) : null}
         </ScrollView>
@@ -132,20 +142,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screenBg,
   },
-  loading: {
-    flex: 1,
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerWrap: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  headerCard: {
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 8,
-    paddingHorizontal: 22,
   },
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.displayBold,
     fontSize: 26,
     letterSpacing: -0.4,
     color: colors.text,
@@ -154,14 +177,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.card,
+    backgroundColor: glass.fill,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 11,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    borderColor: glass.rim,
+    borderRadius: radius.pill,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
   },
-  streakFire: {
+  streakIcon: {
     fontSize: 14,
   },
   streakNum: {
@@ -169,29 +192,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.orange,
   },
-  streakDays: {
+  streakLabel: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.muted,
   },
-  content: {
-    paddingTop: 20,
-    paddingHorizontal: 22,
-    paddingBottom: 110,
-  },
   searchContainer: {
-    paddingHorizontal: 22,
-    marginTop: 20,
-    marginBottom: 0,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: glass.fillStrong,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 10,
     gap: 10,
   },
@@ -201,31 +219,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
   },
-  noResults: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 40,
+  content: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.tabClear,
+    gap: spacing.md,
   },
-  searchResultCard: {
-    backgroundColor: colors.card,
+  searchCard: {
+    backgroundColor: glass.fill,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderColor: glass.rim,
+    borderRadius: radius.xl,
+    padding: spacing.md,
   },
   resultDate: {
     fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.muted,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   resultText: {
     fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
     lineHeight: 22,
+  },
+  noResults: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: 40,
   },
 });
