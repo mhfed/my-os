@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -66,7 +68,10 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
       animationType='slide'
       onRequestClose={handleClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.backdrop}
+      >
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
 
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}> 
@@ -153,7 +158,7 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
             />
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

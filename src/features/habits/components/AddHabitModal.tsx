@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -75,7 +77,10 @@ export function AddHabitModal({ visible, onClose }: AddHabitModalProps) {
       animationType='slide'
       onRequestClose={handleClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.backdrop}
+      >
         <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
           <View style={styles.grabber} />
@@ -135,7 +140,7 @@ export function AddHabitModal({ visible, onClose }: AddHabitModalProps) {
             </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

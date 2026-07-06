@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -68,7 +70,11 @@ export function TransactionHistorySheet({
       presentationStyle='fullScreen'
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.screen}
+      >
+        <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
         <LinearGradient
           colors={['rgba(255,255,255,0.04)', 'transparent']}
           start={{ x: 0.5, y: 0 }}
@@ -132,6 +138,7 @@ export function TransactionHistorySheet({
           data={filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
           contentContainerStyle={filtered.length === 0 ? styles.emptyContent : styles.listContent}
           renderItem={({ item }) => (
             <PressableScale onPress={() => setEditingTxn(item)} haptic='light' style={styles.txnRow}>
@@ -153,7 +160,8 @@ export function TransactionHistorySheet({
             onClose={() => setEditingTxn(null)}
           />
         )}
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

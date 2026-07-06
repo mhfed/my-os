@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -109,7 +111,10 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
       animationType='slide'
       onRequestClose={handleClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.backdrop}
+      >
         <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
           <View style={styles.grabber} />
@@ -241,7 +246,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

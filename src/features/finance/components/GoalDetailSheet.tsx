@@ -182,7 +182,11 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
       presentationStyle='pageSheet'
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.screen}
+      >
+        <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         <LinearGradient
           colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
           start={{ x: 0.5, y: 0 }}
@@ -204,7 +208,11 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
           <GameIconButton icon='delete-outline' variant='red' size={36} iconSize={16} onPress={handleDelete} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
+        >
           {/* Edit panel */}
           {editOpen && (
             <View style={styles.editPanel}>
@@ -508,7 +516,8 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
           onClose={() => setEditDeadlinePickerOpen(false)}
           minDate={todayStart()}
         />
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

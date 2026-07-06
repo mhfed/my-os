@@ -1,9 +1,10 @@
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, glass, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon, type IconName } from '@/theme/icons';
+import { PressableScale } from '@/components/motion';
 
 interface StatTileProps {
   icon: IconName;
@@ -35,14 +36,12 @@ export function StatTile({
   onPress,
   square = true,
 }: StatTileProps) {
-  const Wrapper: typeof Pressable | typeof View = onPress ? Pressable : View;
-  return (
-    <Wrapper
-      onPress={onPress}
-      style={[styles.tile, square && styles.square]}
-    >
+  const content = (
+    <>
       <View style={styles.top}>
-        <View style={[styles.iconChip, { backgroundColor: tint(accent, '24') }]}>
+        <View
+          style={[styles.iconChip, { backgroundColor: tint(accent, '24') }]}
+        >
           <Icon name={icon} size={22} color={accent} />
         </View>
         {trailingIcon ? (
@@ -60,8 +59,23 @@ export function StatTile({
           {value}
         </Text>
       </View>
-    </Wrapper>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <PressableScale
+        onPress={onPress}
+        haptic='light'
+        scaleTo={0.97}
+        style={[styles.tile, square && styles.square]}
+      >
+        {content}
+      </PressableScale>
+    );
+  }
+
+  return <View style={[styles.tile, square && styles.square]}>{content}</View>;
 }
 
 const styles = StyleSheet.create({

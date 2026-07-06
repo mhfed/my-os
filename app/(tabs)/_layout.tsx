@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Animated,
   Pressable,
@@ -36,8 +36,24 @@ interface TabIconProps {
 }
 
 function TabIcon({ iconName, color, focused }: TabIconProps) {
+  const focusAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(focusAnim, {
+      toValue: focused ? 1 : 0,
+      damping: 14,
+      stiffness: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [focusAnim, focused]);
+
+  const scale = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.12],
+  });
+
   return (
-    <View style={styles.tabIconWrap}>
+    <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
       {focused && (
         <View style={[styles.activeTabBg, { backgroundColor: colors.secondaryContainer + '18' }]} />
       )}
@@ -46,7 +62,7 @@ function TabIcon({ iconName, color, focused }: TabIconProps) {
         size={focused ? 24 : 22}
         color={focused ? colors.secondaryContainer : colors.onSurfaceVariant + '99'}
       />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -116,6 +132,7 @@ export default function TabsLayout() {
 
   const sharedTabOptions = {
     headerShown: false,
+    animation: 'shift' as const,
     tabBarActiveTintColor: colors.secondaryContainer,
     tabBarInactiveTintColor: colors.onSurfaceVariant + '99',
     tabBarBackground: () => <TabBarBackground />,

@@ -50,23 +50,27 @@ export function PressableScale({
   ...rest
 }: PressableScaleProps) {
   const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
     transform: [{ scale: scale.value }],
   }));
 
   const handlePressIn = useCallback<NonNullable<PressableProps['onPressIn']>>(
     (e) => {
       scale.value = withSpring(scaleTo, springs.press);
+      opacity.value = withSpring(0.88, springs.press);
       fire(haptic);
       onPressIn?.(e);
     },
-    [scale, scaleTo, haptic, onPressIn]
+    [scale, opacity, scaleTo, haptic, onPressIn]
   );
 
   const handlePressOut = useCallback(() => {
     scale.value = withSpring(1, springs.press);
-  }, [scale]);
+    opacity.value = withSpring(1, springs.press);
+  }, [scale, opacity]);
 
   return (
     <AnimatedPressable

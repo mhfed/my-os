@@ -5,6 +5,16 @@
 This file gives AI coding agents the minimum operating rules needed to work
 quickly and safely in this repo.
 
+## Issue tracking (beads / bd)
+
+This project uses **bd (beads)** for issue tracking.
+
+- Run `bd prime` for workflow context and command guidance.
+- Use `bd ready`, `bd show <id>`, `bd update <id> --claim`, and `bd close <id>`.
+- Use `bd remember "insight"` for persistent project memory; do not create MEMORY.md files.
+- Do not use markdown TODO lists for task tracking; create beads issues instead (`bd create "Title" -p <0-3>`).
+- Issue IDs are prefixed `my-os-` (e.g. `my-os-a3f2dd`).
+
 ## Project shape
 
 - App type: Expo + React Native + Expo Router
@@ -109,9 +119,9 @@ if (!ready) return null;
 
 ### 3. When to use what pattern
 
-| Data type | Hook selector | `getState()` |
-|-----------|:---:|:---:|
-| Plain state (`tasks[]`, `items[]`, `notes[]`) | ✅ before early return | ✅ if behind early return |
-| Function returning new ref (`getOverview()`, `views()`) | ❌ never | ✅ always |
-| Stable function reference (`sectionOf`, `toggleTask`) | ✅ safe (reference stable) | ✅ safe |
-| Booleans/strings (`ready`, `isWorkoutActive`) | ✅ best | ✅ OK |
+| Data type                                               |       Hook selector        |       `getState()`        |
+| ------------------------------------------------------- | :------------------------: | :-----------------------: |
+| Plain state (`tasks[]`, `items[]`, `notes[]`)           |   ✅ before early return   | ✅ if behind early return |
+| Function returning new ref (`getOverview()`, `views()`) |          ❌ never          |         ✅ always         |
+| Stable function reference (`sectionOf`, `toggleTask`)   | ✅ safe (reference stable) |          ✅ safe          |
+| Booleans/strings (`ready`, `isWorkoutActive`)           |          ✅ best           |           ✅ OK           |

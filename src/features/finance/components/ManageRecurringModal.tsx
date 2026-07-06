@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -81,7 +83,10 @@ export function ManageRecurringModal({
       animationType='slide'
       onRequestClose={handleClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.backdrop}
+      >
         <Pressable style={styles.backdropFill} onPress={handleClose} />
         <View style={styles.sheet}>
           <BlurView tint='dark' intensity={28} style={StyleSheet.absoluteFill} />
@@ -190,6 +195,7 @@ export function ManageRecurringModal({
           {mode === 'add' && (
             <ScrollView
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps='handled'
               contentContainerStyle={styles.formContent}
             >
               <Text style={styles.fieldLabel}>CATEGORY</Text>
@@ -279,7 +285,7 @@ export function ManageRecurringModal({
             </ScrollView>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

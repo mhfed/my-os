@@ -210,7 +210,11 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
       presentationStyle='pageSheet'
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.screen}
+      >
+        <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         {/* Header */}
         <View style={styles.header}>
           <PressableScale
@@ -246,6 +250,7 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
         >
           {/* Inline edit panel */}
           {editOpen && (
@@ -567,7 +572,8 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
             </KeyboardAvoidingView>
           </View>
         </Modal>
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
 
       {/* DatePickerModal for edit due date — sibling to SafeAreaView, inside outer Modal */}
       <DatePickerModal
