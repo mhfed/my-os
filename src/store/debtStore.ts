@@ -2,6 +2,10 @@ import { create } from 'zustand';
 
 import { allRows, runSql } from '@/db/database';
 import { SYS_CAT } from '@/data/seed';
+import {
+  cancelNotification,
+  scheduleNotification,
+} from '@/services/notifications';
 import type {
   DebtEntry,
   DebtPayment,
@@ -50,9 +54,7 @@ function buildView(entry: DebtEntry, payments: DebtPayment[]): DebtView {
       : 0;
   const now = Date.now();
   const isOverdue =
-    entry.status !== 'settled' &&
-    !!entry.dueDate &&
-    now > entry.dueDate;
+    entry.status !== 'settled' && !!entry.dueDate && now > entry.dueDate;
   const daysUntilDue = entry.dueDate
     ? Math.round((entry.dueDate - now) / 86_400_000)
     : null;
@@ -112,7 +114,8 @@ function mapEntry(r: DebtEntryRow): DebtEntry {
     dueDate: r.due_date ?? undefined,
     interestType: r.interest_type as DebtEntry['interestType'],
     interestRate: r.interest_rate ?? undefined,
-    interestPeriod: r.interest_period as DebtEntry['interestPeriod'] ?? undefined,
+    interestPeriod:
+      (r.interest_period as DebtEntry['interestPeriod']) ?? undefined,
     status: r.status as DebtStatus,
     linkedTransactionId: r.linked_transaction_id ?? undefined,
     createdAt: r.created_at,
@@ -131,6 +134,50 @@ function mapPayment(r: DebtPaymentRow): DebtPayment {
 }
 
 // ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+function syncDebtNotifications(entry: DebtEntry) {
+  const t3Id = `debt-${entry.id}-t3`;
+  const t0Id = `debt-${entry.id}-t0`;
+
+  if (entry.status === 'settled' || !entry.dueDate) {
+    cancelNotification(t3Id);
+    cancelNotification(t0Id);
+    return;
+  }
+
+  // Set notification to 9:00 AM of the target day
+  const d = new Date(entry.dueDate);
+  d.setHours(9, 0, 0, 0);
+
+  const t0 = d.getTime();
+  const t3 = t0 - 3 * 86_400_000; // 3 days before
+
+  const verb = entry.type === 'lend' ? 'Thu nợ' : 'Trả nợ';
+
+  // Non-blocking fire-and-forget
+  scheduleNotification(
+    t3Id,
+    `Sắp đến hạn ${verb.toLowerCase()}`,
+    `Bạn có khoản ${verb.toLowerCase()} với ${entry.party} trong 3 ngày tới.`,
+    t3,
+  );
+
+  scheduleNotification(
+    t0Id,
+    `Đến hạn ${verb.toLowerCase()}`,
+    `Hôm nay là ngày hạn ${verb.toLowerCase()} với ${entry.party}.`,
+    t0,
+  );
+}
+
+function cancelDebtNotifications(id: string) {
+  cancelNotification(`debt-${id}-t3`);
+  cancelNotification(`debt-${id}-t0`);
+}
+
+// ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
 
@@ -141,8 +188,12 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
 
   init: async () => {
     const [entries, payments] = await Promise.all([
-      allRows<DebtEntryRow>('SELECT * FROM debt_entries ORDER BY created_at DESC;'),
-      allRows<DebtPaymentRow>('SELECT * FROM debt_payments ORDER BY date DESC;'),
+      allRows<DebtEntryRow>(
+        'SELECT * FROM debt_entries ORDER BY created_at DESC;',
+      ),
+      allRows<DebtPaymentRow>(
+        'SELECT * FROM debt_payments ORDER BY date DESC;',
+      ),
     ]);
     set({
       entries: entries.map(mapEntry),
@@ -181,6 +232,7 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
       ],
     );
     set((s) => ({ entries: [entry, ...s.entries] }));
+    syncDebtNotifications(entry);
   },
 
   updateDebt: async (id, patch) => {
@@ -200,7 +252,10 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
         id,
       ],
     );
-    set((s) => ({ entries: s.entries.map((e) => (e.id === id ? updated : e)) }));
+    set((s) => ({
+      entries: s.entries.map((e) => (e.id === id ? updated : e)),
+    }));
+    syncDebtNotifications(updated);
   },
 
   deleteDebt: async (id) => {
@@ -209,6 +264,7 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
       entries: s.entries.filter((e) => e.id !== id),
       payments: s.payments.filter((p) => p.debtId !== id),
     }));
+    cancelDebtNotifications(id);
   },
 
   addPayment: async (debtId, amount, date, note) => {
@@ -223,7 +279,14 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     await runSql(
       `INSERT INTO debt_payments (id, debt_id, amount, date, note, created_at)
        VALUES (?, ?, ?, ?, ?, ?);`,
-      [payment.id, payment.debtId, payment.amount, payment.date, payment.note ?? null, payment.createdAt],
+      [
+        payment.id,
+        payment.debtId,
+        payment.amount,
+        payment.date,
+        payment.note ?? null,
+        payment.createdAt,
+      ],
     );
 
     // Recalculate status
@@ -237,12 +300,16 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
       const newStatus: DebtStatus =
         paidAmount >= entry.originalAmount ? 'settled' : 'partial';
       if (newStatus !== entry.status) {
-        await runSql('UPDATE debt_entries SET status=? WHERE id=?;', [newStatus, debtId]);
+        await runSql('UPDATE debt_entries SET status=? WHERE id=?;', [
+          newStatus,
+          debtId,
+        ]);
         set((s) => ({
           entries: s.entries.map((e) =>
             e.id === debtId ? { ...e, status: newStatus } : e,
           ),
         }));
+        syncDebtNotifications({ ...entry, status: newStatus });
       }
     }
 
@@ -260,12 +327,16 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     if (entry) {
       const newStatus: DebtStatus = paidAmount <= 0 ? 'open' : 'partial';
       if (newStatus !== entry.status) {
-        await runSql('UPDATE debt_entries SET status=? WHERE id=?;', [newStatus, debtId]);
+        await runSql('UPDATE debt_entries SET status=? WHERE id=?;', [
+          newStatus,
+          debtId,
+        ]);
         set((s) => ({
           entries: s.entries.map((e) =>
             e.id === debtId ? { ...e, status: newStatus } : e,
           ),
         }));
+        syncDebtNotifications({ ...entry, status: newStatus });
       }
     }
     set(() => ({ payments: remaining }));
@@ -301,11 +372,10 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     );
     set((s) => ({
       entries: s.entries.map((e) =>
-        e.id === id
-          ? { ...e, status: 'settled', linkedTransactionId }
-          : e,
+        e.id === id ? { ...e, status: 'settled', linkedTransactionId } : e,
       ),
     }));
+    cancelDebtNotifications(id);
   },
 
   getDebtView: (id) => {
