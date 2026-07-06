@@ -34,6 +34,8 @@ interface TaskRow {
   dueDate: number | null;
   createdAt: number;
   completedAt: number | null;
+  goalId: string | null;
+  sourceInboxId: string | null;
 }
 
 interface SubtaskRow {
@@ -55,6 +57,8 @@ function mapRow(r: TaskRow, subtasks: SubtaskRow[] = []): Task {
     dueDate: r.dueDate ?? undefined,
     createdAt: r.createdAt,
     completedAt: r.completedAt ?? undefined,
+    goalId: r.goalId ?? undefined,
+    sourceInboxId: r.sourceInboxId ?? undefined,
     subtasks: subtasks.map((s) => ({
       id: s.id,
       taskId: s.taskId,
@@ -75,8 +79,8 @@ function newId(): string {
 }
 
 const INSERT_SQL = `INSERT OR REPLACE INTO tasks
-  (id, userId, title, context, priority, done, dueDate, createdAt, completedAt)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+  (id, userId, title, context, priority, done, dueDate, createdAt, completedAt, goalId, sourceInboxId)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
 
 /** Seed tasks — stable ids, dueDates relative to local midnight today. */
 function seedTasks(): Task[] {
@@ -150,6 +154,8 @@ async function insertTask(task: Task): Promise<void> {
     task.dueDate ?? null,
     task.createdAt,
     task.completedAt ?? null,
+    task.goalId ?? null,
+    task.sourceInboxId ?? null,
   ]);
 }
 
@@ -218,6 +224,8 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
       done: false,
       dueDate: input.dueDate,
       createdAt: now,
+      goalId: input.goalId,
+      sourceInboxId: input.sourceInboxId,
       subtasks,
     };
     await insertTask(task);
@@ -317,7 +325,8 @@ export function taskTimeLabel(task: Task): string {
     if (task.completedAt) {
       const d = new Date(task.completedAt);
       const hh = d.getHours() < 10 ? `0${d.getHours()}` : `${d.getHours()}`;
-      const mm = d.getMinutes() < 10 ? `0${d.getMinutes()}` : `${d.getMinutes()}`;
+      const mm =
+        d.getMinutes() < 10 ? `0${d.getMinutes()}` : `${d.getMinutes()}`;
       return `✓ Done at ${hh}:${mm}`;
     }
     return '✓ Done';

@@ -25,6 +25,10 @@ export interface Task {
   dueDate?: number;
   createdAt: number;
   completedAt?: number;
+  /** Cross-module link to a Goal (my-os-8u7). Completing contributes progress. */
+  goalId?: string;
+  /** Back-reference to the inbox item this task was triaged from. */
+  sourceInboxId?: string;
   subtasks?: Subtask[];
 }
 
@@ -39,6 +43,8 @@ export interface NewTaskInput {
   context?: string;
   priority: Priority;
   dueDate?: number;
+  goalId?: string;
+  sourceInboxId?: string;
   subtasks?: string[]; // Array of titles to create initially
 }
 

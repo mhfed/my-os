@@ -71,7 +71,9 @@ export const SCHEMA: string[] = [
     done INTEGER NOT NULL DEFAULT 0,
     dueDate INTEGER,
     createdAt INTEGER NOT NULL,
-    completedAt INTEGER
+    completedAt INTEGER,
+    goalId TEXT,
+    sourceInboxId TEXT
   );`,
 
   `CREATE TABLE IF NOT EXISTS task_subtasks (
@@ -250,9 +252,31 @@ export const SCHEMA: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_notes_updatedAt ON notes (updatedAt);`,
   `CREATE INDEX IF NOT EXISTS idx_goals_status ON goals (status);`,
   `CREATE INDEX IF NOT EXISTS idx_milestones_goalId ON milestones (goalId);`,
+  `CREATE INDEX IF NOT EXISTS idx_tasks_goalId ON tasks (goalId);`,
 
   `CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL
   );`,
+];
+
+/**
+ * Additive column migrations for tables that already exist on-device.
+ * `CREATE TABLE IF NOT EXISTS` never alters an existing table, so new columns
+ * on shipped tables must be added here. Each entry is applied only when the
+ * column is missing (see `applyMigrations` in `@/db/database`), keeping init
+ * idempotent. Match the existing per-table casing (Phase-1 tables = camelCase).
+ */
+export interface ColumnMigration {
+  table: string;
+  column: string;
+  /** Full column definition appended after `ADD COLUMN`, e.g. `TEXT`. */
+  definition: string;
+}
+
+export const COLUMN_MIGRATIONS: ColumnMigration[] = [
+  // Cross-module connectivity (my-os-8u7): link a task to a Goal and keep a
+  // back-reference to the inbox item it was triaged from.
+  { table: 'tasks', column: 'goalId', definition: 'TEXT' },
+  { table: 'tasks', column: 'sourceInboxId', definition: 'TEXT' },
 ];

@@ -8,7 +8,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
-import { SCHEMA } from '@/db/schema';
+import { COLUMN_MIGRATIONS, SCHEMA } from '@/db/schema';
 import type {
   Budget,
   Category,
@@ -38,11 +38,39 @@ export async function initDatabase(): Promise<{ wasEmpty: boolean }> {
   for (const statement of SCHEMA) {
     await db.execAsync(statement);
   }
+  await applyMigrations(db);
   const row = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM categories;'
+    'SELECT COUNT(*) AS count FROM categories;',
   );
   const wasEmpty = (row?.count ?? 0) === 0;
   return { wasEmpty };
+}
+
+/** True when `column` already exists on `table` (via PRAGMA table_info). */
+async function columnExists(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const cols = await db.getAllAsync<{ name: string }>(
+    `PRAGMA table_info(${table});`,
+  );
+  return cols.some((c) => c.name === column);
+}
+
+/**
+ * Applies additive column migrations idempotently. SQLite's `ALTER TABLE ADD
+ * COLUMN` errors if the column exists, so each is guarded by a runtime check —
+ * this keeps `initDatabase()` safe to call on every launch and by any store.
+ */
+async function applyMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
+  for (const { table, column, definition } of COLUMN_MIGRATIONS) {
+    if (!(await columnExists(db, table, column))) {
+      await db.execAsync(
+        `ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`,
+      );
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +177,7 @@ function mapRecurring(r: RecurringRow): RecurringRule {
 export async function loadCategories(): Promise<Category[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<CategoryRow>(
-    'SELECT * FROM categories ORDER BY createdAt ASC;'
+    'SELECT * FROM categories ORDER BY createdAt ASC;',
   );
   return rows.map(mapCategory);
 }
@@ -157,7 +185,7 @@ export async function loadCategories(): Promise<Category[]> {
 export async function loadTransactions(): Promise<Transaction[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<TransactionRow>(
-    'SELECT * FROM transactions ORDER BY date DESC;'
+    'SELECT * FROM transactions ORDER BY date DESC;',
   );
   return rows.map(mapTransaction);
 }
@@ -192,7 +220,7 @@ export async function insertCategory(category: Category): Promise<void> {
       category.color,
       category.icon,
       category.createdAt,
-    ]
+    ],
   );
 }
 
@@ -212,7 +240,7 @@ export async function insertTransaction(txn: Transaction): Promise<void> {
       txn.date,
       txn.recurringId ?? null,
       txn.createdAt,
-    ]
+    ],
   );
 }
 
@@ -236,7 +264,7 @@ export async function upsertBudget(budget: Budget): Promise<void> {
       budget.amount,
       budget.month,
       budget.createdAt,
-    ]
+    ],
   );
 }
 
@@ -255,7 +283,7 @@ export async function insertRecurring(rule: RecurringRule): Promise<void> {
       rule.note ?? null,
       rule.dayOfMonth,
       rule.createdAt,
-    ]
+    ],
   );
 }
 
@@ -269,19 +297,28 @@ export async function insertRecurring(rule: RecurringRule): Promise<void> {
 type SqlParam = string | number | null;
 
 /** Run an INSERT/UPDATE/DELETE with positional params. */
-export async function runSql(sql: string, params: SqlParam[] = []): Promise<void> {
+export async function runSql(
+  sql: string,
+  params: SqlParam[] = [],
+): Promise<void> {
   const db = await getDb();
   await db.runAsync(sql, params);
 }
 
 /** Fetch all rows of a query, typed by the caller. */
-export async function allRows<T>(sql: string, params: SqlParam[] = []): Promise<T[]> {
+export async function allRows<T>(
+  sql: string,
+  params: SqlParam[] = [],
+): Promise<T[]> {
   const db = await getDb();
   return db.getAllAsync<T>(sql, params);
 }
 
 /** Fetch the first row of a query (or null). */
-export async function firstRow<T>(sql: string, params: SqlParam[] = []): Promise<T | null> {
+export async function firstRow<T>(
+  sql: string,
+  params: SqlParam[] = [],
+): Promise<T | null> {
   const db = await getDb();
   return db.getFirstAsync<T>(sql, params);
 }
@@ -289,7 +326,7 @@ export async function firstRow<T>(sql: string, params: SqlParam[] = []): Promise
 /** True when a table has no rows — the signal each store uses to seed. */
 export async function tableIsEmpty(table: string): Promise<boolean> {
   const row = await firstRow<{ count: number }>(
-    `SELECT COUNT(*) AS count FROM ${table};`
+    `SELECT COUNT(*) AS count FROM ${table};`,
   );
   return (row?.count ?? 0) === 0;
 }
