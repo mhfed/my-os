@@ -142,9 +142,12 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       case 'task': {
         const tasks = useTasksStore.getState();
         if (!tasks.ready) await tasks.init();
+        // Cross-module traceability (my-os-8u7): keep a back-reference to the
+        // inbox item this task was triaged from instead of a dead copy.
         await useTasksStore.getState().addTask({
           title: item.text,
           priority: 'P2',
+          sourceInboxId: item.id,
         });
         break;
       }
