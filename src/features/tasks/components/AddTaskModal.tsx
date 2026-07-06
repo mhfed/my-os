@@ -4,6 +4,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,7 @@ import { colors, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { startOfToday } from '@/utils/day';
 import { useTasksStore } from '@/store/tasksStore';
+import { useGoalStore } from '@/store/goalStore';
 import type { Priority } from '@/types/task';
 
 interface AddTaskModalProps {
@@ -41,7 +43,13 @@ function priorityColor(priority: Priority): string {
 }
 
 /** Icon name matching priority arrow semantics (Jira-style). */
-function priorityIcon(priority: Priority): 'signal-cellular-3' | 'signal-cellular-2' | 'signal-cellular-1' | 'signal-cellular-outline' {
+function priorityIcon(
+  priority: Priority,
+):
+  | 'signal-cellular-3'
+  | 'signal-cellular-2'
+  | 'signal-cellular-1'
+  | 'signal-cellular-outline' {
   switch (priority) {
     case 'P0':
       return 'signal-cellular-3';
@@ -68,11 +76,16 @@ function dueDateFor(choice: DueChoice): number | undefined {
 /** Slide-up sheet to create a new task: title, priority, context, due. */
 export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const addTask = useTasksStore((s) => s.addTask);
+  // Only active goals are pickable — completed/dropped goals shouldn't gather
+  // new work (my-os-8u7.4).
+  const goals = useGoalStore((s) => s.goals);
+  const activeGoals = goals.filter((g) => g.status === 'active');
 
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('P2');
   const [context, setContext] = useState('');
   const [due, setDue] = useState<DueChoice>('Today');
+  const [goalId, setGoalId] = useState<string | undefined>(undefined);
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
 
@@ -83,6 +96,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
     setPriority('P2');
     setContext('');
     setDue('Today');
+    setGoalId(undefined);
     setSubtasks([]);
     setNewSubtask('');
   }
@@ -99,6 +113,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
       context: context.trim() || undefined,
       priority,
       dueDate: dueDateFor(due),
+      goalId,
       subtasks,
     });
     handleClose();
@@ -233,6 +248,76 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             })}
           </View>
 
+          {activeGoals.length > 0 ? (
+            <>
+              <Text style={styles.fieldLabel}>GOAL</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.goalRow}
+                keyboardShouldPersistTaps='handled'
+              >
+                <Pressable
+                  onPress={() => setGoalId(undefined)}
+                  style={[
+                    styles.goalChip,
+                    goalId === undefined
+                      ? {
+                          backgroundColor: tint(colors.purple),
+                          borderColor: colors.purple,
+                        }
+                      : styles.segmentInactive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.goalChipText,
+                      {
+                        color:
+                          goalId === undefined ? colors.purple : colors.muted,
+                      },
+                    ]}
+                  >
+                    None
+                  </Text>
+                </Pressable>
+                {activeGoals.map((g) => {
+                  const isActive = g.id === goalId;
+                  return (
+                    <Pressable
+                      key={g.id}
+                      onPress={() => setGoalId(g.id)}
+                      style={[
+                        styles.goalChip,
+                        isActive
+                          ? {
+                              backgroundColor: tint(colors.purple),
+                              borderColor: colors.purple,
+                            }
+                          : styles.segmentInactive,
+                      ]}
+                    >
+                      <Icon
+                        name='target'
+                        size={13}
+                        color={isActive ? colors.purple : colors.muted}
+                      />
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.goalChipText,
+                          { color: isActive ? colors.purple : colors.muted },
+                        ]}
+                      >
+                        {g.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </>
+          ) : null}
+
           <View style={styles.actions}>
             <Pressable style={styles.cancelButton} onPress={handleClose}>
               <Text style={styles.cancelText}>Cancel</Text>
@@ -307,6 +392,26 @@ const styles = StyleSheet.create({
   segments: {
     flexDirection: 'row',
     gap: 8,
+  },
+  goalRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 4,
+  },
+  goalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    maxWidth: 180,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 11,
+    borderWidth: 1,
+  },
+  goalChipText: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    flexShrink: 1,
   },
   subtasksList: {
     gap: 8,

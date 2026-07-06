@@ -11,6 +11,8 @@ interface TaskCardProps {
   task: Task;
   timeLabel: string;
   overdue: boolean;
+  /** Title of the linked goal, if this task contributes to one (my-os-8u7.4). */
+  goalTitle?: string;
   onToggle: (id: string) => void;
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
 }
@@ -46,6 +48,7 @@ export const TaskCard = memo(function TaskCard({
   task,
   timeLabel,
   overdue,
+  goalTitle,
   onToggle,
   onToggleSubtask,
 }: TaskCardProps) {
@@ -94,14 +97,24 @@ export const TaskCard = memo(function TaskCard({
           >
             {task.title}
           </Text>
-          <Text
-            style={[
-              styles.time,
-              isOverdue ? styles.timeOverdue : styles.timeToday,
-            ]}
-          >
-            {timeLabel}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text
+              style={[
+                styles.time,
+                isOverdue ? styles.timeOverdue : styles.timeToday,
+              ]}
+            >
+              {timeLabel}
+            </Text>
+            {goalTitle ? (
+              <View style={styles.goalBadge}>
+                <Icon name='target' size={11} color={colors.purple} />
+                <Text style={styles.goalBadgeText} numberOfLines={1}>
+                  {goalTitle}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
         <View
@@ -204,10 +217,31 @@ const styles = StyleSheet.create({
     color: colors.tabInactive,
     textDecorationLine: 'line-through',
   },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 3,
+  },
   time: {
     fontFamily: fonts.monoMedium,
     fontSize: 11,
-    marginTop: 3,
+  },
+  goalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: 160,
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: 8,
+    backgroundColor: tint(colors.purple, '18'),
+  },
+  goalBadgeText: {
+    fontFamily: fonts.medium,
+    fontSize: 10,
+    color: colors.purple,
+    flexShrink: 1,
   },
   timeOverdue: {
     color: colors.red,

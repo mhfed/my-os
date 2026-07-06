@@ -11,6 +11,7 @@ import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
 import { AnimatedCard } from '@/components/motion';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
+import { useGoalStore } from '@/store/goalStore';
 import type { Task } from '@/types/task';
 
 import { AddTaskModal } from './components/AddTaskModal';
@@ -40,6 +41,7 @@ interface TaskItem {
   task: Task;
   timeLabel: string;
   overdue: boolean;
+  goalTitle?: string;
 }
 
 type ListItem = SectionItem | TaskItem;
@@ -53,6 +55,7 @@ export function TasksScreen() {
   const tasks = useTasksStore((s) => s.tasks);
   const ready = useTasksStore((s) => s.ready);
   const activeFilter = useTasksStore((s) => s.activeFilter);
+  const goals = useGoalStore((s) => s.goals);
   const init = useTasksStore((s) => s.init);
   const toggleTask = useTasksStore((s) => s.toggleTask);
   const toggleSubtask = useTasksStore((s) => s.toggleSubtask);
@@ -74,40 +77,91 @@ export function TasksScreen() {
     [tasks],
   );
 
+  // goalId -> title lookup so each task row can show its contributing goal.
+  const goalTitleById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const g of goals) map[g.id] = g.title;
+    return map;
+  }, [goals]);
+
   const flattenedList = useMemo<ListItem[]>(() => {
     const items: ListItem[] = [];
     const showOverdue = activeFilter !== 'Today';
+    const goalTitleOf = (task: Task) =>
+      task.goalId ? goalTitleById[task.goalId] : undefined;
 
     const overdueTasks = tasks.filter(
       (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'overdue',
     );
     if (showOverdue && overdueTasks.length > 0) {
-      items.push({ kind: 'section', id: 'section-overdue', label: 'QUÁ HẠN', count: overdueTasks.length, tone: 'overdue' });
+      items.push({
+        kind: 'section',
+        id: 'section-overdue',
+        label: 'QUÁ HẠN',
+        count: overdueTasks.length,
+        tone: 'overdue',
+      });
       for (const task of overdueTasks) {
-        items.push({ kind: 'task', id: task.id, task, timeLabel: taskTimeLabel(task), overdue: true });
+        items.push({
+          kind: 'task',
+          id: task.id,
+          task,
+          timeLabel: taskTimeLabel(task),
+          overdue: true,
+          goalTitle: goalTitleOf(task),
+        });
       }
     }
 
     const todayTasks = tasks.filter(
       (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'today',
     );
-    items.push({ kind: 'section', id: 'section-today', label: 'HÔM NAY', count: todayTasks.length, tone: 'today' });
+    items.push({
+      kind: 'section',
+      id: 'section-today',
+      label: 'HÔM NAY',
+      count: todayTasks.length,
+      tone: 'today',
+    });
     for (const task of todayTasks) {
-      items.push({ kind: 'task', id: task.id, task, timeLabel: taskTimeLabel(task), overdue: false });
+      items.push({
+        kind: 'task',
+        id: task.id,
+        task,
+        timeLabel: taskTimeLabel(task),
+        overdue: false,
+        goalTitle: goalTitleOf(task),
+      });
     }
 
     const completedTasks = tasks
       .filter((t) => t.done)
-      .sort((a, b) => (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt));
+      .sort(
+        (a, b) =>
+          (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt),
+      );
     if (completedTasks.length > 0) {
-      items.push({ kind: 'section', id: 'section-completed', label: 'ĐÃ XONG', count: completedTasks.length, tone: 'completed' });
+      items.push({
+        kind: 'section',
+        id: 'section-completed',
+        label: 'ĐÃ XONG',
+        count: completedTasks.length,
+        tone: 'completed',
+      });
       for (const task of completedTasks) {
-        items.push({ kind: 'task', id: task.id, task, timeLabel: taskTimeLabel(task), overdue: false });
+        items.push({
+          kind: 'task',
+          id: task.id,
+          task,
+          timeLabel: taskTimeLabel(task),
+          overdue: false,
+          goalTitle: goalTitleOf(task),
+        });
       }
     }
 
     return items;
-  }, [tasks, activeFilter]);
+  }, [tasks, activeFilter, goalTitleById]);
 
   const getItemType = useCallback((item: ListItem): string => item.kind, []);
   const keyExtractor = useCallback((item: ListItem): string => item.id, []);
@@ -115,13 +169,20 @@ export function TasksScreen() {
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
       if (item.kind === 'section') {
-        return <SectionHeader label={item.label} count={item.count} tone={item.tone} />;
+        return (
+          <SectionHeader
+            label={item.label}
+            count={item.count}
+            tone={item.tone}
+          />
+        );
       }
       return (
         <TaskCard
           task={item.task}
           timeLabel={item.timeLabel}
           overdue={item.overdue}
+          goalTitle={item.goalTitle}
           onToggle={toggleTask}
           onToggleSubtask={toggleSubtask}
         />
