@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { useFonts } from 'expo-font';
 import {
   BeVietnamPro_400Regular,
@@ -33,6 +34,17 @@ import { SuperAppSheet } from '@/components/SuperAppSheet';
 
 // Keep the splash screen visible while we bootstrap fonts + every module store.
 SplashScreen.preventAutoHideAsync();
+
+// Ensure notifications show up when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
