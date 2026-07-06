@@ -32,18 +32,44 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
  * Applies the schema and returns `{ wasEmpty }`. `wasEmpty` is true when there
  * were no category rows before init — the signal the store uses to seed.
  */
-export async function initDatabase(): Promise<{ wasEmpty: boolean }> {
-  const db = await getDb();
-  await db.execAsync('PRAGMA journal_mode = WAL;');
-  for (const statement of SCHEMA) {
-    await db.execAsync(statement);
+let initDbPromise: Promise<{ wasEmpty: boolean }> | null = null;
+export function initDatabase(): Promise<{ wasEmpty: boolean }> {
+  if (!initDbPromise) {
+    initDbPromise = (async () => {
+      const db = await getDb();
+      await db.execAsync('PRAGMA journal_mode = WAL;');
+
+      // 1. Create tables first
+      for (const statement of SCHEMA) {
+        const isIndex =
+          statement.trim().startsWith('CREATE INDEX') ||
+          statement.trim().startsWith('CREATE UNIQUE INDEX');
+        if (!isIndex) {
+          await db.execAsync(statement);
+        }
+      }
+
+      // 2. Apply additive column migrations (requires tables to exist)
+      await applyMigrations(db);
+
+      // 3. Create indices (requires columns to exist, including migrated ones)
+      for (const statement of SCHEMA) {
+        const isIndex =
+          statement.trim().startsWith('CREATE INDEX') ||
+          statement.trim().startsWith('CREATE UNIQUE INDEX');
+        if (isIndex) {
+          await db.execAsync(statement);
+        }
+      }
+
+      const row = await db.getFirstAsync<{ count: number }>(
+        'SELECT COUNT(*) AS count FROM categories;',
+      );
+      const wasEmpty = (row?.count ?? 0) === 0;
+      return { wasEmpty };
+    })();
   }
-  await applyMigrations(db);
-  const row = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM categories;',
-  );
-  const wasEmpty = (row?.count ?? 0) === 0;
-  return { wasEmpty };
+  return initDbPromise;
 }
 
 /** True when `column` already exists on `table` (via PRAGMA table_info). */
