@@ -2,7 +2,55 @@ import { create } from 'zustand';
 
 import { allRows, initDatabase, runSql } from '@/db/database';
 import type { Goal, GoalState, Milestone } from '@/types/goal';
+import type { Task } from '@/types/task';
 import { useTasksStore } from './tasksStore';
+
+/**
+ * Cross-module goal progress (my-os-8u7). A goal advances from two sources:
+ *   1. its milestones (each done milestone counts as one unit), and
+ *   2. standalone tasks linked to it via `task.goalId` that are NOT already
+ *      represented by a milestone's `linkedTaskId` (so we never double-count a
+ *      milestone-generated task).
+ * Completing any of those units moves the ring. Returns a stable value object;
+ * callers should memoize since this allocates.
+ */
+export interface GoalProgress {
+  done: number;
+  total: number;
+  pct: number;
+  complete: boolean;
+  /** Linked tasks that contribute independently of milestones. */
+  contributingTasks: Task[];
+}
+
+export function computeGoalProgress(
+  goal: Goal,
+  linkedTasks: Task[],
+): GoalProgress {
+  const milestoneTaskIds = new Set(
+    goal.milestones.map((m) => m.linkedTaskId).filter(Boolean) as string[],
+  );
+  const contributingTasks = linkedTasks.filter(
+    (t) => t.goalId === goal.id && !milestoneTaskIds.has(t.id),
+  );
+
+  const milestoneTotal = goal.milestones.length;
+  const milestoneDone = goal.milestones.filter((m) => m.done).length;
+  const taskTotal = contributingTasks.length;
+  const taskDone = contributingTasks.filter((t) => t.done).length;
+
+  const total = milestoneTotal + taskTotal;
+  const done = milestoneDone + taskDone;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  return {
+    done,
+    total,
+    pct,
+    complete: total > 0 && done === total,
+    contributingTasks,
+  };
+}
 
 function newId(): string {
   const c = globalThis.crypto;

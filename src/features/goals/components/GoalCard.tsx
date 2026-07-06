@@ -7,7 +7,9 @@ import { colors, glass, gradients, glow, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts, typography } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { computeGoalProgress } from '@/store/goalStore';
 import type { Goal } from '@/types/goal';
+import type { Task } from '@/types/task';
 
 const GOLD = colors.gold;
 const DAY_MS = 86_400_000;
@@ -68,26 +70,29 @@ function computeCountdown(deadline: number): Countdown {
 interface GoalCardProps {
   goal: Goal;
   onToggle: (milestoneId: string) => void;
+  /** Standalone tasks linked to this goal via `task.goalId` (my-os-8u7). */
+  linkedTasks?: Task[];
+  /** Toggle a contributing task's done state (advances goal progress). */
+  onToggleTask?: (taskId: string) => void;
 }
 
 /**
  * A single goal: title, deadline countdown pill, a gold ProgressRing driven by
- * milestone completion, description and a tappable milestone checklist. At 100%
- * it blooms gold with a StarRating "victory" banner.
+ * milestone completion AND linked-task completion (my-os-8u7), description, a
+ * tappable milestone checklist and a "contributing tasks" section. At 100% it
+ * blooms gold with a StarRating "victory" banner.
  */
-export function GoalCard({ goal, onToggle }: GoalCardProps) {
-  const { done, total, pct, remaining, complete } = useMemo(() => {
-    const total = goal.milestones.length;
-    const done = goal.milestones.filter((m) => m.done).length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return {
-      done,
-      total,
-      pct,
-      remaining: total - done,
-      complete: total > 0 && done === total,
-    };
-  }, [goal.milestones]);
+export function GoalCard({
+  goal,
+  onToggle,
+  linkedTasks = [],
+  onToggleTask,
+}: GoalCardProps) {
+  const { done, total, pct, remaining, complete, contributingTasks } =
+    useMemo(() => {
+      const p = computeGoalProgress(goal, linkedTasks);
+      return { ...p, remaining: p.total - p.done };
+    }, [goal, linkedTasks]);
 
   const countdown = goal.deadline ? computeCountdown(goal.deadline) : null;
 
@@ -103,11 +108,7 @@ export function GoalCard({ goal, onToggle }: GoalCardProps) {
           </Text>
           {countdown ? (
             <View style={[styles.pill, { backgroundColor: countdown.bg }]}>
-              <Icon
-                name={countdown.icon}
-                size={13}
-                color={countdown.color}
-              />
+              <Icon name={countdown.icon} size={13} color={countdown.color} />
               <Text style={[styles.pillText, { color: countdown.color }]}>
                 {countdown.label}
               </Text>
@@ -139,7 +140,7 @@ export function GoalCard({ goal, onToggle }: GoalCardProps) {
         </View>
       ) : null}
 
-      {total > 0 ? (
+      {goal.milestones.length > 0 ? (
         <View style={styles.milestones}>
           {goal.milestones.map((m) => (
             <PressableScale
@@ -162,6 +163,42 @@ export function GoalCard({ goal, onToggle }: GoalCardProps) {
                 numberOfLines={2}
               >
                 {m.title}
+              </Text>
+            </PressableScale>
+          ))}
+        </View>
+      ) : null}
+
+      {contributingTasks.length > 0 ? (
+        <View style={styles.milestones}>
+          <View style={styles.linkedHeader}>
+            <Icon name='link-variant' size={13} color={colors.muted} />
+            <Text style={styles.linkedHeaderText}>
+              Task đóng góp ({contributingTasks.filter((t) => t.done).length}/
+              {contributingTasks.length})
+            </Text>
+          </View>
+          {contributingTasks.map((t) => (
+            <PressableScale
+              key={t.id}
+              haptic='medium'
+              scaleTo={0.97}
+              onPress={() => onToggleTask?.(t.id)}
+              style={styles.milestoneRow}
+              accessibilityRole='checkbox'
+              accessibilityState={{ checked: t.done }}
+              accessibilityLabel={t.title}
+            >
+              <View style={[styles.checkbox, t.done && styles.checkboxDone]}>
+                {t.done ? (
+                  <Icon name='check-bold' size={13} color={colors.screenBg} />
+                ) : null}
+              </View>
+              <Text
+                style={[styles.milestoneText, t.done && styles.milestoneDone]}
+                numberOfLines={2}
+              >
+                {t.title}
               </Text>
             </PressableScale>
           ))}
@@ -238,6 +275,20 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: glass.fillStrong,
     gap: 4,
+  },
+  linkedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 4,
+    paddingTop: 2,
+    paddingBottom: 2,
+  },
+  linkedHeaderText: {
+    fontFamily: fonts.display,
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: colors.muted,
   },
   milestoneRow: {
     flexDirection: 'row',

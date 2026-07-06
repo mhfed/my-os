@@ -11,6 +11,7 @@ import { Icon } from '@/theme/icons';
 import { EmptyState, GameIconButton } from '@/components/game';
 import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useGoalStore } from '@/store/goalStore';
+import { useTasksStore } from '@/store/tasksStore';
 import type { Goal } from '@/types/goal';
 
 import { GoalCard } from './components/GoalCard';
@@ -29,10 +30,23 @@ export function GoalsScreen() {
   const ready = useGoalStore((s) => s.ready);
   const goals = useGoalStore((s) => s.goals);
   const toggleMilestone = useGoalStore((s) => s.toggleMilestone);
+  // Plain-state selectors (safe per AGENTS.md) so contributing tasks stay live.
+  const tasks = useTasksStore((s) => s.tasks);
+  const toggleTask = useTasksStore((s) => s.toggleTask);
 
   const [creatorOpen, setCreatorOpen] = useState(false);
 
   const sorted = useMemo(() => [...goals].sort(bySoonestDeadline), [goals]);
+
+  // goalId -> its linked standalone tasks (my-os-8u7 cross-module progress).
+  const tasksByGoal = useMemo(() => {
+    const map: Record<string, typeof tasks> = {};
+    for (const t of tasks) {
+      if (!t.goalId) continue;
+      (map[t.goalId] ??= []).push(t);
+    }
+    return map;
+  }, [tasks]);
 
   const handleBack = () => router.navigate('/more');
 
@@ -79,7 +93,9 @@ export function GoalsScreen() {
             <AnimatedCard index={index + 1}>
               <GoalCard
                 goal={item}
+                linkedTasks={tasksByGoal[item.id]}
                 onToggle={(mId) => toggleMilestone(item.id, mId)}
+                onToggleTask={(taskId) => toggleTask(taskId)}
               />
             </AnimatedCard>
           )}
@@ -122,7 +138,9 @@ function GoalsSkeleton() {
           <View style={styles.skeletonRow}>
             <View style={styles.skeletonLines}>
               <View style={[styles.skeletonBar, { width: '70%' }]} />
-              <View style={[styles.skeletonBar, { width: '40%', height: 12 }]} />
+              <View
+                style={[styles.skeletonBar, { width: '40%', height: 12 }]}
+              />
             </View>
             <View style={styles.skeletonRing} />
           </View>
