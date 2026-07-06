@@ -21,6 +21,7 @@ export function FilterPills({ active, onSelect }: FilterPillsProps) {
     >
       {FILTERS.map((filter) => {
         const isActive = filter === active;
+        const label = filter === 'Pending' ? 'Cần làm' : 'Đã xong';
         return (
           <Pressable
             key={filter}
@@ -36,7 +37,7 @@ export function FilterPills({ active, onSelect }: FilterPillsProps) {
                 isActive ? styles.labelActive : styles.labelInactive,
               ]}
             >
-              {filter}
+              {label}
             </Text>
           </Pressable>
         );

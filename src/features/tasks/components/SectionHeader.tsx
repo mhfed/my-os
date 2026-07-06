@@ -8,7 +8,7 @@ interface SectionHeaderProps {
   label: string;
   count: number;
   /** Color of the leading dot + (for overdue) the label text. */
-  tone: 'overdue' | 'today' | 'completed';
+  tone: 'overdue' | 'today' | 'completed' | 'upcoming' | 'anytime';
 }
 
 /** Section heading: colored dot + uppercase label + muted mono count. */
@@ -19,11 +19,18 @@ export const SectionHeader = memo(function SectionHeader({
 }: SectionHeaderProps) {
   const isOverdue = tone === 'overdue';
   const isCompleted = tone === 'completed';
+  const isUpcoming = tone === 'upcoming';
+  const isAnytime = tone === 'anytime';
+
   const accentColor = isOverdue
     ? colors.red
     : isCompleted
-    ? colors.green
-    : colors.blue;
+      ? colors.green
+      : isUpcoming
+        ? colors.orange
+        : isAnytime
+          ? colors.text
+          : colors.blue;
 
   return (
     <View style={styles.row}>

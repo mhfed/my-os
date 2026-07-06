@@ -25,7 +25,7 @@ const FAB_GRADIENT = [colors.blue, colors.blueDeep] as const;
 // FlashList flattened list types
 // ---------------------------------------------------------------------------
 
-type SectionTone = 'overdue' | 'today' | 'completed';
+type SectionTone = 'overdue' | 'today' | 'upcoming' | 'completed' | 'anytime';
 
 interface SectionItem {
   kind: 'section';
@@ -86,77 +86,146 @@ export function TasksScreen() {
 
   const flattenedList = useMemo<ListItem[]>(() => {
     const items: ListItem[] = [];
-    const showOverdue = activeFilter !== 'Today';
     const goalTitleOf = (task: Task) =>
       task.goalId ? goalTitleById[task.goalId] : undefined;
 
-    const overdueTasks = tasks.filter(
-      (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'overdue',
-    );
-    if (showOverdue && overdueTasks.length > 0) {
-      items.push({
-        kind: 'section',
-        id: 'section-overdue',
-        label: 'QUÁ HẠN',
-        count: overdueTasks.length,
-        tone: 'overdue',
-      });
-      for (const task of overdueTasks) {
-        items.push({
-          kind: 'task',
-          id: task.id,
-          task,
-          timeLabel: taskTimeLabel(task),
-          overdue: true,
-          goalTitle: goalTitleOf(task),
-        });
+    const startToDay = new Date().setHours(0, 0, 0, 0);
+    const DAY_MS = 86_400_000;
+
+    if (activeFilter === 'Pending') {
+      const pendingTasks = tasks.filter((t) => !t.done);
+
+      const groups = new Map<number, Task[]>();
+      const anytimeTasks: Task[] = [];
+
+      for (const t of pendingTasks) {
+        if (t.dueDate != null) {
+          const d = new Date(t.dueDate);
+          const dayStart = new Date(
+            d.getFullYear(),
+            d.getMonth(),
+            d.getDate(),
+          ).getTime();
+          if (!groups.has(dayStart)) groups.set(dayStart, []);
+          groups.get(dayStart)!.push(t);
+        } else {
+          anytimeTasks.push(t);
+        }
       }
-    }
 
-    const todayTasks = tasks.filter(
-      (t) => !t.done && useTasksStore.getState().sectionOf(t) === 'today',
-    );
-    items.push({
-      kind: 'section',
-      id: 'section-today',
-      label: 'HÔM NAY',
-      count: todayTasks.length,
-      tone: 'today',
-    });
-    for (const task of todayTasks) {
-      items.push({
-        kind: 'task',
-        id: task.id,
-        task,
-        timeLabel: taskTimeLabel(task),
-        overdue: false,
-        goalTitle: goalTitleOf(task),
-      });
-    }
+      const sortedDays = Array.from(groups.keys()).sort((a, b) => a - b);
 
-    const completedTasks = tasks
-      .filter((t) => t.done)
-      .sort(
-        (a, b) =>
-          (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt),
-      );
-    if (completedTasks.length > 0) {
-      items.push({
-        kind: 'section',
-        id: 'section-completed',
-        label: 'ĐÃ XONG',
-        count: completedTasks.length,
-        tone: 'completed',
-      });
-      for (const task of completedTasks) {
+      for (const dayStart of sortedDays) {
+        const dayTasks = groups.get(dayStart)!;
+        dayTasks.sort((a, b) => a.dueDate! - b.dueDate!);
+
+        const diffDays = Math.round((dayStart - startToDay) / DAY_MS);
+        let label = '';
+        if (diffDays === 0) label = 'Hôm nay';
+        else if (diffDays === -1) label = 'Hôm qua';
+        else if (diffDays === 1) label = 'Ngày mai';
+        else {
+          const d = new Date(dayStart);
+          const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+          label = `${weekdays[d.getDay()]}, ${d.getDate()} Thg ${d.getMonth() + 1}`;
+        }
+
+        let tone: SectionTone = 'today';
+        if (diffDays < 0) tone = 'overdue';
+        else if (diffDays > 0) tone = 'upcoming';
+
         items.push({
-          kind: 'task',
-          id: task.id,
-          task,
-          timeLabel: taskTimeLabel(task),
-          overdue: false,
-          goalTitle: goalTitleOf(task),
+          kind: 'section',
+          id: `section-day-${dayStart}`,
+          label: label.toUpperCase(),
+          count: dayTasks.length,
+          tone,
         });
+        for (const task of dayTasks) {
+          items.push({
+            kind: 'task',
+            id: task.id,
+            task,
+            timeLabel: taskTimeLabel(task),
+            overdue: diffDays < 0,
+            goalTitle: goalTitleOf(task),
+          });
+        }
+      }
+
+      if (anytimeTasks.length > 0) {
+        anytimeTasks.sort((a, b) => b.createdAt - a.createdAt);
+        items.push({
+          kind: 'section',
+          id: 'section-anytime',
+          label: 'SẮP XẾP SAU',
+          count: anytimeTasks.length,
+          tone: 'anytime',
+        });
+        for (const task of anytimeTasks) {
+          items.push({
+            kind: 'task',
+            id: task.id,
+            task,
+            timeLabel: taskTimeLabel(task),
+            overdue: false,
+            goalTitle: goalTitleOf(task),
+          });
+        }
+      }
+    } else {
+      const completedTasks = tasks.filter((t) => t.done);
+
+      const groups = new Map<number, Task[]>();
+
+      for (const t of completedTasks) {
+        const time = t.completedAt ?? t.createdAt;
+        const d = new Date(time);
+        const dayStart = new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate(),
+        ).getTime();
+        if (!groups.has(dayStart)) groups.set(dayStart, []);
+        groups.get(dayStart)!.push(t);
+      }
+
+      const sortedDays = Array.from(groups.keys()).sort((a, b) => b - a);
+
+      for (const dayStart of sortedDays) {
+        const dayTasks = groups.get(dayStart)!;
+        dayTasks.sort(
+          (a, b) =>
+            (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt),
+        );
+
+        const diffDays = Math.round((dayStart - startToDay) / DAY_MS);
+        let label = '';
+        if (diffDays === 0) label = 'Hôm nay';
+        else if (diffDays === -1) label = 'Hôm qua';
+        else {
+          const d = new Date(dayStart);
+          const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+          label = `${weekdays[d.getDay()]}, ${d.getDate()} Thg ${d.getMonth() + 1}`;
+        }
+
+        items.push({
+          kind: 'section',
+          id: `section-done-${dayStart}`,
+          label: label.toUpperCase(),
+          count: dayTasks.length,
+          tone: 'completed',
+        });
+        for (const task of dayTasks) {
+          items.push({
+            kind: 'task',
+            id: task.id,
+            task,
+            timeLabel: taskTimeLabel(task),
+            overdue: false,
+            goalTitle: goalTitleOf(task),
+          });
+        }
       }
     }
 

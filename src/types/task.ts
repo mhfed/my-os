@@ -35,7 +35,7 @@ export interface Task {
 /** Overdue = past-due & not done; Today = due today or undated. */
 export type TaskSection = 'overdue' | 'today' | 'upcoming';
 
-export type TaskFilter = 'All' | 'Today' | 'This week' | 'Projects';
+export type TaskFilter = 'Pending' | 'Completed';
 
 /** Input for creating a task (from the add form or inbox triage). */
 export interface NewTaskInput {

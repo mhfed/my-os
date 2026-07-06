@@ -19,7 +19,7 @@ import type {
   TasksState,
 } from '@/types/task';
 
-export const FILTERS: TaskFilter[] = ['All', 'Today', 'This week', 'Projects'];
+export const FILTERS: TaskFilter[] = ['Pending', 'Completed'];
 
 const DAY_MS = 86_400_000;
 
@@ -164,7 +164,7 @@ let initPromise: Promise<void> | null = null;
 
 export const useTasksStore = create<TasksState>()((set, get) => ({
   tasks: [],
-  activeFilter: 'All',
+  activeFilter: 'Pending',
   ready: false,
 
   init: async () => {
