@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Modal,
   Pressable,
@@ -19,17 +19,46 @@ import { useGoalStore } from '@/store/goalStore';
 interface GoalCreatorModalProps {
   visible: boolean;
   onClose: () => void;
+  editGoalId?: string | null;
 }
 
-export function GoalCreatorModal({ visible, onClose }: GoalCreatorModalProps) {
+export function GoalCreatorModal({
+  visible,
+  onClose,
+  editGoalId,
+}: GoalCreatorModalProps) {
+  const goals = useGoalStore((s) => s.goals);
   const createGoal = useGoalStore((s) => s.createGoal);
+  const updateGoal = useGoalStore((s) => s.updateGoal);
+
+  const isEditing = !!editGoalId;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // For creation, milestones are strings. For editing, showing existing ones is read-only (for now)
+  // so we separate new milestones vs existing milestones.
   const [milestones, setMilestones] = useState<string[]>([]);
   const [newMilestone, setNewMilestone] = useState('');
 
-  const canSave = title.trim().length > 0 && milestones.length > 0;
+  // Prefill when editing
+  useEffect(() => {
+    if (visible && editGoalId) {
+      const goal = goals.find((g) => g.id === editGoalId);
+      if (goal) {
+        setTitle(goal.title);
+        setDescription(goal.description || '');
+        setMilestones([]); // Only hold NEW milestones
+        setNewMilestone('');
+      }
+    } else if (visible && !editGoalId) {
+      setTitle('');
+      setDescription('');
+      setMilestones([]);
+      setNewMilestone('');
+    }
+  }, [visible, editGoalId, goals]);
+
+  const canSave = title.trim().length > 0;
 
   function handleClose() {
     setTitle('');
@@ -41,12 +70,25 @@ export function GoalCreatorModal({ visible, onClose }: GoalCreatorModalProps) {
 
   async function handleSave() {
     if (!canSave) return;
-    await createGoal({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      milestones: milestones,
-      deadline: Date.now() + 86400000 * 30, // Mock deadline 30 days for now
-    });
+
+    // Nếu user đang gõ dở cột mốc nhưng chưa ấn Enter thì gom vào luôn
+    const draft = newMilestone.trim();
+    const finalMilestones = draft ? [...milestones, draft] : milestones;
+
+    if (isEditing && editGoalId) {
+      await updateGoal(editGoalId, {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        newMilestones: finalMilestones,
+      });
+    } else {
+      await createGoal({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        milestones: finalMilestones,
+        deadline: Date.now() + 86400000 * 30, // Mock deadline 30 days for now
+      });
+    }
     handleClose();
   }
 
@@ -64,7 +106,9 @@ export function GoalCreatorModal({ visible, onClose }: GoalCreatorModalProps) {
         >
           <View style={styles.sheet}>
             <View style={styles.grabber} />
-            <Text style={styles.heading}>New Goal</Text>
+            <Text style={styles.heading}>
+              {isEditing ? 'Sửa mục tiêu' : 'Mục tiêu mới'}
+            </Text>
 
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -90,7 +134,9 @@ export function GoalCreatorModal({ visible, onClose }: GoalCreatorModalProps) {
               />
 
               <Text style={styles.fieldLabel}>
-                MILESTONES (Tasks will be generated)
+                {isEditing
+                  ? 'THÊM MỐC THỜI GIAN MỚI (Tự sinh Task)'
+                  : 'MILESTONES (Tasks will be generated)'}
               </Text>
               <View style={styles.mContainer}>
                 {milestones.map((m, i) => (
@@ -142,7 +188,9 @@ export function GoalCreatorModal({ visible, onClose }: GoalCreatorModalProps) {
                   onPress={handleSave}
                   disabled={!canSave}
                 >
-                  <Text style={styles.saveText}>Save Goal</Text>
+                  <Text style={styles.saveText}>
+                    {isEditing ? 'Lưu thay đổi' : 'Lưu mục tiêu'}
+                  </Text>
                 </Pressable>
               </View>
             </ScrollView>

@@ -33,6 +33,15 @@ export interface GoalState {
     deadline?: number;
     milestones: string[];
   }) => Promise<void>;
+  updateGoal: (
+    id: string,
+    updates: {
+      title: string;
+      description?: string;
+      deadline?: number;
+      newMilestones?: string[];
+    },
+  ) => Promise<void>;
   updateGoalStatus: (
     id: string,
     status: GoalStatus,

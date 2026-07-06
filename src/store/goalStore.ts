@@ -170,6 +170,68 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     set((state) => ({ goals: [newGoal, ...state.goals] }));
   },
 
+  updateGoal: async (id, updates) => {
+    const now = Date.now();
+
+    // Update goal base info
+    await runSql(
+      'UPDATE goals SET title = ?, description = ?, deadline = ?, updatedAt = ? WHERE id = ?;',
+      [
+        updates.title,
+        updates.description ?? null,
+        updates.deadline ?? null,
+        now,
+        id,
+      ],
+    );
+
+    const createdMilestones: Milestone[] = [];
+    if (updates.newMilestones && updates.newMilestones.length > 0) {
+      const tasksStr = useTasksStore.getState();
+      if (!tasksStr.ready) await tasksStr.init();
+
+      for (const mTitle of updates.newMilestones) {
+        if (!mTitle.trim()) continue;
+        const mId = newId();
+
+        const task = await tasksStr.addTask({
+          title: mTitle,
+          priority: 'P1',
+          dueDate: updates.deadline,
+          context: updates.title,
+        });
+
+        await runSql(
+          `INSERT INTO milestones (id, goalId, title, done, linkedTaskId, createdAt)
+           VALUES (?, ?, ?, ?, ?, ?);`,
+          [mId, id, mTitle, 0, task.id, now],
+        );
+        createdMilestones.push({
+          id: mId,
+          goalId: id,
+          title: mTitle,
+          done: false,
+          linkedTaskId: task.id,
+          createdAt: now,
+        });
+      }
+    }
+
+    set((state) => ({
+      goals: state.goals.map((g) => {
+        if (g.id !== id) return g;
+        return {
+          ...g,
+          title: updates.title,
+          description: updates.description,
+          deadline: updates.deadline,
+          updatedAt: now,
+          milestones: [...g.milestones, ...createdMilestones],
+        };
+      }),
+    }));
+  },
+
   updateGoalStatus: async (id, status, dropReason) => {
     const now = Date.now();
     await runSql(

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -30,11 +30,13 @@ export function GoalsScreen() {
   const ready = useGoalStore((s) => s.ready);
   const goals = useGoalStore((s) => s.goals);
   const toggleMilestone = useGoalStore((s) => s.toggleMilestone);
+  const deleteGoal = useGoalStore((s) => s.deleteGoal);
   // Plain-state selectors (safe per AGENTS.md) so contributing tasks stay live.
   const tasks = useTasksStore((s) => s.tasks);
   const toggleTask = useTasksStore((s) => s.toggleTask);
 
   const [creatorOpen, setCreatorOpen] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
 
   const sorted = useMemo(() => [...goals].sort(bySoonestDeadline), [goals]);
 
@@ -49,6 +51,22 @@ export function GoalsScreen() {
   }, [tasks]);
 
   const handleBack = () => router.navigate('/more');
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      'Xoá mục tiêu',
+      'Bạn có chắc chắn muốn xoá mục tiêu này không?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        { text: 'Xoá', style: 'destructive', onPress: () => deleteGoal(id) },
+      ],
+    );
+  };
+
+  const handleEdit = (id: string) => {
+    setEditingGoalId(id);
+    setCreatorOpen(true);
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -96,6 +114,8 @@ export function GoalsScreen() {
                 linkedTasks={tasksByGoal[item.id]}
                 onToggle={(mId) => toggleMilestone(item.id, mId)}
                 onToggleTask={(taskId) => toggleTask(taskId)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
               />
             </AnimatedCard>
           )}
@@ -117,13 +137,20 @@ export function GoalsScreen() {
         variant='gold'
         size={60}
         style={styles.fab}
-        onPress={() => setCreatorOpen(true)}
+        onPress={() => {
+          setEditingGoalId(null);
+          setCreatorOpen(true);
+        }}
         accessibilityLabel='Tạo mục tiêu mới'
       />
 
       <GoalCreatorModal
         visible={creatorOpen}
-        onClose={() => setCreatorOpen(false)}
+        onClose={() => {
+          setCreatorOpen(false);
+          setEditingGoalId(null);
+        }}
+        editGoalId={editingGoalId}
       />
     </SafeAreaView>
   );

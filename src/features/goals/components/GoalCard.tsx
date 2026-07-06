@@ -74,6 +74,8 @@ interface GoalCardProps {
   linkedTasks?: Task[];
   /** Toggle a contributing task's done state (advances goal progress). */
   onToggleTask?: (taskId: string) => void;
+  onEdit?: (goalId: string) => void;
+  onDelete?: (goalId: string) => void;
 }
 
 /**
@@ -87,6 +89,8 @@ export function GoalCard({
   onToggle,
   linkedTasks = [],
   onToggleTask,
+  onEdit,
+  onDelete,
 }: GoalCardProps) {
   const { done, total, pct, remaining, complete, contributingTasks } =
     useMemo(() => {
@@ -103,9 +107,38 @@ export function GoalCard({
     >
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text style={styles.title} numberOfLines={2}>
-            {goal.title}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, { flex: 1 }]} numberOfLines={2}>
+              {goal.title}
+            </Text>
+
+            {onEdit || onDelete ? (
+              <View style={styles.actionIcons}>
+                {onEdit && (
+                  <PressableScale
+                    onPress={() => onEdit(goal.id)}
+                    hitSlop={8}
+                    style={styles.actionBtn}
+                  >
+                    <Icon name='pencil' size={18} color={colors.muted} />
+                  </PressableScale>
+                )}
+                {onDelete && (
+                  <PressableScale
+                    onPress={() => onDelete(goal.id)}
+                    hitSlop={8}
+                    style={styles.actionBtn}
+                  >
+                    <Icon
+                      name='trash-can-outline'
+                      size={18}
+                      color={colors.red}
+                    />
+                  </PressableScale>
+                )}
+              </View>
+            ) : null}
+          </View>
           {countdown ? (
             <View style={[styles.pill, { backgroundColor: countdown.bg }]}>
               <Icon name={countdown.icon} size={13} color={countdown.color} />
@@ -223,6 +256,19 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     gap: spacing.xs,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  actionIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionBtn: {
+    padding: 2,
   },
   title: {
     ...typography.headlineLgMobile,
