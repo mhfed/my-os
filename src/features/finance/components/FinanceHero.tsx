@@ -49,7 +49,7 @@ export function FinanceHero({ totalBalance, income, spent, onPressBalance, onPre
           >
             NGUYEN MINH HIEU
           </Text>
-          <Text style={styles.balance}>{formatVND(totalBalance)}</Text>
+          <Text style={[styles.balance, { color: totalBalance >= 0 ? colors.green : colors.red }]}>{formatVND(totalBalance)}</Text>
         </PressableScale>
 
         <View style={styles.subRow}>
@@ -91,7 +91,7 @@ export function FinanceHero({ totalBalance, income, spent, onPressBalance, onPre
                 <Icon name='arrow-top-right' size={13} color={colors.red} />
               </View>
               <Text
-                style={[styles.subAmount, { color: colors.text }]}
+                style={[styles.subAmount, { color: colors.red }]}
                 numberOfLines={1}
               >
                 -{formatCompactVND(spent)}

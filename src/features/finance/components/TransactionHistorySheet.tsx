@@ -223,7 +223,7 @@ export function TransactionHistorySheet({
                     )}
                     {group.totalExpense > 0 && (
                       <View style={[styles.totalBadge, { backgroundColor: tint(colors.red, '1A'), borderColor: colors.red }]}>
-                        <Text style={[styles.totalBadgeText, { color: colors.text }]}>
+                        <Text style={[styles.totalBadgeText, { color: colors.red }]}>
                           -{formatCompactVND(group.totalExpense)}
                         </Text>
                       </View>

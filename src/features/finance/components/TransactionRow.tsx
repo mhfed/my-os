@@ -26,7 +26,7 @@ function DeleteAction({ onPress }: { onPress: () => void }) {
 
 export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
   const isIncome = txn.type === 'income';
-  const amountColor = isIncome ? colors.green : colors.text;
+  const amountColor = isIncome ? colors.green : colors.red;
   const amountText = isIncome
     ? formatSignedVND(txn.amount, 'income')
     : formatVND(txn.amount);

@@ -616,7 +616,7 @@ export function FinanceScreen() {
                 </View>
                 <Text style={styles.debtLabel}>Tôi nợ ai</Text>
               </View>
-              <Text style={[styles.debtAmount, { color: colors.text }]}>
+              <Text style={[styles.debtAmount, { color: colors.red }]}>
                 {formatVND(totalBorrow)}
               </Text>
               <View style={styles.debtCardFooter}>
@@ -704,7 +704,7 @@ export function FinanceScreen() {
                 <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted }}>|</Text>
               )}
               {recentTabExpense > 0 ? (
-                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.text }}>
+                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.red }}>
                   -{formatVND(recentTabExpense)}
                 </Text>
               ) : recentTabIncome === 0 ? (
@@ -727,7 +727,7 @@ export function FinanceScreen() {
             <View style={styles.txnList}>
               {recentFilteredTxns.slice(0, 5).map((txn, i) => {
                 const isIncome = txn.type === 'income';
-                const amountColor = isIncome ? colors.green : colors.text;
+                const amountColor = isIncome ? colors.green : colors.red;
                 const amountPrefix = isIncome ? '+ ' : '- ';
                 return (
                   <AnimatedCard key={txn.id} index={i + 5}>
