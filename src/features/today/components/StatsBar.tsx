@@ -60,11 +60,14 @@ export const StatsBar = memo(function StatsBar({
 
   return (
     <View style={styles.row}>
-      {stats.map((s) => (
-        <View key={s.label} style={styles.cell}>
-          <Icon name={s.icon} size={20} color={s.color} />
-          <Text style={[styles.value, { color: s.color }]}>{s.value}</Text>
-          <Text style={styles.label}>{s.label}</Text>
+      {stats.map((s, i) => (
+        <View key={s.label} style={{ flexDirection: 'row', flex: 1 }}>
+          {i > 0 && <View style={styles.divider} />}
+          <View style={styles.cell}>
+            <Icon name={s.icon} size={20} color={s.color} />
+            <Text style={[styles.value, { color: s.color }]}>{s.value}</Text>
+            <Text style={styles.label}>{s.label}</Text>
+          </View>
         </View>
       ))}
     </View>
@@ -74,17 +77,19 @@ export const StatsBar = memo(function StatsBar({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: glass.fillStrong,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: glass.rim,
     marginBottom: spacing.sm,
+    paddingVertical: 12,
+  },
+  divider: {
+    width: 1,
+    height: '60%',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    alignSelf: 'center',
   },
   cell: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
     gap: 4,
   },
   value: {

@@ -454,7 +454,7 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   setNettingOpen(true);
                 }}
                 haptic='medium'
-                style={[styles.nettingBtn, base3D(colors.orangeDeep, 2)]}
+                style={styles.nettingBtn}
               >
                 <Text style={styles.nettingBtnText}>Cấn trừ</Text>
               </PressableScale>
@@ -485,13 +485,13 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
               const isNetting = p.paymentMethod === 'netting';
               const pIcon = isNetting ? 'swap-horizontal' : 'cash-check';
               const pColor = isNetting ? colors.orange : colors.teal;
-              const pColorDeep = isNetting ? colors.orangeDeep : colors.tealDeep;
               return (
-                <AnimatedCard key={p.id} index={i}>
+                <View key={p.id}>
+                  {i > 0 && <View style={styles.rowDivider} />}
                   <View style={styles.paymentRow}>
-                    <View style={[styles.paymentIconWrap, base3D(pColorDeep, 2)]}>
-                      <View style={[styles.paymentIcon, { backgroundColor: pColor, borderColor: 'rgba(255,255,255,0.1)' }]}>
-                        <Icon name={pIcon} size={16} color={colors.white} />
+                    <View style={styles.paymentIconWrap}>
+                      <View style={[styles.paymentIcon, { backgroundColor: tint(pColor, '18'), borderColor: tint(pColor, '30') }]}>
+                        <Icon name={pIcon} size={14} color={pColor} />
                       </View>
                     </View>
                     <View style={styles.paymentLeft}>
@@ -502,17 +502,18 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                         <Text style={styles.paymentNote}>{p.note}</Text>
                       )}
                     </View>
-                    <Text style={[styles.paymentAmount, { color: pColorDeep }]}>
+                    <Text style={[styles.paymentAmount, { color: pColor }]}>
                       +{formatCompactVND(p.amount)}
                     </Text>
                     <Pressable
                       hitSlop={8}
                       onPress={() => deletePayment(p.id, view!.id, p.amount)}
+                      style={{ marginLeft: 8 }}
                     >
                       <Icon name='close' size={14} color={colors.tabInactive} />
                     </Pressable>
                   </View>
-                </AnimatedCard>
+                </View>
               );
             })
           )}
@@ -738,15 +739,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.sm,
-    backgroundColor: colors.card,
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...elevation.card,
   },
   title: {
     flex: 1,
@@ -757,37 +757,33 @@ const styles = StyleSheet.create({
     ...textShadow.emboss,
   },
   editBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.sm,
-    backgroundColor: colors.card,
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...elevation.card,
   },
   deleteBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.sm,
-    backgroundColor: tint(colors.red, '22'),
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
+    backgroundColor: tint(colors.red, '15'),
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: tint(colors.red, '30'),
     alignItems: 'center',
     justifyContent: 'center',
-    ...elevation.card,
   },
   content: { paddingHorizontal: 20, paddingBottom: 100, gap: 16 },
   // Edit panel
   editPanel: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    padding: 14,
-    marginBottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderRadius: radius.xl,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    ...elevation.card,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   editLabel: {
     fontFamily: fonts.semibold,
@@ -800,9 +796,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -816,9 +812,9 @@ const styles = StyleSheet.create({
   editAmountWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -847,9 +843,9 @@ const styles = StyleSheet.create({
   editDateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -898,7 +894,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   disabled: { opacity: 0.4 },
-  // —— original styles below ——
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -908,49 +903,44 @@ const styles = StyleSheet.create({
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.tabInactive },
   statusText: { fontFamily: fonts.semibold, fontSize: 12 },
   progressCard: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: radius.lg,
-    padding: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     gap: 12,
-    ...elevation.card,
   },
   progressAmounts: { flexDirection: 'row', justifyContent: 'space-between' },
   progressLabel: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, marginBottom: 2 },
   progressOriginal: { fontFamily: fonts.monoSemibold, fontSize: 18, color: colors.text },
   progressRemaining: { fontFamily: fonts.monoSemibold, fontSize: 18 },
   track: {
-    height: 8,
-    backgroundColor: colors.track,
-    borderRadius: 4,
+    height: 4,
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: radius.pill,
     overflow: 'hidden',
   },
-  fill: { height: '100%', borderRadius: 4 },
+  fill: { height: '100%', borderRadius: radius.pill },
   progressMeta: { flexDirection: 'row', justifyContent: 'space-between' },
   progressMetaText: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
   noteBox: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255,255,255,0.01)',
     borderRadius: radius.md,
     padding: 12,
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.03)',
   },
   noteText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
   settleLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255,255,255,0.01)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    ...elevation.card,
   },
   settleLinkLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
   sectionTitle: {
@@ -966,25 +956,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    ...elevation.card,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   paymentIconWrap: {
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
   },
   paymentIcon: {
     width: 32,
     height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: colors.teal,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
   },
   paymentLeft: { flex: 1 },
   paymentDate: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
@@ -1050,9 +1034,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     marginBottom: 22,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.lg,
     paddingVertical: 14,
   },
@@ -1069,9 +1053,9 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 6,
     paddingVertical: 8,
@@ -1089,9 +1073,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1136,11 +1120,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     marginVertical: 14,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderRadius: radius.md,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   nettingCompareCell: {
     alignItems: 'center',
@@ -1155,5 +1139,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.monoSemibold,
     fontSize: 16,
     color: colors.text,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
 });

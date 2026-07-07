@@ -107,7 +107,7 @@ export function SetBudgetModal({ visible, onClose, period = 'monthly', periodKey
                     isActive && {
                       backgroundColor: face,
                       borderColor: deep,
-                      ...base3D(deep, 3),
+                      borderWidth: 1,
                     },
                   ]}
                 >

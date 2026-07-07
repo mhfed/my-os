@@ -63,9 +63,9 @@ function GoalRow({ view, onPress, index }: { view: SavingsGoalView; onPress: () 
 
   return (
     <PressableScale style={styles.row} onPress={onPress} haptic='light'>
-      <View style={[styles.goalIconWrap, base3D(colors.purpleDeep, 2)]}>
-        <View style={[styles.goalIcon, { backgroundColor: tint(view.color, '22') }]}>
-          <Icon name={view.icon as IconName} size={18} color={view.color} />
+      <View style={styles.goalIconWrap}>
+        <View style={[styles.goalIcon, { backgroundColor: tint(view.color, '18'), borderColor: tint(view.color, '30') }]}>
+          <Icon name={view.icon as IconName} size={16} color={view.color} />
         </View>
       </View>
 
@@ -103,7 +103,7 @@ function GoalRow({ view, onPress, index }: { view: SavingsGoalView; onPress: () 
         </View>
       </View>
 
-      <Icon name='chevron-right' size={15} color={colors.tabInactive} />
+      <Icon name='chevron-right' size={14} color={colors.tabInactive} />
     </PressableScale>
   );
 }
@@ -166,7 +166,7 @@ export function SavingsGoalListSheet({ visible, onClose }: SavingsGoalListSheetP
           renderItem={({ item, index }) => (
             <GoalRow view={item} index={index} onPress={() => setSelectedId(item.id)} />
           )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={styles.rowDivider} />}
         />
 
         <GameIconButton
@@ -204,50 +204,51 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.track,
-    backgroundColor: colors.white,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
-  chipActive: { backgroundColor: tint(colors.purple, '22'), borderColor: colors.purple },
-  chipText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
-  chipTextActive: { color: colors.purple },
+  chipActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  chipText: { fontFamily: fonts.medium, fontSize: 11, color: colors.muted },
+  chipTextActive: { color: colors.text, fontFamily: fonts.semibold },
   list: { paddingHorizontal: 20, paddingBottom: 120, paddingTop: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: radius.lg,
-    padding: 14,
-    ...elevation.card,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   goalIconWrap: {
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
   },
   goalIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
   },
   rowMid: { flex: 1, gap: 6 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   goalName: { fontFamily: fonts.display, fontSize: 14, color: colors.text, flex: 1 },
   pct: { fontFamily: fonts.monoSemibold, fontSize: 12 },
-  track: { height: 10, backgroundColor: colors.track, borderRadius: radius.pill, overflow: 'hidden' },
+  track: { height: 4, backgroundColor: colors.surfaceContainerHigh, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
   rowBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   amounts: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
   statusBadge: { fontFamily: fonts.semibold, fontSize: 11 },
-  separator: { height: 10 },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
   empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 12 },
   emptyText: { fontFamily: fonts.medium, fontSize: 14, color: colors.tabInactive },
   fab: {

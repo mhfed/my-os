@@ -29,22 +29,23 @@ export const WidgetCard = memo(function WidgetCard({
   return (
     <AnimatedCard index={index} style={styles.wrapper}>
       <PressableScale onPress={onPress} haptic='light' scaleTo={0.97}>
-        <GamePanel style={styles.panel}>
+        <View style={styles.panel}>
           <View style={styles.header}>
             <View
               style={[
                 styles.iconWrap,
-                { backgroundColor: palette.accent + '18' },
+                { backgroundColor: palette.accent + '12' },
               ]}
             >
-              <Icon name={icon} size={18} color={palette.accent} />
+              <Icon name={icon} size={15} color={palette.accent} />
             </View>
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
+            <Icon name='chevron-right' size={14} color={colors.tabInactive} />
           </View>
           <View style={styles.body}>{children}</View>
-        </GamePanel>
+        </View>
       </PressableScale>
     </AnimatedCard>
   );
@@ -55,32 +56,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   panel: {
-    paddingBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.xl,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingTop: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   iconWrap: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontFamily: fonts.displayBold,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.text,
-    ...textShadow.emboss,
     flex: 1,
   },
   body: {
-    paddingHorizontal: 12,
     gap: 6,
   },
 });

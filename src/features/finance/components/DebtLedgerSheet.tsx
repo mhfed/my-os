@@ -81,12 +81,12 @@ function DebtRow({
     <AnimatedCard index={index}>
       <PressableScale style={styles.row} onPress={onPress} haptic='light'>
         {/* Icon badge */}
-        <View style={[styles.avatarWrap, base3D(accentDeep, 3)]}>
-          <View style={[styles.avatar, { backgroundColor: accent }]}>
+        <View style={styles.avatarWrap}>
+          <View style={[styles.avatar, { backgroundColor: tint(accent, '18'), borderColor: tint(accent, '30') }]}>
             <Icon
               name={isLend ? 'hand-coin' : 'bank-outline'}
-              size={18}
-              color={colors.white}
+              size={16}
+              color={accent}
             />
           </View>
         </View>
@@ -116,7 +116,7 @@ function DebtRow({
               {formatCompactVND(view.paidAmount)} /{' '}
               {formatCompactVND(view.originalAmount)}
             </Text>
-            <Text style={[styles.remainText, { color: accentDeep }]}>
+            <Text style={[styles.remainText, { color: accent }]}>
               {view.status === 'settled'
                 ? '✓'
                 : `còn ${formatCompactVND(view.totalOwed)}`}
@@ -124,7 +124,7 @@ function DebtRow({
           </View>
         </View>
 
-        <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+        <Icon name='chevron-right' size={14} color={colors.tabInactive} />
       </PressableScale>
     </AnimatedCard>
   );
@@ -289,7 +289,7 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
               onPress={() => setSelectedId(item.id)}
             />
           )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={styles.rowDivider} />}
         />
 
         {/* FAB */}
@@ -327,26 +327,24 @@ const styles = StyleSheet.create({
     ...textShadow.emboss,
   },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.sm,
-    backgroundColor: colors.card,
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...elevation.card,
   },
   summaryBar: {
     flexDirection: 'row',
     marginHorizontal: 20,
     marginBottom: 16,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: radius.lg,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.xl,
     paddingVertical: 14,
-    ...elevation.card,
   },
   summaryCol: { flex: 1, alignItems: 'center', gap: 3 },
   summaryLabel: {
@@ -355,16 +353,16 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   summaryValue: { fontFamily: fonts.monoSemibold, fontSize: 15 },
-  summaryDivider: { width: 1, backgroundColor: colors.border },
+  summaryDivider: { width: 1, backgroundColor: 'rgba(255, 255, 255, 0.03)' },
   tabs: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: colors.cardAlt,
-    borderRadius: radius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.track,
-    padding: 4,
-    gap: 4,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    padding: 3,
+    gap: 2,
     marginBottom: 12,
   },
   tabBtn: {
@@ -373,15 +371,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    borderRadius: radius.sm,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
   },
   tabBtnActive: {
-    backgroundColor: colors.purple,
-    ...base3D(colors.purpleDeep, 2),
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
-  tabText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
-  tabTextActive: { color: colors.white, ...textShadow.button },
+  tabText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.muted },
+  tabTextActive: { color: colors.text, fontFamily: fonts.semibold },
   filterRow: {
     flexDirection: 'row',
     gap: 8,
@@ -389,42 +386,37 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.track,
-    backgroundColor: colors.card,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   chipActive: {
-    backgroundColor: tint(colors.purple, '22'),
-    borderColor: colors.purple,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  chipText: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
-  chipTextActive: { color: colors.purple, fontFamily: fonts.semibold },
+  chipText: { fontFamily: fonts.medium, fontSize: 11, color: colors.muted },
+  chipTextActive: { color: colors.text, fontFamily: fonts.semibold },
   list: { paddingHorizontal: 20, paddingBottom: 110, paddingTop: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: radius.lg,
-    padding: 14,
-    ...elevation.card,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   avatarWrap: {
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.sm,
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
   },
   rowMid: { flex: 1, gap: 6 },
   rowTop: {
@@ -440,16 +432,19 @@ const styles = StyleSheet.create({
   },
   statusBadge: { fontFamily: fonts.medium, fontSize: 11 },
   miniTrack: {
-    height: 5,
-    backgroundColor: colors.track,
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: radius.pill,
     overflow: 'hidden',
   },
-  miniFill: { height: '100%', borderRadius: 3 },
+  miniFill: { height: '100%', borderRadius: radius.pill },
   rowBottom: { flexDirection: 'row', justifyContent: 'space-between' },
   paidText: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
   remainText: { fontFamily: fonts.monoSemibold, fontSize: 11 },
-  separator: { height: 10 },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
   empty: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -231,10 +231,15 @@ export function TransactionHistorySheet({
                   </View>
                 </View>
                 <View style={styles.groupItems}>
-                  {group.items.map((txn) => (
-                    <PressableScale key={txn.id} onPress={() => setEditingTxn(txn)} haptic='light' style={styles.txnRow}>
-                      <TransactionRow txn={txn} />
-                    </PressableScale>
+                  {group.items.map((txn, index) => (
+                    <View key={txn.id}>
+                      {index > 0 && <View style={styles.rowDivider} />}
+                      <TransactionRow
+                        txn={txn}
+                        onEdit={() => setEditingTxn(txn)}
+                        borderless
+                      />
+                    </View>
                   ))}
                 </View>
               </View>
@@ -322,22 +327,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   groupContainer: {
-    marginBottom: spacing.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.015)',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
-    overflow: 'hidden',
+    marginBottom: spacing.md,
   },
   groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.03)',
+    marginBottom: 4,
   },
   groupDateWrap: {
     flexDirection: 'row',
@@ -365,8 +365,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   groupItems: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 4,
+    paddingHorizontal: 4,
+    gap: 2,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
 });

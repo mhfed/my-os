@@ -25,11 +25,11 @@ import { formatTxnDate, currentWeekKey, getWeekKey } from '@/utils/date';
 
 import { AddTransactionSheet } from './components/AddTransactionSheet';
 import { DebtLedgerSheet } from './components/DebtLedgerSheet';
-import { FinanceHero } from './components/FinanceHero';
+import { FinanceSummaryHeader } from './components/FinanceSummaryHeader';
+import { FinancePortfolio } from './components/FinancePortfolio';
 import { TransactionHistorySheet } from './components/TransactionHistorySheet';
 import { QuickPettyCashModal } from './components/QuickPettyCashModal';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
-import { NetWorthWidget } from './components/NetWorthWidget';
 import { EditTransactionSheet } from './components/EditTransactionSheet';
 
 const RECENT_LIMIT = 5;
@@ -97,21 +97,7 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
-/** Section header badge — matches Tasks screen SectionHeader tone. */
-function SectionBadge({
-  label,
-  color,
-}: {
-  label: string;
-  color: string;
-}) {
-  return (
-    <View style={[styles.badge, { backgroundColor: tint(color, '18'), borderColor: tint(color, '30') }]}>
-      <View style={[styles.badgeDot, { backgroundColor: color }]} />
-      <Text style={[styles.badgeLabel, { color }]}>{label}</Text>
-    </View>
-  );
-}
+
 
 // ===========================================================================
 // Main Screen
@@ -127,11 +113,14 @@ export function FinanceScreen() {
   const getCategorySpend = useFinanceStore((s) => s.getCategorySpend);
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
   const getMonthlyTrends = useFinanceStore((s) => s.getMonthlyTrends);
+  const stepMonth = useFinanceStore((s) => s.stepMonth);
+  const exportCSV = useFinanceStore((s) => s.exportCSV);
 
   // Debt & Savings
   const debtEntries = useDebtStore((s) => s.entries);
   const debtPayments = useDebtStore((s) => s.payments);
   const savingsGoals = useSavingsStore((s) => s.goals);
+  const savingsContributions = useSavingsStore((s) => s.contributions);
 
   // Modals
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -211,10 +200,8 @@ export function FinanceScreen() {
 
   // Savings goals (active)
   const activeGoals = useMemo(() => {
-    return savingsGoals
-      .filter((g) => g.status === 'active')
-      .sort((a, b) => b.currentAmount / b.targetAmount - a.currentAmount / a.targetAmount);
-  }, [savingsGoals]);
+    return useSavingsStore.getState().getActiveGoals();
+  }, [savingsGoals, savingsContributions]);
 
   // Debt entries grouped by type
   const lendEntries = useMemo(
@@ -279,6 +266,12 @@ export function FinanceScreen() {
     return seg;
   });
 
+  const totalSavings = useMemo(() => {
+    return activeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
+  }, [activeGoals]);
+
+  const netWorth = totalBalance + totalSavings + totalLend - totalBorrow;
+
   const saved = overview.income - overview.spent;
 
   return (
@@ -289,7 +282,6 @@ export function FinanceScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.screenGlow}
-        pointerEvents='none'
       />
 
       <ScrollView
@@ -297,14 +289,18 @@ export function FinanceScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-
-        {/* ---- Hero Balance ---- */}
-        <View style={styles.heroWrap}>
-          <FinanceHero
+        {/* ---- Summary Header ---- */}
+        <View style={styles.headerContainer}>
+          <FinanceSummaryHeader
+            netWorth={netWorth}
             totalBalance={totalBalance}
+            totalSavings={totalSavings}
+            totalReceivable={totalLend}
+            totalPayable={totalBorrow}
             income={overview.income}
             spent={overview.spent}
+            period={period}
+            activeMonth={activeMonth}
             onPressBalance={() => {
               setHistoryFilter('all');
               setHistoryOpen(true);
@@ -317,58 +313,33 @@ export function FinanceScreen() {
               setHistoryFilter('expense');
               setHistoryOpen(true);
             }}
+            onPrevMonth={() => stepMonth(-1)}
+            onNextMonth={() => stepMonth(1)}
+            onExportCSV={exportCSV}
           />
         </View>
 
         {/* ---- Period Selector (Weekly vs Monthly) ---- */}
-        <AnimatedCard index={0.5} style={styles.periodSelectorWrap}>
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: radius.pill,
-            padding: 4,
-            gap: 4,
-          }}>
-            <PressableScale
+        <View style={styles.periodSelectorContainer}>
+          <View style={styles.periodSelectorInner}>
+            <Pressable
               onPress={() => setPeriod('monthly')}
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: 10,
-                borderRadius: radius.pill,
-                backgroundColor: period === 'monthly' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              }}
-              haptic='light'
+              style={[styles.periodSelectorBtn, period === 'monthly' && styles.periodSelectorBtnActive]}
             >
-              <Text style={{
-                fontFamily: fonts.semibold,
-                fontSize: 13,
-                color: period === 'monthly' ? colors.text : colors.muted,
-              }}>Tháng này</Text>
-            </PressableScale>
-            <PressableScale
+              <Text style={[styles.periodSelectorText, period === 'monthly' && styles.periodSelectorTextActive]}>
+                Báo cáo tháng
+              </Text>
+            </Pressable>
+            <Pressable
               onPress={() => setPeriod('weekly')}
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: 10,
-                borderRadius: radius.pill,
-                backgroundColor: period === 'weekly' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              }}
-              haptic='light'
+              style={[styles.periodSelectorBtn, period === 'weekly' && styles.periodSelectorBtnActive]}
             >
-              <Text style={{
-                fontFamily: fonts.semibold,
-                fontSize: 13,
-                color: period === 'weekly' ? colors.text : colors.muted,
-              }}>Tuần này</Text>
-            </PressableScale>
+              <Text style={[styles.periodSelectorText, period === 'weekly' && styles.periodSelectorTextActive]}>
+                Báo cáo tuần
+              </Text>
+            </Pressable>
           </View>
-        </AnimatedCard>
+        </View>
 
         {/* ---- Budget Overdraft Alert ---- */}
         {overview.budget > 0 && overview.spent > overview.budget && (
@@ -396,261 +367,146 @@ export function FinanceScreen() {
           </AnimatedCard>
         )}
 
-        {/* ---- Bento Row: Donut + Trend ---- */}
-        <View style={styles.bentoRow}>
-          {/* Category Donut (Pressable to view detail) */}
-          <AnimatedCard index={1} style={styles.bentoCard}>
-            <PressableScale
-              onPress={() => setCategoryBreakdownOpen(true)}
-              style={{ flex: 1 }}
-              haptic='light'
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <SectionBadge label="Phân bổ" color={colors.gold} />
-                <Icon name='chevron-right' size={14} color={colors.gold} style={{ opacity: 0.7 }} />
-              </View>
-              <View style={styles.donutLayout}>
-                <View style={styles.donutWrap}>
-                  <Svg width={80} height={80} viewBox="0 0 36 36">
-                    <G rotation={-90} originX={18} originY={18}>
-                      {donutSegments.map((seg) => (
-                        <DonutSegment
-                          key={seg.categoryId}
-                          pct={seg.pct}
-                          offset={seg.offset}
-                          color={seg.color}
-                        />
-                      ))}
-                    </G>
-                  </Svg>
-                  <View style={styles.donutCenter}>
-                    <Text style={styles.donutCenterText}>
-                      {period === 'monthly' ? shortMonth(activeMonth) : `W${currentWeek.split('-W')[1]}`}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.donutLegendCompact}>
-                  {donutData.map((d) => (
-                    <View key={d.categoryId} style={styles.legendCompactItem}>
-                      <View style={[styles.legendDot, { backgroundColor: d.color }]} />
-                      <Text style={styles.legendPctCompact}>{Math.round(d.pct)}%</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </PressableScale>
-          </AnimatedCard>
-
-          {/* Trend Chart */}
-          <AnimatedCard index={2} style={styles.bentoCard}>
-            <SectionBadge label="Xu hướng" color={colors.teal} />
-            <View style={styles.trendWrap}>
-              {trends6.length > 0 && (
-                <View style={styles.trendLegend}>
-                  <View style={styles.trendLegendItem}>
-                    <View style={[styles.trendDot, { backgroundColor: colors.gold }]} />
-                    <Text style={styles.trendLegendText}>Thu</Text>
-                  </View>
-                  <View style={styles.trendLegendItem}>
-                    <View style={[styles.trendDot, { backgroundColor: colors.red }]} />
-                    <Text style={styles.trendLegendText}>Chi</Text>
-                  </View>
-                </View>
-              )}
-              <View style={styles.trendBars}>
-                {trends6.map((d) => {
-                  const incH = Math.max(4, (d.income / trendMax) * trendBarH);
-                  const expH = Math.max(4, (d.spent / trendMax) * trendBarH);
-                  const itemKey = period === 'monthly' ? (d as MonthlyOverview).month : (d as WeeklyOverview).week;
-                  const isCurrent = period === 'monthly' ? itemKey === activeMonth : itemKey === currentWeek;
-                  const barLabel = period === 'monthly' ? shortMonth(itemKey) : `W${itemKey.split('-W')[1] || itemKey}`;
-                  return (
-                    <View key={itemKey} style={styles.trendCol}>
-                      <View style={styles.trendPair}>
-                        <View
-                          style={[
-                            styles.trendBarInc,
-                            { height: incH, opacity: isCurrent ? 1 : 0.45 },
-                          ]}
-                        />
-                        <View
-                          style={[
-                            styles.trendBarExp,
-                            { height: expH, opacity: isCurrent ? 1 : 0.45 },
-                          ]}
-                        />
-                      </View>
-                      <Text
-                        style={[
-                          styles.trendLabel,
-                          isCurrent && styles.trendLabelActive,
-                        ]}
-                      >
-                        {barLabel}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          </AnimatedCard>
-        </View>
-
-        {/* ---- Net Worth Widget ---- */}
+        {/* ---- Analytics Panel (Donut + Trend Chart) ---- */}
         <View style={styles.section}>
-          <NetWorthWidget />
-        </View>
-
-        {/* ---- Savings Goals ---- */}
-        {activeGoals.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <SectionBadge label="Mục tiêu tiết kiệm" color={colors.gold} />
-              <Pressable
-                onPress={() => setSheetOpen(true)}
-                style={styles.addBtn}
+          <AnimatedCard index={1} style={styles.analyticsPanel}>
+            <View style={styles.analyticsHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.analyticsDot, { backgroundColor: colors.gold }]} />
+                <Text style={styles.analyticsTitle}>Báo cáo phân bổ & Xu hướng</Text>
+              </View>
+              <PressableScale
+                onPress={() => setCategoryBreakdownOpen(true)}
+                style={styles.analyticsDetailBtn}
+                haptic='light'
               >
-                <Text style={styles.addBtnText}>Thêm</Text>
-                <Icon name="plus" size={14} color={colors.gold} />
-              </Pressable>
-            </View>
-            <View style={styles.goalsList}>
-              {activeGoals.slice(0, 2).map((goal, i) => {
-                const pct = Math.min(1, goal.currentAmount / goal.targetAmount);
-                return (
-                  <AnimatedCard key={goal.id} index={i + 3}>
-                    <View style={styles.goalCard}>
-                      <View style={styles.goalTop}>
-                        <View style={styles.goalNameRow}>
-                          <Icon
-                            name={goal.icon as any}
-                            size={18}
-                            color={goal.color}
-                          />
-                          <Text style={styles.goalName}>{goal.name}</Text>
-                        </View>
-                        <Text style={styles.goalPct}>{Math.round(pct * 100)}%</Text>
-                      </View>
-                      <View style={styles.progressTrack}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              width: `${Math.max(pct * 100, 2)}%`,
-                              backgroundColor: goal.color,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.goalAmounts}>
-                        {formatCompactVND(goal.currentAmount)} / {formatCompactVND(goal.targetAmount)}
-                      </Text>
-                    </View>
-                  </AnimatedCard>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* ---- Debt Ledger (Overview) ---- */}
-        <View style={styles.section}>
-          <SectionBadge label="Sổ nợ" color={colors.purple} />
-
-          {/* Debt warning alert strip */}
-          {(overdueCount > 0 || upcomingCount > 0) && (
-            <View
-              style={[
-                styles.debtAlertRow,
-                {
-                  backgroundColor: overdueCount > 0
-                    ? tint(colors.red, '1F')
-                    : tint(colors.orange, '1F'),
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.debtAlertText,
-                  { color: overdueCount > 0 ? colors.redDeep : colors.orangeDeep },
-                ]}
-              >
-                {overdueCount > 0
-                  ? `● ${overdueCount} khoản quá hạn`
-                  : `⚠️ ${upcomingCount} khoản đến hạn trong 7 ngày`}
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.debtGrid}>
-            <PressableScale
-              style={[styles.debtCard, styles.debtCardLend]}
-              onPress={() => setDebtOpen(true)}
-              haptic='light'
-            >
-              <View style={styles.debtCardHeader}>
-                <View style={[styles.debtCardIconWrap, { backgroundColor: tint(colors.green, '1A'), borderColor: colors.green }]}>
-                  <Icon name='arrow-top-right' size={14} color={colors.green} />
-                </View>
-                <Text style={styles.debtLabel}>Ai nợ tôi</Text>
-              </View>
-              <Text style={[styles.debtAmount, { color: colors.green }]}>
-                {formatVND(totalLend)}
-              </Text>
-              <View style={styles.debtCardFooter}>
-                <Text style={styles.debtFooterText}>
-                  {lendEntries.length} người nợ · Xem sổ
-                </Text>
-                <Icon name='chevron-right' size={12} color={colors.green} />
-              </View>
-            </PressableScale>
-
-            <PressableScale
-              style={[styles.debtCard, styles.debtCardBorrow]}
-              onPress={() => setDebtOpen(true)}
-              haptic='light'
-            >
-              <View style={styles.debtCardHeader}>
-                <View style={[styles.debtCardIconWrap, { backgroundColor: tint(colors.red, '1A'), borderColor: colors.red }]}>
-                  <Icon name='arrow-bottom-left' size={14} color={colors.red} />
-                </View>
-                <Text style={styles.debtLabel}>Tôi nợ ai</Text>
-              </View>
-              <Text style={[styles.debtAmount, { color: colors.red }]}>
-                {formatVND(totalBorrow)}
-              </Text>
-              <View style={styles.debtCardFooter}>
-                <Text style={styles.debtFooterText}>
-                  Nợ {borrowEntries.length} người · Xem sổ
-                </Text>
+                <Text style={styles.analyticsDetailText}>Xem chi tiết</Text>
                 <Icon name='chevron-right' size={12} color={colors.muted} />
+              </PressableScale>
+            </View>
+
+            <View style={styles.analyticsContent}>
+              {/* Donut Chart */}
+              <PressableScale
+                onPress={() => setCategoryBreakdownOpen(true)}
+                style={styles.analyticsDonutWrap}
+                haptic='light'
+              >
+                <View style={styles.donutLayout}>
+                  <View style={styles.donutWrap}>
+                    <Svg width={72} height={72} viewBox="0 0 36 36">
+                      <G rotation={-90} originX={18} originY={18}>
+                        {donutSegments.map((seg) => (
+                          <DonutSegment
+                            key={seg.categoryId}
+                            pct={seg.pct}
+                            offset={seg.offset}
+                            color={seg.color}
+                          />
+                        ))}
+                      </G>
+                    </Svg>
+                    <View style={styles.donutCenter}>
+                      <Text style={styles.donutCenterText}>
+                        {period === 'monthly' ? shortMonth(activeMonth) : `W${currentWeek.split('-W')[1]}`}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.donutLegendCompact}>
+                    {donutData.map((d) => (
+                      <View key={d.categoryId} style={styles.legendCompactItem}>
+                        <View style={[styles.legendDot, { backgroundColor: d.color }]} />
+                        <Text style={styles.legendPctCompact}>{Math.round(d.pct)}%</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </PressableScale>
+
+              <View style={styles.analyticsDivider} />
+
+              {/* Trend Chart */}
+              <View style={styles.analyticsTrendWrap}>
+                {trends6.length > 0 && (
+                  <View style={styles.trendLegend}>
+                    <View style={styles.trendLegendItem}>
+                      <View style={[styles.trendDot, { backgroundColor: colors.gold }]} />
+                      <Text style={styles.trendLegendText}>Thu</Text>
+                    </View>
+                    <View style={styles.trendLegendItem}>
+                      <View style={[styles.trendDot, { backgroundColor: colors.red }]} />
+                      <Text style={styles.trendLegendText}>Chi</Text>
+                    </View>
+                  </View>
+                )}
+                <View style={styles.trendBars}>
+                  {trends6.map((d) => {
+                    const incH = Math.max(4, (d.income / trendMax) * trendBarH);
+                    const expH = Math.max(4, (d.spent / trendMax) * trendBarH);
+                    const itemKey = period === 'monthly' ? (d as MonthlyOverview).month : (d as WeeklyOverview).week;
+                    const isCurrent = period === 'monthly' ? itemKey === activeMonth : itemKey === currentWeek;
+                    const barLabel = period === 'monthly' ? shortMonth(itemKey) : `W${itemKey.split('-W')[1] || itemKey}`;
+                    return (
+                      <View key={itemKey} style={styles.trendCol}>
+                        <View style={styles.trendPair}>
+                          <View
+                            style={[
+                              styles.trendBarInc,
+                              { height: incH, opacity: isCurrent ? 1 : 0.4 },
+                            ]}
+                          />
+                          <View
+                            style={[
+                              styles.trendBarExp,
+                              { height: expH, opacity: isCurrent ? 1 : 0.4 },
+                            ]}
+                          />
+                        </View>
+                        <Text
+                          style={[
+                            styles.trendLabel,
+                            isCurrent && styles.trendLabelActive,
+                          ]}
+                        >
+                          {barLabel}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </View>
-            </PressableScale>
-          </View>
+            </View>
+          </AnimatedCard>
         </View>
 
+        {/* ---- Assets & Liabilities Portfolio ---- */}
+        <View style={styles.section}>
+          <FinancePortfolio
+            activeGoals={activeGoals}
+            totalLend={totalLend}
+            totalBorrow={totalBorrow}
+            lendCount={lendEntries.length}
+            borrowCount={borrowEntries.length}
+            onPressDebt={() => setDebtOpen(true)}
+            overdueCount={overdueCount}
+            upcomingCount={upcomingCount}
+          />
+        </View>
 
-
-        {/* ---- Recent Transactions (Tabbed) ---- */}
+        {/* ---- Recent Transactions (Clean Bank-Statement List) ---- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <SectionBadge label="Giao dịch" color={colors.gold} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={[styles.analyticsDot, { backgroundColor: colors.gold }]} />
+              <Text style={styles.recentSectionTitle}>Nhật ký giao dịch</Text>
+            </View>
             <Pressable onPress={() => setHistoryOpen(true)}>
               <Text style={styles.seeAllBtnText}>Tất cả lịch sử</Text>
             </Pressable>
           </View>
 
           {/* Sub-tabs for transaction scope */}
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.06)',
-            borderRadius: radius.pill,
-            padding: 2,
-            gap: 2,
-            marginBottom: 8,
-          }}>
+          <View style={styles.txTabsContainer}>
             {(['today', 'week', 'month'] as const).map((tab) => {
               const label = tab === 'today' ? 'Hôm nay' : tab === 'week' ? 'Tuần này' : 'Tháng này';
               const active = recentTab === tab;
@@ -658,42 +514,18 @@ export function FinanceScreen() {
                 <PressableScale
                   key={tab}
                   onPress={() => setRecentTab(tab)}
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingVertical: 6,
-                    borderRadius: radius.pill,
-                    backgroundColor: active ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                  }}
+                  style={[styles.txTabBtn, active && styles.txTabBtnActive]}
                   haptic='light'
                 >
-                  <Text style={{
-                    fontFamily: fonts.semibold,
-                    fontSize: 12,
-                    color: active ? colors.gold : colors.muted,
-                  }}>{label}</Text>
+                  <Text style={[styles.txTabText, active && styles.txTabTextActive]}>{label}</Text>
                 </PressableScale>
               );
             })}
           </View>
 
           {/* Total values right below the tabs */}
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: 'rgba(255, 255, 255, 0.015)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: radius.lg,
-            paddingVertical: 10,
-            paddingHorizontal: 14,
-            marginBottom: 12,
-          }}>
-            <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: colors.muted }}>
-              Tổng thu chi chu kỳ:
-            </Text>
+          <View style={styles.txSummaryBanner}>
+            <Text style={styles.txSummaryLabel}>Tổng chi tiêu chu kỳ:</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               {recentTabIncome > 0 && (
                 <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.green }}>
@@ -716,50 +548,54 @@ export function FinanceScreen() {
           </View>
 
           {recentFilteredTxns.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Icon name="receipt-text-outline" size={24} color={colors.muted} />
-              <Text style={styles.emptyText}>Không có giao dịch</Text>
-              <Text style={styles.emptySubtext}>
-                {recentTab === 'today' ? 'Chưa ghi chi tiêu nào trong hôm nay.' : recentTab === 'week' ? 'Chưa ghi chi tiêu nào trong tuần này.' : 'Chưa ghi chi tiêu nào trong tháng này.'}
+            <View style={styles.emptyStatementState}>
+              <Icon name="receipt-text-outline" size={20} color={colors.muted} />
+              <Text style={styles.emptyStatementText}>Không có giao dịch phát sinh</Text>
+              <Text style={styles.emptyStatementSubtext}>
+                {recentTab === 'today' ? 'Chưa ghi nhận chi tiêu trong hôm nay.' : recentTab === 'week' ? 'Chưa ghi nhận chi tiêu trong tuần này.' : 'Chưa ghi nhận chi tiêu trong tháng này.'}
               </Text>
             </View>
           ) : (
-            <View style={styles.txnList}>
+            <View style={styles.statementContainer}>
               {recentFilteredTxns.slice(0, 5).map((txn, i) => {
                 const isIncome = txn.type === 'income';
                 const amountColor = isIncome ? colors.green : colors.red;
-                const amountPrefix = isIncome ? '+ ' : '- ';
+                const amountPrefix = isIncome ? '+' : '-';
                 return (
-                  <AnimatedCard key={txn.id} index={i + 5}>
+                  <View key={txn.id}>
+                    {i > 0 && <View style={styles.statementDivider} />}
                     <PressableScale
                       onPress={() => setEditingTxn(txn)}
                       haptic='light'
+                      style={styles.statementRow}
                     >
-                      <View style={styles.txnRow}>
-                        <View
-                          style={[
-                            styles.txnIconWrap,
-                            { backgroundColor: tint(txn.color, '1A') },
-                          ]}
-                        >
-                          <Icon
-                            name={txn.icon as any}
-                            size={20}
-                            color={txn.color}
-                          />
-                        </View>
-                        <View style={styles.txnMid}>
-                          <Text style={styles.txnName} numberOfLines={1}>
-                            {txn.name}
-                          </Text>
-                          <Text style={styles.txnDate}>{formatTxnDate(txn.date)}</Text>
-                        </View>
-                        <Text style={[styles.txnAmount, { color: amountColor }]}>
-                          {amountPrefix}{formatVND(txn.amount)}
+                      <View
+                        style={[
+                          styles.statementIconWrap,
+                          { backgroundColor: tint(txn.color, '10') },
+                        ]}
+                      >
+                        <Icon
+                          name={txn.icon as any}
+                          size={16}
+                          color={txn.color}
+                        />
+                      </View>
+                      
+                      <View style={styles.statementMid}>
+                        <Text style={styles.statementName} numberOfLines={1}>
+                          {txn.name}
+                        </Text>
+                        <Text style={styles.statementDate}>
+                          {txn.categoryName} · {formatTxnDate(txn.date)}
                         </Text>
                       </View>
+
+                      <Text style={[styles.statementAmount, { color: amountColor }]}>
+                        {amountPrefix}{formatVND(txn.amount)}
+                      </Text>
                     </PressableScale>
-                  </AnimatedCard>
+                  </View>
                 );
               })}
             </View>
@@ -845,68 +681,46 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.tabClear,
   },
 
-  // ---- Header (matches Tasks screen pattern) ----
-  headerWrap: {
+  // ---- Redesigned Premium Styles ----
+  headerContainer: {
     paddingTop: spacing.xs,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.xs,
   },
-  headerPanel: {
-    paddingVertical: 2,
+  periodSelectorContainer: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
-  header: {
-    paddingHorizontal: 4,
+  periodSelectorInner: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: radius.pill,
+    padding: 3,
   },
-  title: {
-    fontFamily: fonts.displayBold,
-    fontSize: 26,
-    color: colors.text,
-    letterSpacing: -0.4,
+  periodSelectorBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: radius.pill,
   },
-  subtitle: {
-    fontFamily: fonts.monoRegular,
+  periodSelectorBtnActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  periodSelectorText: {
+    fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.muted,
-    marginTop: 2,
   },
-
-  // ---- Hero wrapper ----
-  heroWrap: {
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-
-  // ---- Period Selector & Alerts ----
-  periodSelectorWrap: {
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
+  periodSelectorTextActive: {
+    color: colors.text,
+    fontFamily: fonts.semibold,
   },
   budgetAlertWrap: {
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
-  },
-
-  // ---- Section badge ----
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  badgeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-  },
-  badgeLabel: {
-    fontFamily: fonts.displayBold,
-    fontSize: 12,
-    letterSpacing: 0.5,
   },
 
   // ---- Section layout ----
@@ -919,33 +733,72 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 4,
   },
 
-  // ---- Bento Row (Donut + Trend) ----
-  bentoRow: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  bentoCard: {
-    flex: 1,
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
+  // ---- Analytics Panel (Unified Donut + Trend) ----
+  analyticsPanel: {
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: glass.rim,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.xl,
     padding: 16,
     gap: 16,
   },
+  analyticsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  analyticsDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  analyticsTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 13,
+    color: colors.text,
+  },
+  analyticsDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  analyticsDetailText: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.muted,
+  },
+  analyticsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  analyticsDonutWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  analyticsDivider: {
+    width: 1,
+    height: 90,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    marginHorizontal: 8,
+  },
+  analyticsTrendWrap: {
+    flex: 1.3,
+    alignItems: 'center',
+    gap: 6,
+  },
 
-  // --- Donut ---
+  // --- Donut Chart ---
   donutLayout: {
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   donutWrap: {
-    width: 80,
-    height: 80,
+    width: 72,
+    height: 72,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -963,49 +816,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 4,
+    gap: 6,
+    marginTop: 2,
   },
   legendCompactItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
+  legendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   legendPctCompact: {
     fontFamily: fonts.monoSemibold,
-    fontSize: 10,
-    color: colors.text,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendLabel: {
-    flex: 1,
-    fontFamily: fonts.display,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
-  },
-  legendPct: {
-    fontFamily: fonts.displayBold,
-    fontSize: 12,
+    fontSize: 9,
     color: colors.text,
   },
 
   // --- Trend Chart ---
-  trendWrap: {
-    gap: 8,
-  },
   trendLegend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
+    gap: 10,
   },
   trendLegendItem: {
     flexDirection: 'row',
@@ -1013,9 +847,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   trendDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 1.5,
   },
   trendLegendText: {
     fontFamily: fonts.monoRegular,
@@ -1027,8 +861,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     width: '100%',
-    height: 100,
-    paddingTop: 8,
+    height: 80,
+    paddingTop: 4,
   },
   trendCol: {
     flex: 1,
@@ -1038,23 +872,23 @@ const styles = StyleSheet.create({
   trendPair: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 2,
+    gap: 1.5,
   },
   trendBarInc: {
-    width: 6,
-    borderRadius: 3,
+    width: 5,
+    borderRadius: 2,
     backgroundColor: colors.gold,
     minHeight: 4,
   },
   trendBarExp: {
-    width: 6,
-    borderRadius: 3,
+    width: 5,
+    borderRadius: 2,
     backgroundColor: colors.red,
     minHeight: 4,
   },
   trendLabel: {
     fontFamily: fonts.display,
-    fontSize: 9,
+    fontSize: 8,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
   },
@@ -1063,268 +897,121 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold,
   },
 
-  // --- Savings Goals ---
-  goalsList: {
-    gap: 10,
-  },
-  goalCard: {
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    padding: 16,
-    gap: 10,
-  },
-  goalTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  goalNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  goalName: {
+  // --- Recent Transactions ---
+  recentSectionTitle: {
     fontFamily: fonts.displayBold,
     fontSize: 14,
     color: colors.text,
-  },
-  goalPct: {
-    fontFamily: fonts.displayBold,
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: colors.surfaceContainerHigh,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  goalAmounts: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: colors.onSurfaceVariant,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  addBtnText: {
-    fontFamily: fonts.display,
-    fontSize: 14,
-    color: colors.gold,
-  },
-
-  // --- Debt ---
-  debtGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  debtCard: {
-    flex: 1,
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    padding: 14,
-    gap: 6,
-    borderLeftWidth: 3,
-  },
-  debtCardLend: {
-    borderLeftColor: colors.green,
-  },
-  debtCardBorrow: {
-    borderLeftColor: colors.red,
-  },
-  debtCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  debtCardIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  debtLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  debtAmount: {
-    fontFamily: fonts.displayBold,
-    fontSize: 20,
-    lineHeight: 26,
-    marginVertical: 2,
-  },
-  debtCardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 2,
-  },
-  debtFooterText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.muted,
-  },
-
-  // --- Category Breakdown ---
-  catBreakdownCard: {
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    padding: 16,
-    gap: 14,
-  },
-  catRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  catIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  catBody: {
-    flex: 1,
-    gap: 5,
-  },
-  catTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  catName: {
-    flex: 1,
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.text,
-  },
-  catAmount: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 13,
-    color: colors.text,
-  },
-  catPct: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 11,
-    color: colors.muted,
-    minWidth: 28,
-    textAlign: 'right',
-  },
-  catTrack: {
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: colors.surfaceContainerHigh,
-    overflow: 'hidden',
-  },
-  catFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  seeAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 8,
   },
   seeAllBtnText: {
     fontFamily: fonts.display,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.gold,
   },
-
-  // --- Transactions ---
-  txnList: {
-    gap: 8,
+  txTabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: radius.pill,
+    padding: 2,
+    gap: 2,
+    marginVertical: 4,
   },
-  txnRow: {
+  txTabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  txTabBtnActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  txTabText: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: colors.muted,
+  },
+  txTabTextActive: {
+    color: colors.gold,
+  },
+  txSummaryBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 8,
   },
-  txnIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  txSummaryLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.muted,
+  },
+
+  // --- Statement List ---
+  statementContainer: {
+    paddingHorizontal: 4,
+  },
+  statementDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  statementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 0,
+    gap: 12,
+  },
+  statementIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txnMid: {
+  statementMid: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
-  txnName: {
+  statementName: {
     fontFamily: fonts.semibold,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.text,
   },
-  txnDate: {
+  statementDate: {
     fontFamily: fonts.regular,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
+    fontSize: 10,
+    color: colors.muted,
   },
-  txnAmount: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
+  statementAmount: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 13,
   },
 
-  // --- Empty State ---
-  emptyState: {
+  // --- Empty Statement State ---
+  emptyStatementState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
+    paddingVertical: 36,
     gap: 6,
-    borderRadius: radius.xl,
-    backgroundColor: glass.fillStrong,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: glass.rim,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.xl,
   },
-  emptyText: {
+  emptyStatementText: {
     fontFamily: fonts.displayBold,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.muted,
   },
-  emptySubtext: {
+  emptyStatementSubtext: {
     fontFamily: fonts.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.muted,
     textAlign: 'center',
-  },
-
-  debtAlertRow: {
-    borderRadius: radius.md,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  debtAlertText: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
   },
 
   // --- FAB ---

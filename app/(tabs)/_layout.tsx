@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, gradients, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { Ucon } from '@/theme/icons';
+import { Icon, type IconName } from '@/theme/icons';
 import { useGymStore } from '@/store/gymStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -30,7 +30,7 @@ function TabBarBackground() {
 // ─── Tab icon ─────────────────────────────────────────────────────
 
 interface TabIconProps {
-  iconName: 'home' | 'clipboard-notes' | 'heartbeat' | 'wallet';
+  iconName: IconName;
   color: string;
   focused: boolean;
 }
@@ -57,7 +57,7 @@ function TabIcon({ iconName, color, focused }: TabIconProps) {
       {focused && (
         <View style={[styles.activeTabBg, { backgroundColor: colors.secondaryContainer + '18' }]} />
       )}
-      <Ucon
+      <Icon
         name={iconName}
         size={focused ? 24 : 22}
         color={focused ? colors.secondaryContainer : colors.onSurfaceVariant + '99'}
@@ -115,8 +115,8 @@ function PowerOrbButton() {
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <Ucon
-          name={isOpen ? 'times' : 'apps'}
+        <Icon
+          name={isOpen ? 'close' : 'apps'}
           size={26}
           color={colors.white}
         />
@@ -179,7 +179,7 @@ export default function TabsLayout() {
           title: 'Tasks',
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
-              iconName='clipboard-notes'
+              iconName='checkbox-marked-outline'
               color={color}
               focused={focused}
             />
@@ -198,7 +198,7 @@ export default function TabsLayout() {
         options={{
           title: 'Health',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon iconName='heartbeat' color={color} focused={focused} />
+            <TabIcon iconName='heart-pulse' color={color} focused={focused} />
           ),
           ...(isWorkoutActive
             ? { tabBarStyle: { display: 'none' as const } }

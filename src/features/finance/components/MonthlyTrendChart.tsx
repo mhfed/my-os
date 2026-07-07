@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { base3D, colors, gradients, radius } from '@/theme/colors';
+import { colors, gradients, radius } from '@/theme/colors';
 import { fonts, textShadow } from '@/theme/typography';
 import type { MonthlyOverview } from '@/types/finance';
 import { formatCompactVND } from '@/utils/currency';
@@ -204,15 +204,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   tooltip: {
-    backgroundColor: colors.cardAlt,
+    backgroundColor: 'rgba(255,255,255,0.01)',
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.03)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 8,
     alignItems: 'center',
-    ...base3D(colors.tealDeep, 2),
   },
   tooltipMonth: {
     fontFamily: fonts.displayBold,

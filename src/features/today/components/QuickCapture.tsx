@@ -35,7 +35,7 @@ export const QuickCapture = memo(function QuickCapture({
           style={styles.input}
           value={text}
           onChangeText={setText}
-          placeholder='Capture anything...'
+          placeholder='Ghi lại mọi thứ...'
           placeholderTextColor={colors.muted}
           onSubmitEditing={submit}
           returnKeyType='done'
@@ -47,7 +47,7 @@ export const QuickCapture = memo(function QuickCapture({
 
       {openCount > 0 ? (
         <Pressable style={styles.inboxLink} onPress={onOpenInbox}>
-          <Text style={styles.inboxText}>{openCount} in inbox</Text>
+          <Text style={styles.inboxText}>{openCount} việc trong inbox</Text>
           <Icon name='arrow-right' size={13} color={colors.gold} />
         </Pressable>
       ) : null}
@@ -60,10 +60,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: glass.fillStrong,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.pill,
     paddingTop: 6,
     paddingBottom: 6,
     paddingLeft: 16,
@@ -77,9 +77,9 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   button: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
     backgroundColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',

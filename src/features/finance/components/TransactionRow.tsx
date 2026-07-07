@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
-import { base3D, colors, elevation, radius } from '@/theme/colors';
+import { colors, elevation, radius, tint } from '@/theme/colors';
 import { Icon, type IconName } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 import { PressableScale } from '@/components/motion';
@@ -14,6 +14,7 @@ interface TransactionRowProps {
   txn: TransactionView;
   onDelete?: () => void;
   onEdit?: () => void;
+  borderless?: boolean;
 }
 
 function DeleteAction({ onPress }: { onPress: () => void }) {
@@ -24,7 +25,7 @@ function DeleteAction({ onPress }: { onPress: () => void }) {
   );
 }
 
-export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
+export function TransactionRow({ txn, onDelete, onEdit, borderless = false }: TransactionRowProps) {
   const isIncome = txn.type === 'income';
   const amountColor = isIncome ? colors.green : colors.red;
   const amountText = isIncome
@@ -32,8 +33,12 @@ export function TransactionRow({ txn, onDelete, onEdit }: TransactionRowProps) {
     : formatVND(txn.amount);
 
   const rowContent = (
-    <PressableScale style={styles.row} onPress={onEdit} haptic='light'>
-      <IconBadge icon={txn.icon as IconName} color={txn.color} size={40} iconSize={19} />
+    <PressableScale
+      style={[styles.row, borderless && styles.rowBorderless]}
+      onPress={onEdit}
+      haptic='light'
+    >
+      <IconBadge icon={txn.icon as IconName} color={txn.color} size={borderless ? 36 : 40} iconSize={borderless ? 17 : 19} />
 
       <View style={styles.middle}>
         <Text style={styles.name} numberOfLines={1}>
@@ -75,6 +80,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     ...elevation.card,
   },
+  rowBorderless: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
   middle: {
     flex: 1,
   },
@@ -100,6 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     borderRadius: radius.md,
     marginLeft: 8,
-    ...base3D(colors.redDeep, 3),
+    borderWidth: 1,
+    borderColor: tint(colors.red, '33'),
   },
 });

@@ -61,11 +61,11 @@ export function GameIconButton({
   ...rest
 }: GameIconButtonProps) {
   const spec = VARIANTS[variant];
-  const lift = Math.max(3, Math.round(size * 0.1));
   const press = useSharedValue(0);
 
-  const capStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: press.value * lift }],
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - press.value * 0.05 }],
+    opacity: 1 - press.value * 0.08,
   }));
 
   const handlePressIn = useCallback<NonNullable<PressableProps['onPressIn']>>(
@@ -85,35 +85,36 @@ export function GameIconButton({
     [press, onPressOut],
   );
 
-  const r = size * 0.42;
+  const r = size * 0.5;
 
   return (
     <AnimatedPressable
       {...rest}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[{ width: size, height: size + lift }, style]}
+      style={[{ width: size, height: size }, animatedStyle, style]}
     >
-      <View
+      <LinearGradient
+        colors={[tint(spec.gradient[0], '22'), tint(spec.gradient[1], '11')]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
-          StyleSheet.absoluteFill,
-          { top: lift, borderRadius: r, backgroundColor: spec.base },
+          styles.cap,
+          {
+            width: size,
+            height: size,
+            borderRadius: r,
+            borderColor: tint(spec.gradient[0], '40'),
+            backgroundColor: 'rgba(255,255,255,0.01)',
+          },
         ]}
-      />
-      <Animated.View style={capStyle}>
-        <LinearGradient
-          colors={spec.gradient}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={[styles.cap, { width: size, height: size, borderRadius: r, borderColor: 'rgba(255,255,255,0.3)' }]}
-        >
-          <Icon
-            name={icon}
-            size={iconSize ?? size * 0.5}
-            color={colors.white}
-          />
-        </LinearGradient>
-      </Animated.View>
+      >
+        <Icon
+          name={icon}
+          size={iconSize ?? size * 0.45}
+          color={spec.gradient[0]}
+        />
+      </LinearGradient>
     </AnimatedPressable>
   );
 }
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   cap: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     overflow: 'hidden',
   },
 });

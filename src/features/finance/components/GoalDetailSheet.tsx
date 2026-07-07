@@ -390,18 +390,21 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
           {view.contributions.length === 0 ? (
             <Text style={styles.emptyText}>Chưa có đóng góp nào</Text>
           ) : (
-            view.contributions.map((c) => (
-              <View key={c.id} style={styles.contribRow}>
-                <View style={styles.contribLeft}>
-                  <Text style={styles.contribDate}>{formatTxnDate(c.date)}</Text>
-                  {c.note && <Text style={styles.contribNote}>{c.note}</Text>}
-                  {c.linkedTransactionId && (
-                    <Text style={styles.linkedBadge}>Ghi vào chi tiêu</Text>
-                  )}
+            view.contributions.map((c, i) => (
+              <View key={c.id}>
+                {i > 0 && <View style={styles.rowDivider} />}
+                <View style={styles.contribRow}>
+                  <View style={styles.contribLeft}>
+                    <Text style={styles.contribDate}>{formatTxnDate(c.date)}</Text>
+                    {c.note && <Text style={styles.contribNote}>{c.note}</Text>}
+                    {c.linkedTransactionId && (
+                      <Text style={styles.linkedBadge}>Ghi vào chi tiêu</Text>
+                    )}
+                  </View>
+                  <Text style={[styles.contribAmount, { color: progressColor }]}>
+                    +{formatCompactVND(c.amount)}
+                  </Text>
                 </View>
-                <Text style={[styles.contribAmount, { color: progressColor }]}>
-                  +{formatCompactVND(c.amount)}
-                </Text>
               </View>
             ))
           )}
@@ -544,18 +547,17 @@ const styles = StyleSheet.create({
 
   // Edit panel
   editPanel: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderRadius: radius.xl,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    ...elevation.card,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   editLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginBottom: 8 },
   iconRow: { gap: 8, paddingBottom: 4, marginBottom: 14 },
   iconChip: {
     width: 46, height: 46, borderRadius: radius.md, borderWidth: 1,
-    borderColor: colors.track, backgroundColor: colors.white,
+    borderColor: 'rgba(255, 255, 255, 0.04)', backgroundColor: 'rgba(255, 255, 255, 0.01)',
     alignItems: 'center', justifyContent: 'center',
   },
   palette: { flexDirection: 'row', gap: 10, marginBottom: 14 },
@@ -565,7 +567,7 @@ const styles = StyleSheet.create({
   swatchSelected: { borderColor: colors.white, transform: [{ scale: 1.15 }], ...elevation.card },
   editInput: {
     fontFamily: fonts.regular, fontSize: 14, color: colors.text,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 12, marginBottom: 14,
   },
   editNoteInput: { textAlignVertical: 'top', minHeight: 60, borderRadius: radius.md },
@@ -588,8 +590,8 @@ const styles = StyleSheet.create({
   toggleThumb: { width: 20, height: 20, borderRadius: radius.pill, backgroundColor: colors.white },
   toggleThumbOn: { alignSelf: 'flex-end' },
   editDateRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white,
-    borderWidth: 1, borderColor: colors.track, borderRadius: radius.pill,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)', borderRadius: radius.pill,
     paddingHorizontal: 18, paddingVertical: 12, marginBottom: 14, gap: 10,
   },
   editDateLabel: { flex: 1, fontFamily: fonts.medium, fontSize: 14, color: colors.text },
@@ -599,8 +601,9 @@ const styles = StyleSheet.create({
 
   // Main content
   progressCard: {
-    backgroundColor: colors.card, borderWidth: 1, borderRadius: radius.lg, padding: 18, gap: 12,
-    ...elevation.card,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    gap: 12,
   },
   iconRow2: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBox: { width: 52, height: 52, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
@@ -608,7 +611,7 @@ const styles = StyleSheet.create({
   progressCurrent: { fontFamily: fonts.monoSemibold, fontSize: 22, color: colors.text },
   progressTarget: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
   celebrateEmoji: { fontSize: 26 },
-  track: { height: 14, backgroundColor: colors.track, borderRadius: radius.pill, overflow: 'hidden' },
+  track: { height: 4, backgroundColor: colors.surfaceContainerHigh, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill, overflow: 'hidden' },
   fillGloss: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
   progressMeta: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -617,9 +620,9 @@ const styles = StyleSheet.create({
   deadlineText: { fontFamily: fonts.medium, fontSize: 12 },
   monthlyNeeded: { flex: 1, textAlign: 'right', fontFamily: fonts.monoMedium, fontSize: 11, color: colors.muted },
   noteBox: {
-    flexDirection: 'row', gap: 8, backgroundColor: colors.card,
+    flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.01)',
     borderRadius: radius.md, padding: 12, alignItems: 'flex-start',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)',
   },
   noteText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
   sectionTitle: {
@@ -629,8 +632,7 @@ const styles = StyleSheet.create({
   emptyText: { fontFamily: fonts.regular, fontSize: 13, color: colors.tabInactive, textAlign: 'center', paddingVertical: 16 },
   contribRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: colors.card, borderRadius: radius.md, padding: 12,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    paddingVertical: 12, paddingHorizontal: 4,
   },
   contribLeft: { flex: 1 },
   contribDate: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
@@ -657,7 +659,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold, fontSize: 18, color: colors.text, marginBottom: 16,
     ...textShadow.emboss,
   },
-  amountWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 22 },
+  amountWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 22, backgroundColor: 'rgba(255, 255, 255, 0.01)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)', borderRadius: radius.lg, paddingVertical: 14 },
   dong: { fontFamily: fonts.monoMedium, fontSize: 28, color: colors.muted },
   amountInput: {
     fontFamily: fonts.monoSemibold, fontSize: 38, color: colors.text,
@@ -665,22 +667,26 @@ const styles = StyleSheet.create({
   },
   label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginBottom: 8 },
   dateRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white,
-    borderWidth: 1, borderColor: colors.track, borderRadius: radius.pill,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)', borderRadius: radius.pill,
     paddingHorizontal: 6, paddingVertical: 8, marginBottom: 18,
   },
   dateArrow: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   dateLabel: { flex: 1, textAlign: 'center', fontFamily: fonts.medium, fontSize: 14, color: colors.text },
   noteInput: {
     fontFamily: fonts.regular, fontSize: 14, color: colors.text,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 12, marginBottom: 16,
   },
   linkTxnRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.track,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 10, marginBottom: 20,
   },
   linkTxnLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
   disabled: { opacity: 0.4 },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
 });

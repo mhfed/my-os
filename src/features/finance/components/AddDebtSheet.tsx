@@ -171,7 +171,8 @@ export function AddDebtSheet({ visible, onClose }: AddDebtSheetProps) {
                         styles.segmentBtn,
                         active && {
                           backgroundColor: accent,
-                          ...base3D(accentDeep, 3),
+                          borderColor: accentDeep,
+                          borderWidth: 1,
                         },
                       ]}
                     >

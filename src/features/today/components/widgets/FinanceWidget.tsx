@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, gradients } from '@/theme/colors';
+import { colors, gradients, radius } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { WidgetCard } from '../WidgetCard';
 import { useFinanceStore } from '@/store/financeStore';
@@ -119,15 +119,15 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.track,
+    height: 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerHigh,
     overflow: 'hidden',
     marginTop: 6,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.pill,
   },
   statsRow: {
     flexDirection: 'row',

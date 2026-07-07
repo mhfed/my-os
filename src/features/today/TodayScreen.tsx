@@ -1,49 +1,54 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, glass } from '@/theme/colors';
+import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { AnimatedCard } from '@/components/motion';
-import { GamePanel } from '@/components/game';
 import { useTasksStore } from '@/store/tasksStore';
 import { useHabitsStore } from '@/store/habitsStore';
 import { useJournalStore } from '@/store/journalStore';
 import { useInboxStore } from '@/store/inboxStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { todayKey } from '@/utils/day';
+import { useGymStore } from '@/store/gymStore';
+import { useFinanceStore } from '@/store/financeStore';
 
 import { TodayAppBar } from './components/TodayAppBar';
-import { StatsBar } from './components/StatsBar';
-import { DualProgress } from './components/DualProgress';
 import { ModuleShortcuts } from './components/ModuleShortcuts';
 import { QuickCapture } from './components/QuickCapture';
+import { DashboardFinance } from './components/DashboardFinance';
+import { DashboardProductivity } from './components/DashboardProductivity';
+import { DashboardHealth } from './components/DashboardHealth';
 
 /**
- * Lumina OS Today (DESIGN_SPEC §5.1) — aggregate surface: greeting + level,
- * stat bar, dual progress (tasks + habits rings), module shortcuts, and a
- * quick-capture inbox bar. Vietnamese-first labels.
+ * Lumina OS Redesigned Home Screen Dashboard (DESIGN_SPEC §5.1)
  *
- * Redesigned with Tasks/Finance glass card aesthetic.
+ * Aggregate dashboard surface featuring highly polished, custom SVG charts
+ * for core features (Finance, Productivity/Tasks/Habits, Health).
+ * Completely flat minimalist aesthetic, answer-first data display, Vietnamese labels.
  */
 export function TodayScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const scrollOffset = useRef(0);
 
-  // All store hooks before any early return (§AGENTS.md AI gotcha #2)
+  // Store ready states for initialization gating
   const tasksReady = useTasksStore((s) => s.ready);
   const habitsReady = useHabitsStore((s) => s.ready);
   const journalReady = useJournalStore((s) => s.ready);
   const inboxReady = useInboxStore((s) => s.ready);
   const settingsReady = useSettingsStore((s) => s.ready);
-  const tasks = useTasksStore((s) => s.tasks);
+  const gymReady = useGymStore((s) => s.ready);
+  const financeReady = useFinanceStore((s) => s.ready);
+
+  // Subscriptions to refresh lists on state change
+  useTasksStore((s) => s.tasks);
   useHabitsStore((s) => s.habits);
   useHabitsStore((s) => s.logs);
-  useJournalStore((s) => s.entries);
-  useInboxStore((s) => s.items);
+  useGymStore((s) => s.history);
+  useFinanceStore((s) => s.transactions);
 
   const [initStarted, setInitStarted] = useState(false);
   useEffect(() => {
@@ -55,33 +60,53 @@ export function TodayScreen() {
         useJournalStore.getState().init(),
         useInboxStore.getState().init(),
         useSettingsStore.getState().init(),
+        useGymStore.getState().init(),
+        useFinanceStore.getState().init(),
       ]);
     }
   }, [initStarted]);
 
-  const allReady = tasksReady && habitsReady && journalReady && inboxReady && settingsReady;
+  const allReady =
+    tasksReady &&
+    habitsReady &&
+    journalReady &&
+    inboxReady &&
+    settingsReady &&
+    gymReady &&
+    financeReady;
 
-  // --- Derived values (via getState() for function selectors) ---
-  const sectionOf = useTasksStore.getState().sectionOf;
-  const todaySection = tasks.filter((t) => sectionOf(t) === 'today');
-  const todayDoneTasks = todaySection.filter((t) => t.done).length;
-  const doneTodayCount = useHabitsStore.getState().doneTodayCount();
-  const todayEntry = useJournalStore.getState().entryFor(todayKey());
-  const journalToday = todayEntry ? 1 : 0;
+  // Derived values via getState() after early return
+  const getTasksTodayData = () => {
+    const tasks = useTasksStore.getState().tasks;
+    const sectionOf = useTasksStore.getState().sectionOf;
+    const todaySection = tasks.filter((t) => sectionOf(t) === 'today');
+    const todayDone = todaySection.filter((t) => t.done).length;
+    return { done: todayDone, total: todaySection.length };
+  };
 
-  const taskRatio = todayDoneTasks / Math.max(1, todaySection.length);
-  const habitRatio = doneTodayCount / Math.max(1, useHabitsStore.getState().views().length);
+  const getHabitsTodayData = () => {
+    const doneToday = useHabitsStore.getState().doneTodayCount();
+    const totalViews = useHabitsStore.getState().views().length;
+    return { done: doneToday, total: totalViews };
+  };
 
-  const score = useMemo(
-    () => Math.round(100 * (0.5 * taskRatio + 0.4 * habitRatio + 0.1 * journalToday)),
-    [taskRatio, habitRatio, journalToday],
-  );
+  const getGreetingData = () => {
+    const { done: taskDone, total: taskTotal } = getTasksTodayData();
+    const { done: habitDone, total: habitTotal } = getHabitsTodayData();
+    const taskRatio = taskTotal > 0 ? taskDone / taskTotal : 0;
+    const habitRatio = habitTotal > 0 ? habitDone / habitTotal : 0;
+    const score = Math.round(100 * (0.6 * taskRatio + 0.4 * habitRatio));
+    const level = Math.max(1, Math.ceil(score / 20));
+    const streak = taskDone >= 1 || habitDone >= 1 ? 1 : 0;
+    return { level, streak };
+  };
 
-  const level = Math.max(1, Math.ceil(score / 20));
-  const streak = todayDoneTasks >= 1 || doneTodayCount >= 1 ? 1 : 0;
-  const openCount = useInboxStore.getState().openCount();
+  const { level, streak } = allReady
+    ? getGreetingData()
+    : { level: 1, streak: 0 };
+
+  const openCount = useInboxStore((s) => s.items.filter((i) => i.status === 'inbox').length);
   const openInbox = useCallback(() => router.push('/inbox'), [router]);
-  const greeting = 'Chào ngày mới';
 
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(() => {
@@ -92,12 +117,15 @@ export function TodayScreen() {
       useJournalStore.getState().init(),
       useInboxStore.getState().init(),
       useSettingsStore.getState().init(),
+      useGymStore.getState().init(),
+      useFinanceStore.getState().init(),
     ]).then(() => setRefreshing(false));
   }, []);
 
   const handleScroll = useCallback((e: any) => {
     scrollOffset.current = e.nativeEvent.contentOffset.y;
   }, []);
+
   const handleContentSizeChange = useCallback(() => {
     if (scrollOffset.current > 0) {
       scrollRef.current?.scrollTo({ y: scrollOffset.current, animated: false });
@@ -118,7 +146,7 @@ export function TodayScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safe}>
         <TodayAppBar
-          greeting={greeting}
+          greeting='Chào ngày mới'
           level={level}
           streak={streak}
           onOpenProfile={() => {}}
@@ -139,28 +167,29 @@ export function TodayScreen() {
             />
           }
         >
-          <StatsBar
-            taskDone={todayDoneTasks}
-            taskTotal={todaySection.length}
-            habitDone={doneTodayCount}
-            habitTotal={useHabitsStore.getState().views().length}
-            inboxOpen={openCount}
-            streak={streak}
-            journalDone={journalToday > 0}
-          />
-
-          <DualProgress />
-
+          {/* Module shortcuts */}
           <ModuleShortcuts />
 
-          <AnimatedCard index={5} style={styles.section}>
-            <GamePanel>
-              <QuickCapture
-                onCapture={(text: string) => useInboxStore.getState().capture(text)}
-                openCount={openCount}
-                onOpenInbox={openInbox}
-              />
-            </GamePanel>
+          {/* Core Feature Dashboard Cards */}
+          <AnimatedCard index={1}>
+            <DashboardFinance />
+          </AnimatedCard>
+
+          <AnimatedCard index={2}>
+            <DashboardProductivity />
+          </AnimatedCard>
+
+          <AnimatedCard index={3}>
+            <DashboardHealth />
+          </AnimatedCard>
+
+          {/* Quick Capture inbox bar */}
+          <AnimatedCard index={4} style={styles.section}>
+            <QuickCapture
+              onCapture={(text: string) => useInboxStore.getState().capture(text)}
+              openCount={openCount}
+              onOpenInbox={openInbox}
+            />
           </AnimatedCard>
         </ScrollView>
       </SafeAreaView>
@@ -178,13 +207,13 @@ const styles = StyleSheet.create({
   },
   safe: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
   content: {
-    paddingTop: spacing.xs,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.tabClear,
   },
   section: {
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
   },
 });

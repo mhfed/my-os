@@ -105,7 +105,7 @@ export function ManageRecurringModal({
               <View style={styles.backBtnSpacer} />
             )}
             <Text style={styles.title}>
-              {mode === 'list' ? 'Recurring' : 'Add Recurring'}
+              {mode === 'list' ? 'Giao dịch định kỳ' : 'Thêm giao dịch định kỳ'}
             </Text>
             <GameIconButton
               icon='close'
@@ -126,7 +126,7 @@ export function ManageRecurringModal({
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyEmoji}>🔁</Text>
                     <Text style={styles.emptyText}>
-                      No recurring transactions configured.
+                      Chưa có giao dịch định kỳ nào được thiết lập.
                     </Text>
                   </View>
                 ) : (
@@ -137,22 +137,18 @@ export function ManageRecurringModal({
                     if (!cat) return null;
                     return (
                       <AnimatedCard key={item.id} index={index}>
+                        {index > 0 && <View style={styles.rowDivider} />}
                         <View style={styles.itemRow}>
-                          <View
-                            style={[
-                              styles.itemIconWrap,
-                              base3D(colors.purpleDeep, 2),
-                            ]}
-                          >
+                          <View style={styles.itemIconWrap}>
                             <View
                               style={[
                                 styles.itemIcon,
-                                { backgroundColor: tint(cat.color, '33') },
+                                { backgroundColor: tint(cat.color, '18'), borderColor: tint(cat.color, '30') },
                               ]}
                             >
                               <Icon
                                 name={cat.icon as any}
-                                size={17}
+                                size={16}
                                 color={cat.color}
                               />
                             </View>
@@ -162,7 +158,7 @@ export function ManageRecurringModal({
                               {item.note || cat.name}
                             </Text>
                             <Text style={styles.itemSub}>
-                              Day {item.dayOfMonth} ·{' '}
+                              Ngày {item.dayOfMonth} hàng tháng ·{' '}
                               {item.type === 'income' ? '+' : '-'}
                               {item.amount.toLocaleString()}đ
                             </Text>
@@ -181,7 +177,7 @@ export function ManageRecurringModal({
                 )}
               </ScrollView>
               <GameButton
-                label='Add recurring'
+                label='Thêm giao dịch định kỳ'
                 variant='purple'
                 size='md'
                 icon='plus'
@@ -198,7 +194,7 @@ export function ManageRecurringModal({
               keyboardShouldPersistTaps='handled'
               contentContainerStyle={styles.formContent}
             >
-              <Text style={styles.fieldLabel}>CATEGORY</Text>
+              <Text style={styles.fieldLabel}>DANH MỤC</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -241,26 +237,26 @@ export function ManageRecurringModal({
                 })}
               </ScrollView>
 
-              <Text style={styles.fieldLabel}>AMOUNT (VND)</Text>
+              <Text style={styles.fieldLabel}>SỐ TIỀN (VNĐ)</Text>
               <TextInput
                 style={styles.input}
                 value={amountStr}
                 onChangeText={setAmountStr}
-                placeholder='e.g. 1000000'
+                placeholder='Ví dụ: 1.000.000'
                 placeholderTextColor={colors.tabInactive}
                 keyboardType='number-pad'
               />
 
-              <Text style={styles.fieldLabel}>NOTE (OPTIONAL)</Text>
+              <Text style={styles.fieldLabel}>GHI CHÚ (TÙY CHỌN)</Text>
               <TextInput
                 style={[styles.input, styles.inputText]}
                 value={note}
                 onChangeText={setNote}
-                placeholder='e.g. Netflix Subscription'
+                placeholder='Ví dụ: Đăng ký Netflix'
                 placeholderTextColor={colors.tabInactive}
               />
 
-              <Text style={styles.fieldLabel}>DAY OF MONTH (1-28)</Text>
+              <Text style={styles.fieldLabel}>NGÀY HÀNG THÁNG (1-28)</Text>
               <TextInput
                 style={[styles.input, styles.inputText]}
                 value={dayOfMonthStr}
@@ -270,7 +266,7 @@ export function ManageRecurringModal({
               />
 
               <GameButton
-                label='Save template'
+                label='Lưu mẫu giao dịch'
                 variant='green'
                 size='md'
                 icon='check-bold'
@@ -348,7 +344,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    gap: 10,
     paddingBottom: 16,
   },
   emptyState: {
@@ -369,36 +364,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.card,
-    padding: 12,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    ...elevation.card,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   itemIconWrap: {
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
   },
   itemIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.sm,
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   itemInfo: {
     flex: 1,
   },
   itemTitle: {
-    fontFamily: fonts.display,
-    fontSize: 15,
+    fontFamily: fonts.displayBold,
+    fontSize: 14,
     color: colors.text,
   },
   itemSub: {
     fontFamily: fonts.monoRegular,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.muted,
     marginTop: 2,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   addButton: {
     marginTop: 12,
@@ -430,8 +426,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   categoryText: {
     fontFamily: fonts.medium,
@@ -439,10 +435,10 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.lg,
     paddingVertical: 13,
     paddingHorizontal: 14,
     fontFamily: fonts.monoSemibold,
