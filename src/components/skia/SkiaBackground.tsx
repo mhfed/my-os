@@ -87,26 +87,26 @@ export function SkiaBackground({
         />
       </Rect>
 
-      {/* Glow orbs — 80px blur, 0.15 opacity, domain-tinted */}
-      <Group opacity={0.15 * o}>
-        <Circle cx={orb1x} cy={orb1y} r={150}>
-          <BlurMask blur={80} style='normal' />
+      {/* Glow orbs — 130px blur, low opacity for premium ambient bloom */}
+      <Group opacity={0.08 * o}>
+        <Circle cx={orb1x} cy={orb1y} r={200}>
+          <BlurMask blur={130} style='normal' />
         </Circle>
-        <Circle cx={orb1x} cy={orb1y} r={150} color={palette.accent} opacity={0.8} />
+        <Circle cx={orb1x} cy={orb1y} r={200} color={palette.accent} opacity={0.8} />
       </Group>
 
-      <Group opacity={0.12 * o}>
-        <Circle cx={orb2x} cy={orb2y} r={120}>
-          <BlurMask blur={80} style='normal' />
+      <Group opacity={0.06 * o}>
+        <Circle cx={orb2x} cy={orb2y} r={160}>
+          <BlurMask blur={130} style='normal' />
         </Circle>
-        <Circle cx={orb2x} cy={orb2y} r={120} color={palette.gradient[1] || palette.accent} opacity={0.7} />
+        <Circle cx={orb2x} cy={orb2y} r={160} color={palette.gradient[1] || palette.accent} opacity={0.7} />
       </Group>
 
-      <Group opacity={0.1 * o}>
-        <Circle cx={orb3x} cy={orb3y} r={100}>
-          <BlurMask blur={80} style='normal' />
+      <Group opacity={0.05 * o}>
+        <Circle cx={orb3x} cy={orb3y} r={130}>
+          <BlurMask blur={130} style='normal' />
         </Circle>
-        <Circle cx={orb3x} cy={orb3y} r={100} color={palette.gradient[0]} opacity={0.7} />
+        <Circle cx={orb3x} cy={orb3y} r={130} color={palette.gradient[0]} opacity={0.7} />
       </Group>
     </Canvas>
   );

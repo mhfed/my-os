@@ -4,5 +4,4 @@
  * surfaces and ambient backgrounds, not inside long lists.
  */
 export { SkiaBackground } from './SkiaBackground';
-export { FarmBackground } from './farm/FarmBackground';
 export { EnergyOrb } from './EnergyOrb';

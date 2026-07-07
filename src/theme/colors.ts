@@ -10,78 +10,78 @@
  */
 export const colors = {
   // ---- surfaces (Material 3 dark scale, exact) ---------------------------
-  appBg: '#131313', // background / surface / surface-dim
-  screenBg: '#131313',
-  card: '#1c1b1b', // surface-container-low
-  cardAlt: '#201f1f', // surface-container
-  track: '#2a2a2a', // surface-container-high
-  border: 'rgba(255,255,255,0.08)', // glass-card border
+  appBg: '#090A0F', // premium deep dark cyber background
+  screenBg: '#090A0F',
+  card: '#12141C', // surface-container-low, sleeker dark color
+  cardAlt: '#181A24', // surface-container
+  track: '#1F2230', // surface-container-high
+  border: 'rgba(255,255,255,0.05)', // premium thin glass-card border
 
   // ---- text ---------------------------------------------------------------
-  text: '#e5e2e1', // on-surface
+  text: '#E2E8F0', // slate-200
   textOnDark: '#ffffff',
-  muted: '#b9cacb', // on-surface-variant
-  tabInactive: '#b9cacb', // on-surface-variant
+  muted: '#94A3B8', // slate-400
+  tabInactive: '#64748B', // slate-500
 
-  // ---- domain accents (mapped from spec palette) -------------------------
-  purple: '#bb86fc', // custom accent purple
-  purpleDeep: '#9c5fe8',
-  teal: '#00dbe9', // primary-fixed-dim / surface-tint
-  tealDeep: '#00b8d4',
-  green: '#2ff801', // secondary-container (Neon Green)
-  greenDeep: '#00c800',
-  orange: '#ff8c00',
-  orangeDeep: '#e07000',
-  yellow: '#FFD700',
-  yellowDeep: '#e0b800',
-  red: '#ff1744',
-  redDeep: '#d50000',
-  blue: '#00f0ff', // primary-container (Electric Blue)
-  blueDeep: '#00bcd4',
-  pink: '#ffccd6', // tertiary-container (Hot Pink)
-  pinkDeep: '#ff4081',
-  gold: '#FFD700', // Gold accent
-  goldDeep: '#ffab00',
-  amber: '#ff8f00',
-  copper: '#d84315',
-  goldSoft: '#fff8e1',
+  // ---- domain accents (refined premium neon finance palette) --------------
+  purple: '#8B5CF6', // Amethyst Purple
+  purpleDeep: '#7C3AED',
+  teal: '#06B6D4', // Cyber Cyan/Teal
+  tealDeep: '#0891B2',
+  green: '#10B981', // Emerald Green
+  greenDeep: '#059669',
+  orange: '#F59E0B', // Amber Orange
+  orangeDeep: '#D97706',
+  yellow: '#FBBF24', // Yellow gold
+  yellowDeep: '#D97706',
+  red: '#EF4444', // Coral Red
+  redDeep: '#DC2626',
+  blue: '#0EA5E9', // Premium Electric Blue
+  blueDeep: '#0284C7',
+  pink: '#EC4899', // Rose Pink
+  pinkDeep: '#DB2777',
+  gold: '#FBBF24', // Premium Gold
+  goldDeep: '#D97706',
+  amber: '#F59E0B',
+  copper: '#C2410C',
+  goldSoft: '#FEF3C7',
 
   white: '#ffffff',
-  black: '#0e0e0e', // surface-container-lowest
+  black: '#07080D',
 
   // ---- exact Material 3 tokens (for direct reference) --------------------
-  primary: '#dbfcff',
-  onPrimary: '#00363a',
-  primaryContainer: '#00f0ff',
-  onPrimaryContainer: '#006970',
-  secondary: '#d7ffc5',
-  onSecondary: '#053900',
-  secondaryContainer: '#2ff801',
-  onSecondaryContainer: '#0f6d00',
-  tertiary: '#fff3f4',
-  onTertiary: '#66002c',
-  tertiaryContainer: '#ffccd6',
-  onTertiaryContainer: '#bb0058',
-  error: '#ffb4ab',
-  onError: '#690005',
-  errorContainer: '#93000a',
-  onErrorContainer: '#ffdad6',
-  onSurface: '#e5e2e1',
-  onSurfaceVariant: '#b9cacb',
-  outline: '#849495',
-  outlineVariant: '#3b494b',
-  surfaceTint: '#00dbe9',
-  primaryFixed: '#7df4ff',
-  primaryFixedDim: '#00dbe9',
-  secondaryFixed: '#79ff5b',
-  secondaryFixedDim: '#2ae500',
-  tertiaryFixed: '#ffd9e0',
-  tertiaryFixedDim: '#ffb1c3',
-  surfaceContainerLowest: '#0e0e0e',
-  surfaceContainerLow: '#1c1b1b',
-  surfaceContainer: '#201f1f',
-  surfaceContainerHigh: '#2a2a2a',
-  surfaceContainerHighest: '#353534',
+  primary: '#E0F2FE',
+  onPrimary: '#0369A1',
+  primaryContainer: '#0EA5E9',
+  onPrimaryContainer: '#075985',
+  secondary: '#D1FAE5',
+  onSecondary: '#065F46',
+  secondaryContainer: '#10B981',
+  onSecondaryContainer: '#047857',
+  tertiary: '#FCE7F3',
+  onTertiary: '#9D174D',
+  tertiaryContainer: '#EC4899',
+  onTertiaryContainer: '#BE185D',
+  error: '#FEE2E2',
+  onError: '#991B1B',
+  errorContainer: '#EF4444',
+  onErrorContainer: '#B91C1C',
+  onSurface: '#E2E8F0',
+  onSurfaceVariant: '#94A3B8',
+  outline: '#475569',
+  outlineVariant: '#334155',
+  surfaceTint: '#06B6D4',
+  primaryFixed: '#BAE6FD',
+  primaryFixedDim: '#38BDF8',
+  secondaryFixed: '#A7F3D0',
+  secondaryFixedDim: '#34D399',
+  tertiaryFixed: '#FBCFE8',
+  tertiaryFixedDim: '#F472B6',
+  surfaceContainerLowest: '#07080D',
+  surfaceContainerLow: '#12141C',
+  surfaceContainer: '#181A24',
+  surfaceContainerHigh: '#1F2230',
+  surfaceContainerHighest: '#2A2E3D',
 } as const;
 
 /** Add an alpha suffix to a hex (e.g. tint('#00f0ff') -> '#00f0ff1A'). */
@@ -94,37 +94,37 @@ export const tint = (hex: string, alpha = '1A') => `${hex}${alpha}`;
  *   border: 1px solid rgba(255,255,255,0.08)
  */
 export const glass = {
-  fill: 'rgba(26,26,26,0.6)',
-  fillStrong: 'rgba(26,26,26,0.8)',
-  fillSoft: 'rgba(26,26,26,0.4)',
-  rim: 'rgba(255,255,255,0.08)',
-  rimSoft: 'rgba(255,255,255,0.05)',
-  dark: 'rgba(255,255,255,0.08)', // dark glass for pills on dark bg
-  darkRim: 'rgba(255,255,255,0.12)',
+  fill: 'rgba(18,20,28,0.7)', // sleeker and darker for premium feel
+  fillStrong: 'rgba(12,13,18,0.85)',
+  fillSoft: 'rgba(24,26,36,0.5)',
+  rim: 'rgba(255,255,255,0.05)',
+  rimSoft: 'rgba(255,255,255,0.03)',
+  dark: 'rgba(0,0,0,0.2)', // dark glass for pills on dark bg
+  darkRim: 'rgba(255,255,255,0.08)',
 } as const;
 
 /**
  * Gradient stops. Glow/bloom effects use 15-20px blur of accent colors.
  */
 export const gradients = {
-  backdrop: ['#1A1A1A', '#131313'] as const,
-  warm: ['#242424', '#1A1A1A'] as const,
-  green: ['#2ff801', '#00c800'] as const,
-  purple: ['#bb86fc', '#9c5fe8'] as const,
-  gold: ['#FFD700', '#ffab00'] as const,
-  gem: ['#00dbe9', '#00b8d4'] as const,
-  red: ['#ff1744', '#d50000'] as const,
-  blue: ['#00f0ff', '#00bcd4'] as const,
-  pink: ['#ffccd6', '#ff4081'] as const,
-  gloss: ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.0)'] as const,
+  backdrop: ['#0F111A', '#07080D'] as const,
+  warm: ['#181922', '#0F111A'] as const,
+  green: ['#34D399', '#10B981'] as const,
+  purple: ['#C084FC', '#8B5CF6'] as const,
+  gold: ['#FCD34D', '#F59E0B'] as const,
+  gem: ['#22D3EE', '#06B6D4'] as const,
+  red: ['#F87171', '#EF4444'] as const,
+  blue: ['#38BDF8', '#0EA5E9'] as const,
+  pink: ['#F472B6', '#EC4899'] as const,
+  gloss: ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.0)'] as const,
   glassPanel: [
-    'rgba(255,255,255,0.03)',
+    'rgba(255,255,255,0.02)',
     'rgba(255,255,255,0.01)',
     'rgba(255,255,255,0.0)',
   ] as const,
-  spend: ['#00dbe9', '#2ff801'] as const,
-  /** Power Orb gradient: Electric Blue → Neon Green */
-  powerOrb: ['#00f0ff', '#2ae500'] as const,
+  spend: ['#10B981', '#06B6D4'] as const,
+  /** Power Orb gradient: Cyber Blue → Emerald Green */
+  powerOrb: ['#0EA5E9', '#10B981'] as const,
 };
 
 export type AppColors = typeof colors;
@@ -138,71 +138,71 @@ export interface DomainPalette {
 
 export const domains = {
   today: {
-    accent: '#00dbe9', // primary-fixed-dim (teal)
-    deep: '#00b8d4',
-    soft: tint('#00dbe9'),
+    accent: '#06B6D4', // primary-fixed-dim (teal)
+    deep: '#0891B2',
+    soft: tint('#06B6D4'),
     gradient: gradients.gem,
   },
   tasks: {
-    accent: '#00f0ff', // primary-container (Electric Blue)
-    deep: '#00bcd4',
-    soft: tint('#00f0ff'),
+    accent: '#0EA5E9', // primary-container (Electric Blue)
+    deep: '#0284C7',
+    soft: tint('#0EA5E9'),
     gradient: gradients.blue,
   },
   finance: {
-    accent: '#FFD700', // Gold
-    deep: '#ffab00',
-    soft: tint('#FFD700'),
+    accent: '#FBBF24', // Gold
+    deep: '#D97706',
+    soft: tint('#FBBF24'),
     gradient: gradients.gold,
   },
   health: {
-    accent: '#ffccd6', // tertiary-container (Hot Pink)
-    deep: '#ff4081',
-    soft: tint('#ffccd6'),
+    accent: '#EC4899', // tertiary-container (Hot Pink)
+    deep: '#DB2777',
+    soft: tint('#EC4899'),
     gradient: gradients.pink,
   },
   journal: {
-    accent: '#ffccd6',
-    deep: '#ff4081',
-    soft: tint('#ffccd6'),
+    accent: '#EC4899',
+    deep: '#DB2777',
+    soft: tint('#EC4899'),
     gradient: gradients.pink,
   },
   habits: {
-    accent: '#2ff801', // secondary-container (Neon Green)
-    deep: '#00c800',
-    soft: tint('#2ff801'),
+    accent: '#10B981', // secondary-container (Emerald Green)
+    deep: '#059669',
+    soft: tint('#10B981'),
     gradient: gradients.green,
   },
   goals: {
-    accent: '#FFD700', // Gold
-    deep: '#ffab00',
-    soft: tint('#FFD700'),
+    accent: '#FBBF24', // Gold
+    deep: '#D97706',
+    soft: tint('#FBBF24'),
     gradient: gradients.gold,
   },
   notes: {
-    accent: '#FFD700',
-    deep: '#e0b800',
-    soft: tint('#FFD700'),
+    accent: '#FBBF24',
+    deep: '#D97706',
+    soft: tint('#FBBF24'),
     gradient: gradients.gold,
   },
   inbox: {
-    accent: '#bb86fc', // purple
-    deep: '#9c5fe8',
-    soft: tint('#bb86fc'),
+    accent: '#8B5CF6', // purple
+    deep: '#7C3AED',
+    soft: tint('#8B5CF6'),
     gradient: gradients.purple,
   },
 } as const satisfies Record<string, DomainPalette>;
 
 export type DomainKey = keyof typeof domains;
 
-/** Neon glow drop-shadow — 15-20px blur of accent color at 30% opacity */
-export const glow = (hex: string, opacity = 0.3, radius = 18) =>
+/** Neon glow drop-shadow — 24px blur of accent color at 15% opacity (softer ambient look) */
+export const glow = (hex: string, opacity = 0.15, radius = 24) =>
   ({
     shadowColor: hex,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: opacity,
     shadowRadius: radius,
-    elevation: Math.round(radius / 2),
+    elevation: Math.round(radius / 3),
   }) as const;
 
 /** 3D base shadow for pressable elements */
@@ -216,30 +216,30 @@ export const base3D = (deepHex: string, height = 5) =>
   }) as const;
 
 const ACCENT_FACES: readonly string[] = [
-  '#bb86fc', '#FFD700', '#00dbe9', '#2ff801', '#ff8c00',
-  '#FFD700', '#ff1744', '#00f0ff', '#ffccd6',
+  '#8B5CF6', '#FBBF24', '#06B6D4', '#10B981', '#F59E0B',
+  '#EF4444', '#0EA5E9', '#EC4899',
 ];
 
 const ACCENT_DEEP: Record<string, string> = {
-  '#bb86fc': '#9c5fe8',
-  '#FFD700': '#ffab00',
-  '#00dbe9': '#00b8d4',
-  '#2ff801': '#00c800',
-  '#ff8c00': '#e07000',
-  '#ff1744': '#d50000',
-  '#00f0ff': '#00bcd4',
-  '#ffccd6': '#ff4081',
+  '#8B5CF6': '#7C3AED',
+  '#FBBF24': '#D97706',
+  '#06B6D4': '#0891B2',
+  '#10B981': '#059669',
+  '#F59E0B': '#D97706',
+  '#EF4444': '#DC2626',
+  '#0EA5E9': '#0284C7',
+  '#EC4899': '#DB2777',
 };
 
 const ACCENT_GRADIENT: Record<string, readonly [string, string]> = {
-  '#bb86fc': gradients.purple,
-  '#FFD700': gradients.gold,
-  '#00dbe9': gradients.gem,
-  '#2ff801': gradients.green,
-  '#ff8c00': gradients.gold,
-  '#ff1744': gradients.red,
-  '#00f0ff': gradients.blue,
-  '#ffccd6': gradients.pink,
+  '#8B5CF6': gradients.purple,
+  '#FBBF24': gradients.gold,
+  '#06B6D4': gradients.gem,
+  '#10B981': gradients.green,
+  '#F59E0B': gradients.gold,
+  '#EF4444': gradients.red,
+  '#0EA5E9': gradients.blue,
+  '#EC4899': gradients.pink,
 };
 
 function hexToRgb(hex: string): [number, number, number] | null {
