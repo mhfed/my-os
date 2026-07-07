@@ -22,28 +22,46 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
   return (
     <View style={styles.card}>
       {/* Decorative ambient glowing orbs */}
-      <View style={styles.glowBlobLeft} pointerEvents="none" />
-      <View style={styles.glowBlobRight} pointerEvents="none" />
+      <View style={styles.glowBlobLeft} pointerEvents='none' />
+      <View style={styles.glowBlobRight} pointerEvents='none' />
 
       <View style={styles.content}>
         <View style={styles.headerRow}>
           <Text style={styles.label}>Tổng tài sản</Text>
           <View style={styles.chipBrand}>
-            <Icon name="crown" size={11} color={colors.gold} />
+            <Icon name='crown' size={11} color={colors.gold} />
             <Text style={styles.chipBrandText}>PREMIUM</Text>
           </View>
         </View>
+        <Text
+          style={styles.cardholder}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}
+        >
+          NGUYEN MINH HIEU
+        </Text>
         <Text style={styles.balance}>{formatVND(totalBalance)}</Text>
-        <Text style={styles.cardholder}>NGUYEN MINH HIEU</Text>
 
         <View style={styles.subRow}>
           {/* Income block (No label, just green arrow + amount) */}
           <View style={[styles.subCard, { borderLeftColor: colors.green }]}>
             <View style={styles.subHeader}>
-              <View style={[styles.iconWrap, { backgroundColor: tint(colors.green, '1A'), borderColor: colors.green }]}>
-                <Icon name="arrow-bottom-left" size={13} color={colors.green} />
+              <View
+                style={[
+                  styles.iconWrap,
+                  {
+                    backgroundColor: tint(colors.green, '1A'),
+                    borderColor: colors.green,
+                  },
+                ]}
+              >
+                <Icon name='arrow-bottom-left' size={13} color={colors.green} />
               </View>
-              <Text style={[styles.subAmount, { color: colors.green }]} numberOfLines={1}>
+              <Text
+                style={[styles.subAmount, { color: colors.green }]}
+                numberOfLines={1}
+              >
                 +{formatCompactVND(income)}
               </Text>
             </View>
@@ -52,10 +70,21 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
           {/* Expense block (No label, just red arrow + amount) */}
           <View style={[styles.subCard, { borderLeftColor: colors.red }]}>
             <View style={styles.subHeader}>
-              <View style={[styles.iconWrap, { backgroundColor: tint(colors.red, '1A'), borderColor: colors.red }]}>
-                <Icon name="arrow-top-right" size={13} color={colors.red} />
+              <View
+                style={[
+                  styles.iconWrap,
+                  {
+                    backgroundColor: tint(colors.red, '1A'),
+                    borderColor: colors.red,
+                  },
+                ]}
+              >
+                <Icon name='arrow-top-right' size={13} color={colors.red} />
               </View>
-              <Text style={[styles.subAmount, { color: colors.text }]} numberOfLines={1}>
+              <Text
+                style={[styles.subAmount, { color: colors.text }]}
+                numberOfLines={1}
+              >
                 -{formatCompactVND(spent)}
               </Text>
             </View>
@@ -68,7 +97,7 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xxl,
+    borderRadius: radius.xl,
     backgroundColor: 'rgba(18, 20, 28, 0.7)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -130,18 +159,23 @@ const styles = StyleSheet.create({
   },
   balance: {
     fontFamily: fonts.displayBold,
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 18,
+    lineHeight: 24,
     color: colors.text,
     letterSpacing: -0.5,
+    opacity: 0.85,
   },
   cardholder: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 14,
+    fontFamily: fonts.bold,
+    fontSize: 22,
+    lineHeight: 28,
     color: colors.text,
     textTransform: 'uppercase',
     letterSpacing: 2,
-    marginTop: 8,
+    marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 3,
   },
   subRow: {
     flexDirection: 'row',

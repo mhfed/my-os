@@ -291,17 +291,7 @@ export function FinanceScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ---- Header: Title + Subtitle ---- */}
-        <AnimatedCard index={0} style={styles.headerWrap}>
-          <GamePanel style={styles.headerPanel}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Tài chính</Text>
-              <Text style={styles.subtitle}>
-                Thu {formatCompactVND(overview.income)} · Chi {formatCompactVND(overview.spent)} · Tiết kiệm {formatCompactVND(saved)}
-              </Text>
-            </View>
-          </GamePanel>
-        </AnimatedCard>
+
 
         {/* ---- Hero Balance ---- */}
         <View style={styles.heroWrap}>
@@ -818,6 +808,7 @@ const styles = StyleSheet.create({
 
   // ---- Hero wrapper ----
   heroWrap: {
+    paddingTop: spacing.md,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
   },
