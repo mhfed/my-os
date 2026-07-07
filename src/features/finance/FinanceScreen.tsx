@@ -19,7 +19,7 @@ import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useFinanceStore } from '@/store/financeStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
-import type { MonthlyOverview, WeeklyOverview } from '@/types/finance';
+import type { MonthlyOverview, WeeklyOverview, TransactionView } from '@/types/finance';
 import { formatCompactVND, formatVND } from '@/utils/currency';
 import { formatTxnDate, currentWeekKey, getWeekKey } from '@/utils/date';
 
@@ -29,6 +29,8 @@ import { FinanceHero } from './components/FinanceHero';
 import { TransactionHistorySheet } from './components/TransactionHistorySheet';
 import { QuickPettyCashModal } from './components/QuickPettyCashModal';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
+import { NetWorthWidget } from './components/NetWorthWidget';
+import { EditTransactionSheet } from './components/EditTransactionSheet';
 
 const RECENT_LIMIT = 5;
 const FAB_GRADIENT = [colors.gold, colors.goldDeep] as const;
@@ -134,14 +136,17 @@ export function FinanceScreen() {
   // Modals
   const [sheetOpen, setSheetOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [debtOpen, setDebtOpen] = useState(false);
   const [pettyCashOpen, setPettyCashOpen] = useState(false);
   const [categoryBreakdownOpen, setCategoryBreakdownOpen] = useState(false);
   const [period, setPeriod] = useState<'monthly' | 'weekly'>('monthly');
+  const [editingTxn, setEditingTxn] = useState<TransactionView | null>(null);
 
   const getWeeklyOverview = useFinanceStore((s) => s.getWeeklyOverview);
   const getWeeklyCategorySpend = useFinanceStore((s) => s.getWeeklyCategorySpend);
   const getWeeklyTrends = useFinanceStore((s) => s.getWeeklyTrends);
+  const getDebtSummary = useDebtStore((s) => s.getSummary);
 
   if (!ready) {
     return <View style={styles.screen} />;
@@ -152,6 +157,7 @@ export function FinanceScreen() {
   const overview = period === 'monthly' ? getOverview() : getWeeklyOverview(currentWeek);
   const categoriesSpend = period === 'monthly' ? getCategorySpend() : getWeeklyCategorySpend(currentWeek);
   const trends6 = period === 'monthly' ? getMonthlyTrends(6) : getWeeklyTrends(6);
+  const { overdueCount, upcomingCount } = getDebtSummary();
 
   // Tabbed Recent Transactions
   const [recentTab, setRecentTab] = useState<'today' | 'week' | 'month'>('today');
@@ -299,6 +305,18 @@ export function FinanceScreen() {
             totalBalance={totalBalance}
             income={overview.income}
             spent={overview.spent}
+            onPressBalance={() => {
+              setHistoryFilter('all');
+              setHistoryOpen(true);
+            }}
+            onPressIncome={() => {
+              setHistoryFilter('income');
+              setHistoryOpen(true);
+            }}
+            onPressExpense={() => {
+              setHistoryFilter('expense');
+              setHistoryOpen(true);
+            }}
           />
         </View>
 
@@ -478,6 +496,11 @@ export function FinanceScreen() {
           </AnimatedCard>
         </View>
 
+        {/* ---- Net Worth Widget ---- */}
+        <View style={styles.section}>
+          <NetWorthWidget />
+        </View>
+
         {/* ---- Savings Goals ---- */}
         {activeGoals.length > 0 && (
           <View style={styles.section}>
@@ -533,6 +556,32 @@ export function FinanceScreen() {
         {/* ---- Debt Ledger (Overview) ---- */}
         <View style={styles.section}>
           <SectionBadge label="Sổ nợ" color={colors.purple} />
+
+          {/* Debt warning alert strip */}
+          {(overdueCount > 0 || upcomingCount > 0) && (
+            <View
+              style={[
+                styles.debtAlertRow,
+                {
+                  backgroundColor: overdueCount > 0
+                    ? tint(colors.red, '1F')
+                    : tint(colors.orange, '1F'),
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.debtAlertText,
+                  { color: overdueCount > 0 ? colors.redDeep : colors.orangeDeep },
+                ]}
+              >
+                {overdueCount > 0
+                  ? `● ${overdueCount} khoản quá hạn`
+                  : `⚠️ ${upcomingCount} khoản đến hạn trong 7 ngày`}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.debtGrid}>
             <PressableScale
               style={[styles.debtCard, styles.debtCardLend]}
@@ -682,29 +731,34 @@ export function FinanceScreen() {
                 const amountPrefix = isIncome ? '+ ' : '- ';
                 return (
                   <AnimatedCard key={txn.id} index={i + 5}>
-                    <View style={styles.txnRow}>
-                      <View
-                        style={[
-                          styles.txnIconWrap,
-                          { backgroundColor: tint(txn.color, '1A') },
-                        ]}
-                      >
-                        <Icon
-                          name={txn.icon as any}
-                          size={20}
-                          color={txn.color}
-                        />
-                      </View>
-                      <View style={styles.txnMid}>
-                        <Text style={styles.txnName} numberOfLines={1}>
-                          {txn.name}
+                    <PressableScale
+                      onPress={() => setEditingTxn(txn)}
+                      haptic='light'
+                    >
+                      <View style={styles.txnRow}>
+                        <View
+                          style={[
+                            styles.txnIconWrap,
+                            { backgroundColor: tint(txn.color, '1A') },
+                          ]}
+                        >
+                          <Icon
+                            name={txn.icon as any}
+                            size={20}
+                            color={txn.color}
+                          />
+                        </View>
+                        <View style={styles.txnMid}>
+                          <Text style={styles.txnName} numberOfLines={1}>
+                            {txn.name}
+                          </Text>
+                          <Text style={styles.txnDate}>{formatTxnDate(txn.date)}</Text>
+                        </View>
+                        <Text style={[styles.txnAmount, { color: amountColor }]}>
+                          {amountPrefix}{formatVND(txn.amount)}
                         </Text>
-                        <Text style={styles.txnDate}>{formatTxnDate(txn.date)}</Text>
                       </View>
-                      <Text style={[styles.txnAmount, { color: amountColor }]}>
-                        {amountPrefix}{formatVND(txn.amount)}
-                      </Text>
-                    </View>
+                    </PressableScale>
                   </AnimatedCard>
                 );
               })}
@@ -737,7 +791,11 @@ export function FinanceScreen() {
       />
       <TransactionHistorySheet
         visible={historyOpen}
-        onClose={() => setHistoryOpen(false)}
+        onClose={() => {
+          setHistoryOpen(false);
+          setHistoryFilter('all');
+        }}
+        initialFilter={historyFilter}
       />
       <DebtLedgerSheet
         visible={debtOpen}
@@ -758,6 +816,12 @@ export function FinanceScreen() {
         period={period}
         periodKey={period === 'monthly' ? activeMonth : currentWeek}
       />
+      {editingTxn && (
+        <EditTransactionSheet
+          txn={editingTxn}
+          onClose={() => setEditingTxn(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1248,6 +1312,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
     textAlign: 'center',
+  },
+
+  debtAlertRow: {
+    borderRadius: radius.md,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  debtAlertText: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
   },
 
   // --- FAB ---

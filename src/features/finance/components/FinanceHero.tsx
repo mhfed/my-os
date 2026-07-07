@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { PressableScale } from '@/components/motion';
 import { formatVND, formatCompactVND } from '@/utils/currency';
 
 interface FinanceHeroProps {
@@ -12,13 +13,19 @@ interface FinanceHeroProps {
   income: number;
   /** Spent for this period */
   spent: number;
+  /** Called when user taps the balance area */
+  onPressBalance?: () => void;
+  /** Called when user taps the income sub-card */
+  onPressIncome?: () => void;
+  /** Called when user taps the expense sub-card */
+  onPressExpense?: () => void;
 }
 
 /**
  * Hero balance card — premium card with total balance + income/spent mini cards.
  * Formatted with flat desaturated neon styling.
  */
-export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
+export function FinanceHero({ totalBalance, income, spent, onPressBalance, onPressIncome, onPressExpense }: FinanceHeroProps) {
   return (
     <View style={styles.card}>
       {/* Decorative ambient glowing orbs */}
@@ -26,26 +33,28 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
       <View style={styles.glowBlobRight} pointerEvents='none' />
 
       <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <Text style={styles.label}>Tổng tài sản</Text>
-          <View style={styles.chipBrand}>
-            <Icon name='crown' size={11} color={colors.gold} />
-            <Text style={styles.chipBrandText}>PREMIUM</Text>
+        <PressableScale onPress={onPressBalance} haptic='light' disabled={!onPressBalance}>
+          <View style={styles.headerRow}>
+            <Text style={styles.label}>Tổng tài sản</Text>
+            <View style={styles.chipBrand}>
+              <Icon name='crown' size={11} color={colors.gold} />
+              <Text style={styles.chipBrandText}>PREMIUM</Text>
+            </View>
           </View>
-        </View>
-        <Text
-          style={styles.cardholder}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.5}
-        >
-          NGUYEN MINH HIEU
-        </Text>
-        <Text style={styles.balance}>{formatVND(totalBalance)}</Text>
+          <Text
+            style={styles.cardholder}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
+            NGUYEN MINH HIEU
+          </Text>
+          <Text style={styles.balance}>{formatVND(totalBalance)}</Text>
+        </PressableScale>
 
         <View style={styles.subRow}>
           {/* Income block (No label, just green arrow + amount) */}
-          <View style={[styles.subCard, { borderLeftColor: colors.green }]}>
+          <PressableScale onPress={onPressIncome} haptic='light' disabled={!onPressIncome} style={[styles.subCard, { borderLeftColor: colors.green }]}>
             <View style={styles.subHeader}>
               <View
                 style={[
@@ -65,10 +74,10 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
                 +{formatCompactVND(income)}
               </Text>
             </View>
-          </View>
+          </PressableScale>
 
           {/* Expense block (No label, just red arrow + amount) */}
-          <View style={[styles.subCard, { borderLeftColor: colors.red }]}>
+          <PressableScale onPress={onPressExpense} haptic='light' disabled={!onPressExpense} style={[styles.subCard, { borderLeftColor: colors.red }]}>
             <View style={styles.subHeader}>
               <View
                 style={[
@@ -88,7 +97,7 @@ export function FinanceHero({ totalBalance, income, spent }: FinanceHeroProps) {
                 -{formatCompactVND(spent)}
               </Text>
             </View>
-          </View>
+          </PressableScale>
         </View>
       </View>
     </View>

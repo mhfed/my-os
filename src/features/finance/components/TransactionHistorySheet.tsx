@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -31,6 +31,8 @@ import { TransactionRow } from './TransactionRow';
 interface TransactionHistorySheetProps {
   visible: boolean;
   onClose: () => void;
+  /** Optional initial filter type — pre-selects 'income' or 'expense' tab on open. */
+  initialFilter?: 'all' | TxnType;
 }
 
 interface DayGroup {
@@ -73,14 +75,28 @@ function groupTransactionsByDay(txns: TransactionView[]): DayGroup[] {
 export function TransactionHistorySheet({
   visible,
   onClose,
+  initialFilter,
 }: TransactionHistorySheetProps) {
   const insets = useSafeAreaInsets();
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
   const allTransactions = useFinanceStore((s) => s.transactions);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<'all' | TxnType>('all');
+  const [filterType, setFilterType] = useState<'all' | TxnType>(initialFilter ?? 'all');
   const [editingTxn, setEditingTxn] = useState<TransactionView | null>(null);
+
+  // Sync filter when initialFilter changes (e.g. opened from hero card)
+  // Reset filter when sheet is closed
+  const prevVisible = useRef(visible);
+  if (visible && !prevVisible.current && initialFilter) {
+    // Sheet just opened — apply the initial filter
+    if (filterType !== initialFilter) setFilterType(initialFilter);
+  }
+  if (!visible && prevVisible.current) {
+    // Sheet just closed — reset filter
+    if (filterType !== 'all') setFilterType('all');
+  }
+  prevVisible.current = visible;
 
   const allTxns = useMemo(() => getTransactionViews(9999), [allTransactions, getTransactionViews]);
 
