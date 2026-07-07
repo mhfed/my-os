@@ -79,6 +79,16 @@ export interface MonthlyOverview {
   remaining: number; // budget - spent (can be negative)
 }
 
+export interface WeeklyOverview {
+  week: string; // "YYYY-Wxx"
+  spent: number;
+  income: number;
+  saved: number;
+  budget: number;
+  budgetUsed: number;
+  remaining: number;
+}
+
 /** One slice in the "By category" donut + legend. */
 export interface CategorySpend {
   categoryId: string;
@@ -91,6 +101,17 @@ export interface CategorySpend {
   /** Budget cap in VND for the month; 0 if no budget set. */
   budget: number;
   /** 0–∞ fraction of budget used; >1 means over budget; 0 if no budget. */
+  budgetUsed: number;
+}
+
+export interface WeeklyCategorySpend {
+  categoryId: string;
+  name: string;
+  color: string;
+  icon: string;
+  amount: number;
+  pct: number;
+  budget: number;
   budgetUsed: number;
 }
 
@@ -153,4 +174,7 @@ export interface FinanceState {
   getCategorySpend: () => CategorySpend[];
   getTransactionViews: (limit?: number) => TransactionView[];
   getMonthlyTrends: (numMonths: number) => MonthlyOverview[];
+  getWeeklyOverview: (weekKey: string) => WeeklyOverview;
+  getWeeklyCategorySpend: (weekKey: string) => WeeklyCategorySpend[];
+  getWeeklyTrends: (numWeeks: number) => WeeklyOverview[];
 }

@@ -9,6 +9,7 @@ import {
 import type {
   DebtEntry,
   DebtPayment,
+  DebtNetting,
   DebtState,
   DebtStatus,
   DebtSummary,
@@ -99,6 +100,18 @@ interface DebtPaymentRow {
   amount: number;
   date: number;
   note: string | null;
+  payment_method: string | null;
+  linked_netting_id: string | null;
+  created_at: number;
+}
+
+interface DebtNettingRow {
+  id: string;
+  user_id: string | null;
+  party: string;
+  amount: number;
+  date: number;
+  note: string | null;
   created_at: number;
 }
 
@@ -126,6 +139,20 @@ function mapPayment(r: DebtPaymentRow): DebtPayment {
   return {
     id: r.id,
     debtId: r.debt_id,
+    amount: r.amount,
+    date: r.date,
+    note: r.note ?? undefined,
+    paymentMethod: (r.payment_method as DebtPayment['paymentMethod']) ?? undefined,
+    linkedNettingId: r.linked_netting_id ?? undefined,
+    createdAt: r.created_at,
+  };
+}
+
+function mapNetting(r: DebtNettingRow): DebtNetting {
+  return {
+    id: r.id,
+    userId: r.user_id ?? undefined,
+    party: r.party,
     amount: r.amount,
     date: r.date,
     note: r.note ?? undefined,
@@ -184,20 +211,25 @@ function cancelDebtNotifications(id: string) {
 export const useDebtStore = create<DebtState>()((set, get) => ({
   entries: [],
   payments: [],
+  nettings: [],
   ready: false,
 
   init: async () => {
-    const [entries, payments] = await Promise.all([
+    const [entries, payments, nettings] = await Promise.all([
       allRows<DebtEntryRow>(
         'SELECT * FROM debt_entries ORDER BY created_at DESC;',
       ),
       allRows<DebtPaymentRow>(
         'SELECT * FROM debt_payments ORDER BY date DESC;',
       ),
+      allRows<DebtNettingRow>(
+        'SELECT * FROM debt_nettings ORDER BY date DESC;',
+      ),
     ]);
     set({
       entries: entries.map(mapEntry),
       payments: payments.map(mapPayment),
+      nettings: nettings.map(mapNetting),
       ready: true,
     });
   },
@@ -267,24 +299,28 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     cancelDebtNotifications(id);
   },
 
-  addPayment: async (debtId, amount, date, note) => {
+  addPayment: async (debtId, amount, date, note, paymentMethod = 'cash', linkedNettingId) => {
     const payment: DebtPayment = {
       id: newId(),
       debtId,
       amount,
       date,
       note,
+      paymentMethod,
+      linkedNettingId,
       createdAt: Date.now(),
     };
     await runSql(
-      `INSERT INTO debt_payments (id, debt_id, amount, date, note, created_at)
-       VALUES (?, ?, ?, ?, ?, ?);`,
+      `INSERT INTO debt_payments (id, debt_id, amount, date, note, payment_method, linked_netting_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         payment.id,
         payment.debtId,
         payment.amount,
         payment.date,
         payment.note ?? null,
+        paymentMethod,
+        payment.linkedNettingId ?? null,
         payment.createdAt,
       ],
     );
@@ -376,6 +412,39 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
       ),
     }));
     cancelDebtNotifications(id);
+  },
+
+  addNetting: async (party, amount, borrowId, lendId, note) => {
+    const netting: DebtNetting = {
+      id: newId(),
+      party,
+      amount,
+      date: Date.now(),
+      note: note || `Cấn trừ nợ tự động với ${party}`,
+      createdAt: Date.now(),
+    };
+
+    await runSql(
+      `INSERT INTO debt_nettings (id, user_id, party, amount, date, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?);`,
+      [
+        netting.id,
+        null,
+        netting.party,
+        netting.amount,
+        netting.date,
+        netting.note ?? null,
+        netting.createdAt,
+      ],
+    );
+
+    // Call addPayment for both debt entries
+    await get().addPayment(borrowId, amount, netting.date, netting.note, 'netting', netting.id);
+    await get().addPayment(lendId, amount, netting.date, netting.note, 'netting', netting.id);
+
+    set((s) => ({
+      nettings: [netting, ...s.nettings],
+    }));
   },
 
   getDebtView: (id) => {

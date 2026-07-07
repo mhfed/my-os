@@ -10,10 +10,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, glass, radius } from '@/theme/colors';
+import { colors, glass, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
@@ -23,6 +23,7 @@ import { useFinanceStore } from '@/store/financeStore';
 import type { TransactionView, TxnType } from '@/types/finance';
 import { monthRange } from '@/utils/date';
 import { formatTxnDate } from '@/utils/date';
+import { formatCompactVND } from '@/utils/currency';
 
 import { EditTransactionSheet } from './EditTransactionSheet';
 import { TransactionRow } from './TransactionRow';
@@ -32,11 +33,48 @@ interface TransactionHistorySheetProps {
   onClose: () => void;
 }
 
+interface DayGroup {
+  dateLabel: string;
+  totalExpense: number;
+  totalIncome: number;
+  items: TransactionView[];
+}
+
+function groupTransactionsByDay(txns: TransactionView[]): DayGroup[] {
+  const groups: { [key: string]: DayGroup } = {};
+  
+  for (const t of txns) {
+    const d = new Date(t.date);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = {
+        dateLabel: formatTxnDate(t.date),
+        totalExpense: 0,
+        totalIncome: 0,
+        items: [],
+      };
+    }
+    
+    groups[dateKey].items.push(t);
+    if (t.type === 'expense') {
+      groups[dateKey].totalExpense += t.amount;
+    } else {
+      groups[dateKey].totalIncome += t.amount;
+    }
+  }
+  
+  return Object.keys(groups)
+    .sort((a, b) => b.localeCompare(a))
+    .map((key) => groups[key]);
+}
+
 /** Transaction history modal — full-screen searchable log. */
 export function TransactionHistorySheet({
   visible,
   onClose,
 }: TransactionHistorySheetProps) {
+  const insets = useSafeAreaInsets();
   const getTransactionViews = useFinanceStore((s) => s.getTransactionViews);
   const allTransactions = useFinanceStore((s) => s.transactions);
 
@@ -63,6 +101,10 @@ export function TransactionHistorySheet({
     return list;
   }, [allTxns, filterType, searchQuery]);
 
+  const grouped = useMemo(() => {
+    return groupTransactionsByDay(filtered);
+  }, [filtered]);
+
   return (
     <Modal
       visible={visible}
@@ -74,7 +116,7 @@ export function TransactionHistorySheet({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.screen}
       >
-        <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+        <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <LinearGradient
           colors={['rgba(255,255,255,0.04)', 'transparent']}
           start={{ x: 0.5, y: 0 }}
@@ -135,16 +177,53 @@ export function TransactionHistorySheet({
 
         {/* List */}
         <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
+          data={grouped}
+          keyExtractor={(item) => item.dateLabel}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps='handled'
-          contentContainerStyle={filtered.length === 0 ? styles.emptyContent : styles.listContent}
-          renderItem={({ item }) => (
-            <PressableScale onPress={() => setEditingTxn(item)} haptic='light' style={styles.txnRow}>
-              <TransactionRow txn={item} />
-            </PressableScale>
-          )}
+          contentContainerStyle={grouped.length === 0 ? styles.emptyContent : styles.listContent}
+          renderItem={({ item: group }) => {
+            const isTodayOrYesterday = group.dateLabel === 'Today' || group.dateLabel === 'Yesterday';
+            return (
+              <View style={styles.groupContainer}>
+                <View style={styles.groupHeader}>
+                  <View style={styles.groupDateWrap}>
+                    <Icon
+                      name='calendar-blank-outline'
+                      size={14}
+                      color={isTodayOrYesterday ? colors.gold : colors.muted}
+                    />
+                    <Text style={[styles.groupDate, isTodayOrYesterday && { color: colors.gold, fontFamily: fonts.semibold }]}>
+                      {group.dateLabel}
+                    </Text>
+                  </View>
+                  <View style={styles.groupTotalsWrap}>
+                    {group.totalIncome > 0 && (
+                      <View style={[styles.totalBadge, { backgroundColor: tint(colors.green, '1A'), borderColor: colors.green }]}>
+                        <Text style={[styles.totalBadgeText, { color: colors.green }]}>
+                          +{formatCompactVND(group.totalIncome)}
+                        </Text>
+                      </View>
+                    )}
+                    {group.totalExpense > 0 && (
+                      <View style={[styles.totalBadge, { backgroundColor: tint(colors.red, '1A'), borderColor: colors.red }]}>
+                        <Text style={[styles.totalBadgeText, { color: colors.text }]}>
+                          -{formatCompactVND(group.totalExpense)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={styles.groupItems}>
+                  {group.items.map((txn) => (
+                    <PressableScale key={txn.id} onPress={() => setEditingTxn(txn)} haptic='light' style={styles.txnRow}>
+                      <TransactionRow txn={txn} />
+                    </PressableScale>
+                  ))}
+                </View>
+              </View>
+            );
+          }}
           ListEmptyComponent={
             <EmptyState
               icon='wallet-outline'
@@ -160,7 +239,7 @@ export function TransactionHistorySheet({
             onClose={() => setEditingTxn(null)}
           />
         )}
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -225,5 +304,53 @@ const styles = StyleSheet.create({
   },
   txnRow: {
     paddingVertical: spacing.xs,
+  },
+  groupContainer: {
+    marginBottom: spacing.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.015)',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    overflow: 'hidden',
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  groupDateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  groupDate: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  groupTotalsWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  totalBadge: {
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  totalBadgeText: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 10,
+  },
+  groupItems: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 4,
   },
 });

@@ -207,12 +207,24 @@ export const SCHEMA: string[] = [
     created_at INTEGER NOT NULL
   );`,
 
+  `CREATE TABLE IF NOT EXISTS debt_nettings (
+    id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT,
+    party TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    date INTEGER NOT NULL,
+    note TEXT,
+    created_at INTEGER NOT NULL
+  );`,
+
   `CREATE TABLE IF NOT EXISTS debt_payments (
     id TEXT PRIMARY KEY NOT NULL,
     debt_id TEXT NOT NULL,
     amount INTEGER NOT NULL,
     date INTEGER NOT NULL,
     note TEXT,
+    payment_method TEXT NOT NULL DEFAULT 'cash',
+    linked_netting_id TEXT,
     created_at INTEGER NOT NULL,
     FOREIGN KEY(debt_id) REFERENCES debt_entries(id) ON DELETE CASCADE
   );`,
@@ -279,4 +291,7 @@ export const COLUMN_MIGRATIONS: ColumnMigration[] = [
   // back-reference to the inbox item it was triaged from.
   { table: 'tasks', column: 'goalId', definition: 'TEXT' },
   { table: 'tasks', column: 'sourceInboxId', definition: 'TEXT' },
+  // Finance v2: debt netting columns
+  { table: 'debt_payments', column: 'payment_method', definition: "TEXT NOT NULL DEFAULT 'cash'" },
+  { table: 'debt_payments', column: 'linked_netting_id', definition: 'TEXT' },
 ];

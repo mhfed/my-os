@@ -15,17 +15,20 @@ import { spacing } from '@/theme/spacing';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
 import { GamePanel } from '@/components/game';
-import { AnimatedCard } from '@/components/motion';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useFinanceStore } from '@/store/financeStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
+import type { MonthlyOverview, WeeklyOverview } from '@/types/finance';
 import { formatCompactVND, formatVND } from '@/utils/currency';
-import { formatTxnDate } from '@/utils/date';
+import { formatTxnDate, currentWeekKey, getWeekKey } from '@/utils/date';
 
 import { AddTransactionSheet } from './components/AddTransactionSheet';
 import { DebtLedgerSheet } from './components/DebtLedgerSheet';
 import { FinanceHero } from './components/FinanceHero';
 import { TransactionHistorySheet } from './components/TransactionHistorySheet';
+import { QuickPettyCashModal } from './components/QuickPettyCashModal';
+import { CategoryBreakdown } from './components/CategoryBreakdown';
 
 const RECENT_LIMIT = 5;
 const FAB_GRADIENT = [colors.gold, colors.goldDeep] as const;
@@ -132,16 +135,63 @@ export function FinanceScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [debtOpen, setDebtOpen] = useState(false);
+  const [pettyCashOpen, setPettyCashOpen] = useState(false);
+  const [categoryBreakdownOpen, setCategoryBreakdownOpen] = useState(false);
+  const [period, setPeriod] = useState<'monthly' | 'weekly'>('monthly');
+
+  const getWeeklyOverview = useFinanceStore((s) => s.getWeeklyOverview);
+  const getWeeklyCategorySpend = useFinanceStore((s) => s.getWeeklyCategorySpend);
+  const getWeeklyTrends = useFinanceStore((s) => s.getWeeklyTrends);
 
   if (!ready) {
     return <View style={styles.screen} />;
   }
 
-  // ----- Derived values -----
-  const overview = getOverview();
-  const categoriesSpend = getCategorySpend();
-  const recentTxnViews = getTransactionViews(RECENT_LIMIT);
-  const trends6 = getMonthlyTrends(6);
+  // ----- Derived values based on active period -----
+  const currentWeek = currentWeekKey();
+  const overview = period === 'monthly' ? getOverview() : getWeeklyOverview(currentWeek);
+  const categoriesSpend = period === 'monthly' ? getCategorySpend() : getWeeklyCategorySpend(currentWeek);
+  const trends6 = period === 'monthly' ? getMonthlyTrends(6) : getWeeklyTrends(6);
+
+  // Tabbed Recent Transactions
+  const [recentTab, setRecentTab] = useState<'today' | 'week' | 'month'>('today');
+
+  const isToday = (timestamp: number) => {
+    const d = new Date(timestamp);
+    const now = new Date();
+    return d.getDate() === now.getDate() &&
+           d.getMonth() === now.getMonth() &&
+           d.getFullYear() === now.getFullYear();
+  };
+
+  const isCurrentWeek = (timestamp: number) => {
+    return getWeekKey(timestamp) === currentWeek;
+  };
+
+  const isCurrentMonth = (timestamp: number) => {
+    const d = new Date(timestamp);
+    const [yStr, mStr] = activeMonth.split('-');
+    return d.getFullYear() === parseInt(yStr, 10) && (d.getMonth() + 1) === parseInt(mStr, 10);
+  };
+
+  const recentFilteredTxns = useMemo(() => {
+    const allViews = getTransactionViews(9999);
+    return allViews.filter((t) => {
+      if (recentTab === 'today') return isToday(t.date);
+      if (recentTab === 'week') return isCurrentWeek(t.date);
+      return isCurrentMonth(t.date);
+    });
+  }, [transactions, recentTab, activeMonth, currentWeek, getTransactionViews]);
+
+  const { recentTabExpense, recentTabIncome } = useMemo(() => {
+    let spent = 0;
+    let income = 0;
+    for (const t of recentFilteredTxns) {
+      if (t.type === 'expense') spent += t.amount;
+      else income += t.amount;
+    }
+    return { recentTabExpense: spent, recentTabIncome: income };
+  }, [recentFilteredTxns]);
 
   // Total net worth: sum all income minus all expense across all transactions
   const totalBalance = useMemo(() => {
@@ -262,41 +312,125 @@ export function FinanceScreen() {
           />
         </View>
 
-        {/* ---- Bento Row: Donut + Trend ---- */}
-        <View style={styles.bentoRow}>
-          {/* Category Donut */}
-          <AnimatedCard index={1} style={styles.bentoCard}>
-            <SectionBadge label="Phân bổ" color={colors.gold} />
-            <View style={styles.donutLayout}>
-              <View style={styles.donutWrap}>
-                <Svg width={120} height={120} viewBox="0 0 36 36">
-                  <G rotation={-90} originX={18} originY={18}>
-                    {donutSegments.map((seg) => (
-                      <DonutSegment
-                        key={seg.categoryId}
-                        pct={seg.pct}
-                        offset={seg.offset}
-                        color={seg.color}
-                      />
-                    ))}
-                  </G>
-                </Svg>
-                <View style={styles.donutCenter}>
-                  <Text style={styles.donutCenterText}>{shortMonth(activeMonth)}</Text>
-                </View>
-              </View>
-              <View style={styles.donutLegend}>
-                {donutData.map((d) => (
-                  <View key={d.categoryId} style={styles.legendRow}>
-                    <View style={[styles.legendDot, { backgroundColor: d.color }]} />
-                    <Text style={styles.legendLabel} numberOfLines={1}>
-                      {d.name}
-                    </Text>
-                    <Text style={styles.legendPct}>{Math.round(d.pct)}%</Text>
-                  </View>
-                ))}
+        {/* ---- Period Selector (Weekly vs Monthly) ---- */}
+        <AnimatedCard index={0.5} style={styles.periodSelectorWrap}>
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            borderRadius: radius.pill,
+            padding: 4,
+            gap: 4,
+          }}>
+            <PressableScale
+              onPress={() => setPeriod('monthly')}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 10,
+                borderRadius: radius.pill,
+                backgroundColor: period === 'monthly' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              }}
+              haptic='light'
+            >
+              <Text style={{
+                fontFamily: fonts.semibold,
+                fontSize: 13,
+                color: period === 'monthly' ? colors.text : colors.muted,
+              }}>Tháng này</Text>
+            </PressableScale>
+            <PressableScale
+              onPress={() => setPeriod('weekly')}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 10,
+                borderRadius: radius.pill,
+                backgroundColor: period === 'weekly' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              }}
+              haptic='light'
+            >
+              <Text style={{
+                fontFamily: fonts.semibold,
+                fontSize: 13,
+                color: period === 'weekly' ? colors.text : colors.muted,
+              }}>Tuần này</Text>
+            </PressableScale>
+          </View>
+        </AnimatedCard>
+
+        {/* ---- Budget Overdraft Alert ---- */}
+        {overview.budget > 0 && overview.spent > overview.budget && (
+          <AnimatedCard index={0.6} style={styles.budgetAlertWrap}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              backgroundColor: tint(colors.red, '11'),
+              borderWidth: 1,
+              borderColor: colors.redDeep,
+              borderRadius: radius.xl,
+              padding: 16,
+            }}>
+              <Icon name='alert-circle-outline' size={24} color={colors.red} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.red }}>
+                  Vượt ngân sách {period === 'monthly' ? 'tháng' : 'tuần'}!
+                </Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 }}>
+                  Bạn đã tiêu {formatVND(overview.spent)} vượt mức {formatVND(overview.budget)} (+{formatVND(overview.spent - overview.budget)}).
+                </Text>
               </View>
             </View>
+          </AnimatedCard>
+        )}
+
+        {/* ---- Bento Row: Donut + Trend ---- */}
+        <View style={styles.bentoRow}>
+          {/* Category Donut (Pressable to view detail) */}
+          <AnimatedCard index={1} style={styles.bentoCard}>
+            <PressableScale
+              onPress={() => setCategoryBreakdownOpen(true)}
+              style={{ flex: 1 }}
+              haptic='light'
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <SectionBadge label="Phân bổ" color={colors.gold} />
+                <Icon name='chevron-right' size={14} color={colors.gold} style={{ opacity: 0.7 }} />
+              </View>
+              <View style={styles.donutLayout}>
+                <View style={styles.donutWrap}>
+                  <Svg width={80} height={80} viewBox="0 0 36 36">
+                    <G rotation={-90} originX={18} originY={18}>
+                      {donutSegments.map((seg) => (
+                        <DonutSegment
+                          key={seg.categoryId}
+                          pct={seg.pct}
+                          offset={seg.offset}
+                          color={seg.color}
+                        />
+                      ))}
+                    </G>
+                  </Svg>
+                  <View style={styles.donutCenter}>
+                    <Text style={styles.donutCenterText}>
+                      {period === 'monthly' ? shortMonth(activeMonth) : `W${currentWeek.split('-W')[1]}`}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.donutLegendCompact}>
+                  {donutData.map((d) => (
+                    <View key={d.categoryId} style={styles.legendCompactItem}>
+                      <View style={[styles.legendDot, { backgroundColor: d.color }]} />
+                      <Text style={styles.legendPctCompact}>{Math.round(d.pct)}%</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </PressableScale>
           </AnimatedCard>
 
           {/* Trend Chart */}
@@ -319,9 +453,11 @@ export function FinanceScreen() {
                 {trends6.map((d) => {
                   const incH = Math.max(4, (d.income / trendMax) * trendBarH);
                   const expH = Math.max(4, (d.spent / trendMax) * trendBarH);
-                  const isCurrent = d.month === activeMonth;
+                  const itemKey = period === 'monthly' ? (d as MonthlyOverview).month : (d as WeeklyOverview).week;
+                  const isCurrent = period === 'monthly' ? itemKey === activeMonth : itemKey === currentWeek;
+                  const barLabel = period === 'monthly' ? shortMonth(itemKey) : `W${itemKey.split('-W')[1] || itemKey}`;
                   return (
-                    <View key={d.month} style={styles.trendCol}>
+                    <View key={itemKey} style={styles.trendCol}>
                       <View style={styles.trendPair}>
                         <View
                           style={[
@@ -342,7 +478,7 @@ export function FinanceScreen() {
                           isCurrent && styles.trendLabelActive,
                         ]}
                       >
-                        {shortMonth(d.month)}
+                        {barLabel}
                       </Text>
                     </View>
                   );
@@ -404,145 +540,153 @@ export function FinanceScreen() {
           </View>
         )}
 
-        {/* ---- Debt Ledger ---- */}
+        {/* ---- Debt Ledger (Overview) ---- */}
         <View style={styles.section}>
           <SectionBadge label="Sổ nợ" color={colors.purple} />
           <View style={styles.debtGrid}>
-            <Pressable
+            <PressableScale
               style={[styles.debtCard, styles.debtCardLend]}
               onPress={() => setDebtOpen(true)}
+              haptic='light'
             >
-              <Text style={styles.debtLabel}>Ai nợ tôi</Text>
-              <Text style={[styles.debtAmount, { color: colors.secondaryFixedDim }]}>
+              <View style={styles.debtCardHeader}>
+                <View style={[styles.debtCardIconWrap, { backgroundColor: tint(colors.green, '1A'), borderColor: colors.green }]}>
+                  <Icon name='arrow-top-right' size={14} color={colors.green} />
+                </View>
+                <Text style={styles.debtLabel}>Ai nợ tôi</Text>
+              </View>
+              <Text style={[styles.debtAmount, { color: colors.green }]}>
                 {formatVND(totalLend)}
               </Text>
-              <View style={styles.debtAvatars}>
-                {lendEntries.slice(0, 3).map((e) => (
-                  <View
-                    key={e.id}
-                    style={[
-                      styles.debtAvatar,
-                      { backgroundColor: avatarColor(e.party) },
-                    ]}
-                  >
-                    <Text style={styles.debtAvatarText}>{initials(e.party)}</Text>
-                  </View>
-                ))}
-                {lendEntries.length > 3 && (
-                  <View style={[styles.debtAvatar, styles.debtAvatarMore]}>
-                    <Text style={styles.debtAvatarText}>+{lendEntries.length - 3}</Text>
-                  </View>
-                )}
+              <View style={styles.debtCardFooter}>
+                <Text style={styles.debtFooterText}>
+                  {lendEntries.length} người nợ · Xem sổ
+                </Text>
+                <Icon name='chevron-right' size={12} color={colors.green} />
               </View>
-            </Pressable>
+            </PressableScale>
 
-            <Pressable
+            <PressableScale
               style={[styles.debtCard, styles.debtCardBorrow]}
               onPress={() => setDebtOpen(true)}
+              haptic='light'
             >
-              <Text style={styles.debtLabel}>Tôi nợ ai</Text>
-              <Text style={[styles.debtAmount, { color: colors.error }]}>
+              <View style={styles.debtCardHeader}>
+                <View style={[styles.debtCardIconWrap, { backgroundColor: tint(colors.red, '1A'), borderColor: colors.red }]}>
+                  <Icon name='arrow-bottom-left' size={14} color={colors.red} />
+                </View>
+                <Text style={styles.debtLabel}>Tôi nợ ai</Text>
+              </View>
+              <Text style={[styles.debtAmount, { color: colors.text }]}>
                 {formatVND(totalBorrow)}
               </Text>
-              <View style={styles.debtAvatars}>
-                {borrowEntries.slice(0, 3).map((e) => (
-                  <View
-                    key={e.id}
-                    style={[
-                      styles.debtAvatar,
-                      { backgroundColor: avatarColor(e.party) },
-                    ]}
-                  >
-                    <Text style={styles.debtAvatarText}>{initials(e.party)}</Text>
-                  </View>
-                ))}
-                {borrowEntries.length > 3 && (
-                  <View style={[styles.debtAvatar, styles.debtAvatarMore]}>
-                    <Text style={styles.debtAvatarText}>+{borrowEntries.length - 3}</Text>
-                  </View>
-                )}
+              <View style={styles.debtCardFooter}>
+                <Text style={styles.debtFooterText}>
+                  Nợ {borrowEntries.length} người · Xem sổ
+                </Text>
+                <Icon name='chevron-right' size={12} color={colors.muted} />
               </View>
-            </Pressable>
+            </PressableScale>
           </View>
         </View>
 
-        {/* ---- Budget / Category Breakdown ---- */}
-        {categoriesSpend.length > 0 && (
-          <View style={styles.section}>
-            <SectionBadge label="Danh mục chi tiêu" color={colors.teal} />
-            <View style={styles.catBreakdownCard}>
-              {categoriesSpend
-                .sort((a, b) => b.amount - a.amount)
-                .slice(0, 4)
-                .map((cat, i) => {
-                  const barPct = Math.min(100, cat.pct);
-                  return (
-                    <View key={cat.categoryId} style={styles.catRow}>
-                      <View style={styles.catIcon}>
-                        <Icon
-                          name={cat.icon as any}
-                          size={16}
-                          color={cat.color}
-                        />
-                      </View>
-                      <View style={styles.catBody}>
-                        <View style={styles.catTop}>
-                          <Text style={styles.catName} numberOfLines={1}>
-                            {cat.name}
-                          </Text>
-                          <Text style={styles.catAmount} numberOfLines={1}>
-                            {formatCompactVND(cat.amount)}
-                          </Text>
-                          <Text style={styles.catPct}>{Math.round(barPct)}%</Text>
-                        </View>
-                        <View style={styles.catTrack}>
-                          <View
-                            style={[
-                              styles.catFill,
-                              {
-                                width: `${Math.max(barPct, 3)}%`,
-                                backgroundColor: cat.color,
-                              },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-              {categoriesSpend.length > 4 && (
-                <Pressable
-                  style={styles.seeAllBtn}
-                  onPress={() => setHistoryOpen(true)}
-                >
-                  <Text style={styles.seeAllBtnText}>
-                    Xem tất cả {categoriesSpend.length} danh mục
-                  </Text>
-                  <Icon name="chevron-right" size={14} color={colors.gold} />
-                </Pressable>
-              )}
-            </View>
-          </View>
-        )}
 
-        {/* ---- Recent Transactions ---- */}
+
+        {/* ---- Recent Transactions (Tabbed) ---- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <SectionBadge label="Giao dịch gần đây" color={colors.gold} />
+            <SectionBadge label="Giao dịch" color={colors.gold} />
             <Pressable onPress={() => setHistoryOpen(true)}>
-              <Text style={styles.seeAllBtnText}>Tất cả</Text>
+              <Text style={styles.seeAllBtnText}>Tất cả lịch sử</Text>
             </Pressable>
           </View>
 
-          {recentTxnViews.length === 0 ? (
+          {/* Sub-tabs for transaction scope */}
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.06)',
+            borderRadius: radius.pill,
+            padding: 2,
+            gap: 2,
+            marginBottom: 8,
+          }}>
+            {(['today', 'week', 'month'] as const).map((tab) => {
+              const label = tab === 'today' ? 'Hôm nay' : tab === 'week' ? 'Tuần này' : 'Tháng này';
+              const active = recentTab === tab;
+              return (
+                <PressableScale
+                  key={tab}
+                  onPress={() => setRecentTab(tab)}
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingVertical: 6,
+                    borderRadius: radius.pill,
+                    backgroundColor: active ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                  }}
+                  haptic='light'
+                >
+                  <Text style={{
+                    fontFamily: fonts.semibold,
+                    fontSize: 12,
+                    color: active ? colors.gold : colors.muted,
+                  }}>{label}</Text>
+                </PressableScale>
+              );
+            })}
+          </View>
+
+          {/* Total values right below the tabs */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: 'rgba(255, 255, 255, 0.015)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: radius.lg,
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            marginBottom: 12,
+          }}>
+            <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: colors.muted }}>
+              Tổng thu chi chu kỳ:
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {recentTabIncome > 0 && (
+                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.green }}>
+                  +{formatVND(recentTabIncome)}
+                </Text>
+              )}
+              {recentTabIncome > 0 && recentTabExpense > 0 && (
+                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted }}>|</Text>
+              )}
+              {recentTabExpense > 0 ? (
+                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.text }}>
+                  -{formatVND(recentTabExpense)}
+                </Text>
+              ) : recentTabIncome === 0 ? (
+                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.muted }}>
+                  0 ₫
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          {recentFilteredTxns.length === 0 ? (
             <View style={styles.emptyState}>
-              <Icon name="receipt-text-outline" size={28} color={colors.muted} />
-              <Text style={styles.emptyText}>Chưa có giao dịch nào</Text>
-              <Text style={styles.emptySubtext}>Nhấn + để ghi giao dịch đầu tiên</Text>
+              <Icon name="receipt-text-outline" size={24} color={colors.muted} />
+              <Text style={styles.emptyText}>Không có giao dịch</Text>
+              <Text style={styles.emptySubtext}>
+                {recentTab === 'today' ? 'Chưa ghi chi tiêu nào trong hôm nay.' : recentTab === 'week' ? 'Chưa ghi chi tiêu nào trong tuần này.' : 'Chưa ghi chi tiêu nào trong tháng này.'}
+              </Text>
             </View>
           ) : (
             <View style={styles.txnList}>
-              {recentTxnViews.map((txn, i) => {
+              {recentFilteredTxns.slice(0, 5).map((txn, i) => {
                 const isIncome = txn.type === 'income';
                 const amountColor = isIncome ? colors.green : colors.text;
                 const amountPrefix = isIncome ? '+ ' : '- ';
@@ -580,7 +724,12 @@ export function FinanceScreen() {
       </ScrollView>
 
       {/* ---- FAB ---- */}
-      <Pressable style={styles.fab} onPress={() => setSheetOpen(true)}>
+      <Pressable
+        style={styles.fab}
+        onPress={() => setPettyCashOpen(true)}
+        onLongPress={() => setSheetOpen(true)}
+        delayLongPress={300}
+      >
         <LinearGradient
           colors={FAB_GRADIENT}
           start={{ x: 0.17, y: 0 }}
@@ -603,6 +752,21 @@ export function FinanceScreen() {
       <DebtLedgerSheet
         visible={debtOpen}
         onClose={() => setDebtOpen(false)}
+      />
+      <QuickPettyCashModal
+        visible={pettyCashOpen}
+        onClose={() => setPettyCashOpen(false)}
+        onSwitchToDetailed={() => {
+          setPettyCashOpen(false);
+          setSheetOpen(true);
+        }}
+      />
+      <CategoryBreakdown
+        visible={categoryBreakdownOpen}
+        onClose={() => setCategoryBreakdownOpen(false)}
+        data={categoriesSpend}
+        period={period}
+        periodKey={period === 'monthly' ? activeMonth : currentWeek}
       />
     </SafeAreaView>
   );
@@ -629,8 +793,8 @@ const styles = StyleSheet.create({
 
   // ---- Header (matches Tasks screen pattern) ----
   headerWrap: {
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingHorizontal: spacing.md,
     marginBottom: spacing.xs,
   },
   headerPanel: {
@@ -654,7 +818,17 @@ const styles = StyleSheet.create({
 
   // ---- Hero wrapper ----
   heroWrap: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+
+  // ---- Period Selector & Alerts ----
+  periodSelectorWrap: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  budgetAlertWrap: {
+    paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
   },
 
@@ -682,8 +856,8 @@ const styles = StyleSheet.create({
 
   // ---- Section layout ----
   section: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.lg,
     gap: spacing.sm,
   },
   sectionHeader: {
@@ -696,8 +870,8 @@ const styles = StyleSheet.create({
   bentoRow: {
     flexDirection: 'row',
     gap: 12,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
   },
   bentoCard: {
     flex: 1,
@@ -712,11 +886,11 @@ const styles = StyleSheet.create({
   // --- Donut ---
   donutLayout: {
     alignItems: 'center',
-    gap: 16,
+    gap: 10,
   },
   donutWrap: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -726,13 +900,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   donutCenterText: {
-    fontFamily: fonts.display,
-    fontSize: 12,
+    fontFamily: fonts.semibold,
+    fontSize: 10,
     color: colors.text,
   },
-  donutLegend: {
-    width: '100%',
+  donutLegendCompact: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 8,
+    marginTop: 4,
+  },
+  legendCompactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  legendPctCompact: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 10,
+    color: colors.text,
   },
   legendRow: {
     flexDirection: 'row',
@@ -890,48 +1077,50 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    padding: 16,
-    gap: 8,
-    borderLeftWidth: 4,
+    padding: 14,
+    gap: 6,
+    borderLeftWidth: 3,
   },
   debtCardLend: {
-    borderLeftColor: colors.secondaryFixedDim,
+    borderLeftColor: colors.green,
   },
   debtCardBorrow: {
-    borderLeftColor: colors.error,
+    borderLeftColor: colors.red,
+  },
+  debtCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  debtCardIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   debtLabel: {
-    fontFamily: fonts.display,
-    fontSize: 14,
-    letterSpacing: 0.7,
-    color: colors.onSurfaceVariant,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.muted,
   },
   debtAmount: {
     fontFamily: fonts.displayBold,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 26,
+    marginVertical: 2,
   },
-  debtAvatars: {
+  debtCardFooter: {
     flexDirection: 'row',
-    marginTop: 4,
-  },
-  debtAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: colors.screenBg,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -8,
+    justifyContent: 'space-between',
+    marginTop: 2,
   },
-  debtAvatarMore: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  debtAvatarText: {
-    fontFamily: fonts.displayBold,
-    fontSize: 9,
-    color: colors.onPrimary,
+  debtFooterText: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
   },
 
   // --- Category Breakdown ---

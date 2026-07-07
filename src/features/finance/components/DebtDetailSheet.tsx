@@ -95,6 +95,11 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
   const [payDate, setPayDate] = useState(todayStart);
   const [linkTxnOnSettle, setLinkTxnOnSettle] = useState(true);
 
+  // Netting state
+  const [nettingOpen, setNettingOpen] = useState(false);
+  const [nettingAmountText, setNettingAmountText] = useState('');
+  const [nettingNote, setNettingNote] = useState('');
+
   // Edit panel state
   const [editOpen, setEditOpen] = useState(false);
   const [editParty, setEditParty] = useState('');
@@ -109,6 +114,13 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
   const liveView = debtId ? getDebtView(debtId) : null;
   if (liveView) viewRef.current = liveView;
   const view = viewRef.current;
+
+  // Find opposing active entries for this party
+  const entries = useDebtStore((s) => s.entries);
+  const opposingEntries = view ? entries.filter(
+    (e) => e.status !== 'settled' && e.party === view.party && e.type !== view.type
+  ) : [];
+  const opposingView = opposingEntries[0] ? getDebtView(opposingEntries[0].id) : null;
 
   if (!view) return null;
 
@@ -424,6 +436,31 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
             </View>
           )}
 
+          {/* Opposing debt netting banner */}
+          {opposingView && view.status !== 'settled' && (
+            <View style={styles.nettingBanner}>
+              <Icon name='swap-horizontal' size={18} color={colors.orangeDeep} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.nettingTitle}>⚡ Phát hiện khoản vay chéo!</Text>
+                <Text style={styles.nettingSub}>
+                  Bạn có thể cấn trừ tối đa {formatCompactVND(Math.min(view.totalOwed, opposingView.totalOwed))} ₫ để giảm dư nợ.
+                </Text>
+              </View>
+              <PressableScale
+                onPress={() => {
+                  const maxNet = Math.min(view.totalOwed, opposingView.totalOwed);
+                  setNettingAmountText(String(maxNet));
+                  setNettingNote(`Cấn trừ đối ứng tự động với ${view.party}`);
+                  setNettingOpen(true);
+                }}
+                haptic='medium'
+                style={[styles.nettingBtn, base3D(colors.orangeDeep, 2)]}
+              >
+                <Text style={styles.nettingBtnText}>Cấn trừ</Text>
+              </PressableScale>
+            </View>
+          )}
+
           {/* Settle link toggle (only when not yet settled) */}
           {view.status !== 'settled' && (
             <View style={styles.settleLinkRow}>
@@ -444,32 +481,40 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
           {view.payments.length === 0 ? (
             <Text style={styles.emptyPayments}>Chưa có lần thanh toán nào</Text>
           ) : (
-            view.payments.map((p, i) => (
-              <AnimatedCard key={p.id} index={i}>
-                <View style={styles.paymentRow}>
-                  <View style={[styles.paymentIconWrap, base3D(colors.tealDeep, 2)]}>
-                    <View style={styles.paymentIcon}>
-                      <Icon name='cash-check' size={16} color={colors.white} />
+            view.payments.map((p, i) => {
+              const isNetting = p.paymentMethod === 'netting';
+              const pIcon = isNetting ? 'swap-horizontal' : 'cash-check';
+              const pColor = isNetting ? colors.orange : colors.teal;
+              const pColorDeep = isNetting ? colors.orangeDeep : colors.tealDeep;
+              return (
+                <AnimatedCard key={p.id} index={i}>
+                  <View style={styles.paymentRow}>
+                    <View style={[styles.paymentIconWrap, base3D(pColorDeep, 2)]}>
+                      <View style={[styles.paymentIcon, { backgroundColor: pColor, borderColor: 'rgba(255,255,255,0.1)' }]}>
+                        <Icon name={pIcon} size={16} color={colors.white} />
+                      </View>
                     </View>
+                    <View style={styles.paymentLeft}>
+                      <Text style={styles.paymentDate}>
+                        {formatTxnDate(p.date)} {isNetting && <Text style={{ color: colors.orangeDeep, fontSize: 11, fontFamily: fonts.semibold }}>[Cấn trừ]</Text>}
+                      </Text>
+                      {p.note && (
+                        <Text style={styles.paymentNote}>{p.note}</Text>
+                      )}
+                    </View>
+                    <Text style={[styles.paymentAmount, { color: pColorDeep }]}>
+                      +{formatCompactVND(p.amount)}
+                    </Text>
+                    <Pressable
+                      hitSlop={8}
+                      onPress={() => deletePayment(p.id, view!.id, p.amount)}
+                    >
+                      <Icon name='close' size={14} color={colors.tabInactive} />
+                    </Pressable>
                   </View>
-                  <View style={styles.paymentLeft}>
-                    <Text style={styles.paymentDate}>{formatTxnDate(p.date)}</Text>
-                    {p.note && (
-                      <Text style={styles.paymentNote}>{p.note}</Text>
-                    )}
-                  </View>
-                  <Text style={[styles.paymentAmount, { color: colors.tealDeep }]}>
-                    +{formatCompactVND(p.amount)}
-                  </Text>
-                  <Pressable
-                    hitSlop={8}
-                    onPress={() => deletePayment(p.id, view!.id, p.amount)}
-                  >
-                    <Icon name='close' size={14} color={colors.tabInactive} />
-                  </Pressable>
-                </View>
-              </AnimatedCard>
-            ))
+                </AnimatedCard>
+              );
+            })
           )}
         </ScrollView>
 
@@ -567,6 +612,102 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   disabled={payAmount <= 0}
                   style={payAmount <= 0 ? styles.disabled : undefined}
                   onPress={handleAddPayment}
+                />
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </Modal>
+
+        {/* Netting modal */}
+        <Modal
+          visible={nettingOpen}
+          transparent
+          animationType='slide'
+          onRequestClose={() => setNettingOpen(false)}
+        >
+          <View style={styles.payRoot}>
+            <Pressable
+              style={styles.backdrop}
+              onPress={() => setNettingOpen(false)}
+            />
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={styles.kav}
+            >
+              <View style={styles.paySheet}>
+                <View style={styles.handle} />
+                <Text style={styles.payTitle}>Cấn trừ nợ chéo</Text>
+
+                {opposingView && (
+                  <View style={styles.nettingCompareRow}>
+                    <View style={styles.nettingCompareCell}>
+                      <Text style={styles.nettingCompareLabel}>Khoản hiện tại</Text>
+                      <Text style={styles.nettingCompareVal}>{formatCompactVND(view.totalOwed)} ₫</Text>
+                    </View>
+                    <Icon name='swap-horizontal' size={20} color={colors.muted} />
+                    <View style={styles.nettingCompareCell}>
+                      <Text style={styles.nettingCompareLabel}>Khoản đối ứng</Text>
+                      <Text style={styles.nettingCompareVal}>{formatCompactVND(opposingView.totalOwed)} ₫</Text>
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.amountWrap}>
+                  <Text style={styles.dong}>₫</Text>
+                  <TextInput
+                    value={groupDigits(parseAmount(nettingAmountText))}
+                    onChangeText={setNettingAmountText}
+                    keyboardType='number-pad'
+                    placeholder='0'
+                    placeholderTextColor={colors.tabInactive}
+                    style={styles.amountInput}
+                    autoFocus
+                  />
+                </View>
+
+                <Text style={styles.label}>Ghi chú</Text>
+                <TextInput
+                  value={nettingNote}
+                  onChangeText={setNettingNote}
+                  placeholder='Đối trừ công nợ...'
+                  placeholderTextColor={colors.tabInactive}
+                  style={styles.noteInput}
+                />
+
+                <GameButton
+                  label='Xác nhận cấn trừ'
+                  variant='gold'
+                  size='md'
+                  fullWidth
+                  disabled={
+                    parseAmount(nettingAmountText) <= 0 ||
+                    (opposingView
+                      ? parseAmount(nettingAmountText) > Math.min(view.totalOwed, opposingView.totalOwed)
+                      : true)
+                  }
+                  style={
+                    (parseAmount(nettingAmountText) <= 0 ||
+                    (opposingView
+                      ? parseAmount(nettingAmountText) > Math.min(view.totalOwed, opposingView.totalOwed)
+                      : true))
+                      ? styles.disabled
+                      : undefined
+                  }
+                  onPress={async () => {
+                    const amt = parseAmount(nettingAmountText);
+                    const maxNet = opposingView ? Math.min(view.totalOwed, opposingView.totalOwed) : 0;
+                    if (amt <= 0 || amt > maxNet || !opposingView) return;
+                    const borrowId = view.type === 'borrow' ? view.id : opposingView.id;
+                    const lendId = view.type === 'lend' ? view.id : opposingView.id;
+                    await useDebtStore.getState().addNetting(
+                      view.party,
+                      amt,
+                      borrowId,
+                      lendId,
+                      nettingNote.trim() || undefined
+                    );
+                    setNettingOpen(false);
+                  }}
                 />
               </View>
             </KeyboardAvoidingView>
@@ -955,5 +1096,64 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 20,
+  },
+  nettingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: tint(colors.orange, '1F'),
+    borderWidth: 1,
+    borderColor: colors.orangeDeep,
+    borderRadius: radius.md,
+    padding: 14,
+    ...elevation.card,
+  },
+  nettingTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.orangeDeep,
+  },
+  nettingSub: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  nettingBtn: {
+    backgroundColor: colors.orangeDeep,
+    borderRadius: radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  nettingBtnText: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.white,
+  },
+  nettingCompareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginVertical: 14,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  nettingCompareCell: {
+    alignItems: 'center',
+  },
+  nettingCompareLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    marginBottom: 2,
+  },
+  nettingCompareVal: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 16,
+    color: colors.text,
   },
 });

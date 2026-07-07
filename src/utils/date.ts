@@ -87,3 +87,37 @@ export function formatTxnDate(epochMs: number): string {
   const shortMonth = MONTH_NAMES[date.getMonth()].slice(0, 3);
   return `${date.getDate()} ${shortMonth}`;
 }
+
+/** Parses "YYYY-Wxx" into year and week number. */
+export function parseWeekKey(weekKey: string): { year: number; week: number } {
+  const [yearStr, weekStr] = weekKey.split('-W');
+  return { year: Number(yearStr), week: Number(weekStr) };
+}
+
+/** Epoch-ms bounds for a week (Monday 00:00 to Monday 00:00). */
+export function weekRange(weekKey: string): { start: number; end: number } {
+  const { year, week } = parseWeekKey(weekKey);
+  const jan4 = new Date(year, 0, 4);
+  const day = jan4.getDay() || 7;
+  const startOfWeek1 = new Date(jan4.getTime() - (day - 1) * 86_400_000);
+  startOfWeek1.setHours(0, 0, 0, 0);
+  const start = startOfWeek1.getTime() + (week - 1) * 7 * 86_400_000;
+  const end = start + 7 * 86_400_000;
+  return { start, end };
+}
+
+/** Returns ISO-8601 week key "YYYY-Wxx" for a given timestamp. */
+export function getWeekKey(epochMs: number): string {
+  const d = new Date(epochMs);
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+  const weekStr = weekNo < 10 ? `0${weekNo}` : `${weekNo}`;
+  return `${date.getUTCFullYear()}-W${weekStr}`;
+}
+
+/** Returns the "YYYY-Wxx" week key for now. */
+export function currentWeekKey(): string {
+  return getWeekKey(Date.now());
+}

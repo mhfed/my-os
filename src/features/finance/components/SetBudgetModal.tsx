@@ -24,13 +24,17 @@ import { monthLabel } from '@/utils/date';
 interface SetBudgetModalProps {
   visible: boolean;
   onClose: () => void;
+  period?: 'weekly' | 'monthly';
+  periodKey?: string;
 }
 
-/** Bottom-sheet modal to set a monthly budget cap for a category. */
-export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
+/** Bottom-sheet modal to set a monthly/weekly budget cap for a category. */
+export function SetBudgetModal({ visible, onClose, period = 'monthly', periodKey }: SetBudgetModalProps) {
   const allCategories = useFinanceStore((s) => s.categories);
   const setBudget = useFinanceStore((s) => s.setBudget);
   const activeMonth = useFinanceStore((s) => s.activeMonth);
+
+  const targetPeriodKey = periodKey || activeMonth;
 
   const categories = useMemo(
     () => allCategories.filter((c) => c.type === 'expense'),
@@ -57,7 +61,7 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
 
   async function handleSave() {
     if (!canSave) return;
-    await setBudget(selectedCategoryId, parseInt(amountStr, 10), activeMonth);
+    await setBudget(selectedCategoryId, parseInt(amountStr, 10), targetPeriodKey);
     handleClose();
   }
 
@@ -80,7 +84,7 @@ export function SetBudgetModal({ visible, onClose }: SetBudgetModalProps) {
 
           <View style={styles.header}>
             <Text style={styles.title}>Set Budget</Text>
-            <Text style={styles.subtitle}>for {monthLabel(activeMonth)}</Text>
+            <Text style={styles.subtitle}>for {period === 'weekly' ? targetPeriodKey : monthLabel(targetPeriodKey)}</Text>
           </View>
 
           <Text style={styles.fieldLabel}>CATEGORY</Text>

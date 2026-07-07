@@ -19,7 +19,7 @@ import {
   upsertBudget as dbUpsertBudget,
 } from '@/db/database';
 import { ensureSystemCategories, seedDatabase } from '@/data/seed';
-import { addMonths, currentMonthKey, monthRange } from '@/utils/date';
+import { addMonths, currentMonthKey, monthRange, weekRange, getWeekKey } from '@/utils/date';
 import * as FileSystem from 'expo-file-system';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import type {
@@ -30,6 +30,8 @@ import type {
   MonthlyOverview,
   Transaction,
   TransactionView,
+  WeeklyOverview,
+  WeeklyCategorySpend,
 } from '@/types/finance';
 
 /** RFC4122 id when available, otherwise a sufficiently-unique fallback. */
@@ -371,6 +373,109 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       const budgetUsed = budget > 0 ? Math.min(1, spent / budget) : 0;
       result.push({
         month,
+        spent,
+        income,
+        saved: income - spent,
+        budget,
+        budgetUsed,
+        remaining: budget - spent,
+      });
+    }
+
+    return result;
+  },
+
+  getWeeklyOverview: (weekKey: string): WeeklyOverview => {
+    const { transactions, budgets } = get();
+    const { start, end } = weekRange(weekKey);
+
+    let income = 0;
+    let spent = 0;
+    for (const t of transactions) {
+      if (t.date < start || t.date >= end) continue;
+      if (t.type === 'income') income += t.amount;
+      else spent += t.amount;
+    }
+
+    const budget = budgets
+      .filter((b) => b.month === weekKey)
+      .reduce((sum, b) => sum + b.amount, 0);
+
+    const budgetUsed =
+      budget > 0 ? Math.min(1, Math.max(0, spent / budget)) : 0;
+
+    return {
+      week: weekKey,
+      spent,
+      income,
+      saved: income - spent,
+      budget,
+      budgetUsed,
+      remaining: budget - spent,
+    };
+  },
+
+  getWeeklyCategorySpend: (weekKey: string): WeeklyCategorySpend[] => {
+    const { transactions, categories, budgets } = get();
+    const { start, end } = weekRange(weekKey);
+
+    const totals = new Map<string, number>();
+    let totalExpense = 0;
+    for (const t of transactions) {
+      if (t.type !== 'expense') continue;
+      if (t.date < start || t.date >= end) continue;
+      totals.set(t.categoryId, (totals.get(t.categoryId) ?? 0) + t.amount);
+      totalExpense += t.amount;
+    }
+
+    const result: WeeklyCategorySpend[] = [];
+    for (const category of categories) {
+      const amount = totals.get(category.id) ?? 0;
+      if (amount <= 0) continue;
+      const catBudget = budgets.find(
+        (b) => b.categoryId === category.id && b.month === weekKey,
+      )?.amount ?? 0;
+      result.push({
+        categoryId: category.id,
+        name: category.name,
+        color: category.color,
+        icon: category.icon,
+        amount,
+        pct: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
+        budget: catBudget,
+        budgetUsed: catBudget > 0 ? amount / catBudget : 0,
+      });
+    }
+
+    return result.sort((a, b) => b.amount - a.amount);
+  },
+
+  getWeeklyTrends: (numWeeks: number): WeeklyOverview[] => {
+    const { transactions, budgets } = get();
+    const result: WeeklyOverview[] = [];
+    const now = Date.now();
+
+    for (let i = numWeeks - 1; i >= 0; i--) {
+      const targetTime = now - i * 7 * 86_400_000;
+      const weekKey = getWeekKey(targetTime);
+      const { start, end } = weekRange(weekKey);
+
+      let income = 0;
+      let spent = 0;
+      for (const t of transactions) {
+        if (t.date < start || t.date >= end) continue;
+        if (t.type === 'income') income += t.amount;
+        else spent += t.amount;
+      }
+
+      const budget = budgets
+        .filter((b) => b.month === weekKey)
+        .reduce((s, b) => s + b.amount, 0);
+
+      const budgetUsed = budget > 0 ? Math.min(1, spent / budget) : 0;
+
+      result.push({
+        week: weekKey,
         spent,
         income,
         saved: income - spent,
