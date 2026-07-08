@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { GamePanel, ProgressRing, StarRating } from '@/components/game';
+import { ProgressRing, StarRating } from '@/components/game';
 import { PressableScale } from '@/components/motion';
 import { colors, glass, gradients, glow, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts, typography } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { computeGoalProgress } from '@/store/goalStore';
+import { useSavingsStore } from '@/store/savingsStore';
+import { useHabitsStore } from '@/store/habitsStore';
 import type { Goal } from '@/types/goal';
 import type { Task } from '@/types/task';
 
@@ -21,10 +25,6 @@ type Countdown = {
   icon: 'flag-checkered' | 'clock-alert-outline' | 'alert-circle-outline';
 };
 
-/**
- * Deadline → a countdown pill. Neutral gold when comfortably ahead, orange when
- * the deadline is near (≤ 7 days) and red once overdue (DESIGN_SPEC §5.6).
- */
 function computeCountdown(deadline: number): Countdown {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -70,20 +70,12 @@ function computeCountdown(deadline: number): Countdown {
 interface GoalCardProps {
   goal: Goal;
   onToggle: (milestoneId: string) => void;
-  /** Standalone tasks linked to this goal via `task.goalId` (my-os-8u7). */
   linkedTasks?: Task[];
-  /** Toggle a contributing task's done state (advances goal progress). */
   onToggleTask?: (taskId: string) => void;
   onEdit?: (goalId: string) => void;
   onDelete?: (goalId: string) => void;
 }
 
-/**
- * A single goal: title, deadline countdown pill, a gold ProgressRing driven by
- * milestone completion AND linked-task completion (my-os-8u7), description, a
- * tappable milestone checklist and a "contributing tasks" section. At 100% it
- * blooms gold with a StarRating "victory" banner.
- */
 export function GoalCard({
   goal,
   onToggle,
@@ -92,19 +84,43 @@ export function GoalCard({
   onEdit,
   onDelete,
 }: GoalCardProps) {
+  const savingsGoals = useSavingsStore((s) => s.goals);
+  const habitLogs = useHabitsStore((s) => s.logs);
+
   const { done, total, pct, remaining, complete, contributingTasks } =
     useMemo(() => {
       const p = computeGoalProgress(goal, linkedTasks);
       return { ...p, remaining: p.total - p.done };
-    }, [goal, linkedTasks]);
+    }, [goal, linkedTasks, savingsGoals, habitLogs]);
 
   const countdown = goal.deadline ? computeCountdown(goal.deadline) : null;
 
+  const savingsGoal = useMemo(() => {
+    if (!goal.savingsGoalId) return null;
+    return savingsGoals.find((g) => g.id === goal.savingsGoalId);
+  }, [goal.savingsGoalId, savingsGoals]);
+
+  const linkedHabit = useMemo(() => {
+    if (!goal.habitId) return null;
+    try {
+      const { useHabitsStore } = require('@/store/habitsStore');
+      return useHabitsStore.getState().views().find((h: any) => h.id === goal.habitId);
+    } catch (e) {
+      return null;
+    }
+  }, [goal.habitId, habitLogs]);
+
   return (
-    <GamePanel
-      variant='glass'
-      style={complete ? glow(GOLD, 0.35, 18) : undefined}
-    >
+    <View style={[styles.card, complete ? glow(GOLD, 0.25, 20) : undefined]}>
+      <BlurView intensity={12} tint='dark' style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents='none'
+      />
+      
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
           <View style={styles.titleRow}>
@@ -151,8 +167,8 @@ export function GoalCard({
 
         <ProgressRing
           progress={total > 0 ? done / total : 0}
-          size={64}
-          stroke={8}
+          size={60}
+          stroke={7}
           gradient={gradients.gold}
           glow={pct > 0}
         >
@@ -165,6 +181,57 @@ export function GoalCard({
           {goal.description}
         </Text>
       ) : null}
+
+      {/* Linked Modules Info */}
+      {(savingsGoal || linkedHabit) && (
+        <View style={styles.linksBlock}>
+          {savingsGoal && (
+            <View style={styles.linkRow}>
+              <View style={styles.linkHeader}>
+                <Icon name='piggy-bank-outline' size={14} color={colors.gold} />
+                <Text style={styles.linkTitle} numberOfLines={1}>
+                  Heo đất: {savingsGoal.name}
+                </Text>
+                <Text style={styles.linkVal}>
+                  {Math.round(
+                    (savingsGoal.targetAmount > 0
+                      ? Math.min(1, savingsGoal.currentAmount / savingsGoal.targetAmount)
+                      : 0) * 100
+                  )}%
+                </Text>
+              </View>
+              <View style={styles.progressBarBg}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    {
+                      width: `${Math.round(
+                        (savingsGoal.targetAmount > 0
+                          ? Math.min(1, savingsGoal.currentAmount / savingsGoal.targetAmount)
+                          : 0) * 100
+                      )}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          )}
+
+          {linkedHabit && (
+            <View style={[styles.linkRow, savingsGoal ? { marginTop: 8 } : undefined]}>
+              <View style={styles.linkHeader}>
+                <Icon name='repeat' size={14} color='#4ECDC4' />
+                <Text style={styles.linkTitle} numberOfLines={1}>
+                  Thói quen: {linkedHabit.name}
+                </Text>
+                <Text style={styles.linkVal}>
+                  🔥 {linkedHabit.streak} ngày • {linkedHabit.pct}%
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
 
       {complete ? (
         <View style={styles.victory}>
@@ -186,9 +253,9 @@ export function GoalCard({
               accessibilityState={{ checked: m.done }}
               accessibilityLabel={m.title}
             >
-              <View style={[styles.checkbox, m.done && styles.checkboxDone]}>
+              <View style={[styles.checkbox, m.done ? styles.checkboxDone : styles.checkboxUndone]}>
                 {m.done ? (
-                  <Icon name='check-bold' size={13} color={colors.screenBg} />
+                  <Icon name='check-bold' size={13} color={colors.black} />
                 ) : null}
               </View>
               <Text
@@ -207,7 +274,7 @@ export function GoalCard({
           <View style={styles.linkedHeader}>
             <Icon name='link-variant' size={13} color={colors.muted} />
             <Text style={styles.linkedHeaderText}>
-              Task đóng góp ({contributingTasks.filter((t) => t.done).length}/
+              Nhiệm vụ đóng góp ({contributingTasks.filter((t) => t.done).length}/
               {contributingTasks.length})
             </Text>
           </View>
@@ -222,9 +289,9 @@ export function GoalCard({
               accessibilityState={{ checked: t.done }}
               accessibilityLabel={t.title}
             >
-              <View style={[styles.checkbox, t.done && styles.checkboxDone]}>
+              <View style={[styles.checkbox, t.done ? styles.checkboxDone : styles.checkboxUndone]}>
                 {t.done ? (
-                  <Icon name='check-bold' size={13} color={colors.screenBg} />
+                  <Icon name='check-bold' size={13} color={colors.black} />
                 ) : null}
               </View>
               <Text
@@ -243,11 +310,19 @@ export function GoalCard({
           ? 'Tất cả cột mốc đã hoàn thành'
           : `${remaining} cột mốc còn lại`}
       </Text>
-    </GamePanel>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: glass.fillStrong,
+    borderWidth: 1,
+    borderColor: glass.rim,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    overflow: 'hidden',
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -265,7 +340,7 @@ const styles = StyleSheet.create({
   actionIcons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   actionBtn: {
     padding: 2,
@@ -280,17 +355,17 @@ const styles = StyleSheet.create({
     gap: 5,
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: radius.pill,
   },
   pillText: {
     fontFamily: fonts.display,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 0.3,
   },
   ringValue: {
     fontFamily: fonts.displayBold,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.text,
   },
   description: {
@@ -299,6 +374,44 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.muted,
     marginTop: spacing.sm,
+  },
+  linksBlock: {
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  linkRow: {
+    gap: 6,
+  },
+  linkHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  linkTitle: {
+    flex: 1,
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.text,
+  },
+  linkVal: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 11,
+    color: colors.muted,
+  },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.gold,
+    borderRadius: radius.pill,
   },
   victory: {
     flexDirection: 'row',
@@ -317,17 +430,20 @@ const styles = StyleSheet.create({
   },
   milestones: {
     marginTop: spacing.md,
-    padding: spacing.sm,
-    borderRadius: radius.lg,
-    backgroundColor: glass.fillStrong,
-    gap: 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.02)',
+    gap: 2,
   },
   linkedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 4,
-    paddingTop: 2,
+    paddingTop: 6,
     paddingBottom: 2,
   },
   linkedHeaderText: {
@@ -340,17 +456,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    minHeight: 44,
+    minHeight: 40,
     paddingHorizontal: 4,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
+    width: 20,
+    height: 20,
+    borderRadius: radius.sm - 2,
     borderWidth: 1.5,
-    borderColor: colors.outline,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  checkboxUndone: {
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   checkboxDone: {
     backgroundColor: GOLD,
@@ -359,7 +478,7 @@ const styles = StyleSheet.create({
   milestoneText: {
     flex: 1,
     fontFamily: fonts.medium,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.text,
   },
   milestoneDone: {
@@ -368,7 +487,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     fontFamily: fonts.display,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 0.4,
     color: colors.muted,
     marginTop: spacing.sm,

@@ -168,6 +168,8 @@ export const SCHEMA: string[] = [
     deadline INTEGER,
     status TEXT NOT NULL DEFAULT 'active',
     dropReason TEXT,
+    savingsGoalId TEXT,
+    habitId TEXT,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL
   );`,
@@ -299,4 +301,7 @@ export const COLUMN_MIGRATIONS: ColumnMigration[] = [
   // Tasks v2: recurrence and routine_time columns
   { table: 'tasks', column: 'recurrence', definition: 'TEXT' },
   { table: 'tasks', column: 'routine_time', definition: 'TEXT' },
+  // Goals v2: savings goal and habit linkage
+  { table: 'goals', column: 'savingsGoalId', definition: 'TEXT' },
+  { table: 'goals', column: 'habitId', definition: 'TEXT' },
 ];

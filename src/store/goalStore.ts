@@ -39,15 +39,45 @@ export function computeGoalProgress(
   const taskTotal = contributingTasks.length;
   const taskDone = contributingTasks.filter((t) => t.done).length;
 
-  const total = milestoneTotal + taskTotal;
-  const done = milestoneDone + taskDone;
+  let total = milestoneTotal + taskTotal;
+  let done = milestoneDone + taskDone;
+
+  // Add savings goal if linked
+  if (goal.savingsGoalId) {
+    try {
+      const { useSavingsStore } = require('./savingsStore');
+      const sg = useSavingsStore.getState().goals.find((g: any) => g.id === goal.savingsGoalId);
+      if (sg) {
+        total += 1;
+        const progress = sg.targetAmount > 0 ? Math.min(1, sg.currentAmount / sg.targetAmount) : 0;
+        done += progress;
+      }
+    } catch (e) {
+      console.warn('Failed to load savings goal progress', e);
+    }
+  }
+
+  // Add habit if linked
+  if (goal.habitId) {
+    try {
+      const { useHabitsStore } = require('./habitsStore');
+      const habitView = useHabitsStore.getState().views().find((h: any) => h.id === goal.habitId);
+      if (habitView) {
+        total += 1;
+        done += (habitView.pct / 100);
+      }
+    } catch (e) {
+      console.warn('Failed to load habit progress', e);
+    }
+  }
+
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return {
-    done,
+    done: Math.round(done * 100) / 100,
     total,
     pct,
-    complete: total > 0 && done === total,
+    complete: total > 0 && done >= total,
     contributingTasks,
   };
 }
@@ -98,6 +128,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
         deadline: r.deadline ?? undefined,
         status: r.status as Goal['status'],
         dropReason: r.dropReason ?? undefined,
+        savingsGoalId: r.savingsGoalId ?? undefined,
+        habitId: r.habitId ?? undefined,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
         milestones: mByGoal[r.id] || [],
@@ -111,8 +143,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     const goalId = newId();
     const now = Date.now();
     await runSql(
-      `INSERT INTO goals (id, userId, title, description, deadline, status, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+      `INSERT INTO goals (id, userId, title, description, deadline, status, savingsGoalId, habitId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         goalId,
         null,
@@ -120,6 +152,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
         input.description ?? null,
         input.deadline ?? null,
         'active',
+        input.savingsGoalId ?? null,
+        input.habitId ?? null,
         now,
         now,
       ],
@@ -162,6 +196,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
       description: input.description,
       deadline: input.deadline,
       status: 'active',
+      savingsGoalId: input.savingsGoalId,
+      habitId: input.habitId,
       createdAt: now,
       updatedAt: now,
       milestones: createdMilestones,
@@ -175,11 +211,13 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
 
     // Update goal base info
     await runSql(
-      'UPDATE goals SET title = ?, description = ?, deadline = ?, updatedAt = ? WHERE id = ?;',
+      'UPDATE goals SET title = ?, description = ?, deadline = ?, savingsGoalId = ?, habitId = ?, updatedAt = ? WHERE id = ?;',
       [
         updates.title,
         updates.description ?? null,
         updates.deadline ?? null,
+        updates.savingsGoalId ?? null,
+        updates.habitId ?? null,
         now,
         id,
       ],
@@ -225,6 +263,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
           title: updates.title,
           description: updates.description,
           deadline: updates.deadline,
+          savingsGoalId: updates.savingsGoalId,
+          habitId: updates.habitId,
           updatedAt: now,
           milestones: [...g.milestones, ...createdMilestones],
         };

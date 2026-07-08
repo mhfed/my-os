@@ -17,6 +17,8 @@ export interface Goal {
   deadline?: number;
   status: GoalStatus;
   dropReason?: string;
+  savingsGoalId?: string;
+  habitId?: string;
   createdAt: number;
   updatedAt: number;
   milestones: Milestone[];
@@ -32,6 +34,8 @@ export interface GoalState {
     description?: string;
     deadline?: number;
     milestones: string[];
+    savingsGoalId?: string;
+    habitId?: string;
   }) => Promise<void>;
   updateGoal: (
     id: string,
@@ -40,6 +44,8 @@ export interface GoalState {
       description?: string;
       deadline?: number;
       newMilestones?: string[];
+      savingsGoalId?: string;
+      habitId?: string;
     },
   ) => Promise<void>;
   updateGoalStatus: (

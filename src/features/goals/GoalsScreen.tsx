@@ -78,24 +78,37 @@ export function GoalsScreen() {
         pointerEvents='none'
       />
 
-      {/* Header */}
-      <AnimatedCard index={0} style={styles.headerWrap}>
-        <View style={styles.headerCard}>
-          <View style={styles.header}>
-            <PressableScale
-              onPress={handleBack}
-              haptic='light'
-              hitSlop={8}
-              style={styles.back}
-              accessibilityRole='button'
-              accessibilityLabel='Quay lại'
-            >
-              <Icon name='arrow-left' size={24} color={colors.text} />
-            </PressableScale>
-            <Text style={styles.title}>Mục tiêu</Text>
-          </View>
+      {/* Header — flat, no card */}
+      <View style={styles.headerWrap}>
+        <PressableScale
+          onPress={handleBack}
+          haptic='light'
+          hitSlop={8}
+          style={styles.back}
+          accessibilityRole='button'
+          accessibilityLabel='Quay lại'
+        >
+          <Icon name='arrow-left' size={22} color={colors.text} />
+        </PressableScale>
+        <View>
+          <Text style={styles.title}>Mục tiêu</Text>
+          <Text style={styles.subtitle}>{goals.length} mục tiêu đang theo đuổi</Text>
         </View>
-      </AnimatedCard>
+        <PressableScale
+          onPress={() => {
+            setEditingGoalId(null);
+            setCreatorOpen(true);
+          }}
+          haptic='light'
+          style={styles.addBtn}
+          accessibilityLabel='Tạo mục tiêu mới'
+        >
+          <Icon name='plus' size={20} color={colors.text} />
+        </PressableScale>
+      </View>
+
+      {/* Divider */}
+      <View style={styles.headerDivider} />
 
       {!ready ? (
         <GoalsSkeleton />
@@ -133,7 +146,7 @@ export function GoalsScreen() {
       )}
 
       <GameIconButton
-        icon='target'
+        icon='plus'
         variant='gold'
         size={60}
         style={styles.fab}
@@ -188,39 +201,51 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   headerWrap: {
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
-  },
-  headerCard: {
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   back: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: -spacing.xs,
   },
   title: {
     fontFamily: fonts.displayBold,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 20,
     color: colors.text,
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 1,
+  },
+  addBtn: {
+    marginLeft: 'auto',
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: radius.sm,
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
   },
   listContent: {
-    padding: spacing.lg,
-    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.tabClear,
+    gap: spacing.sm,
   },
   emptyContent: {
     flexGrow: 1,
@@ -230,7 +255,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.xxl,
+    bottom: spacing.tabClear + 16,
   },
   // ---- skeleton ----------------------------------------------------------
   skeletonCard: {
