@@ -15,24 +15,19 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.personalos.app",
+      "bundleIdentifier": "com.hieuminh.personalos",
       "infoPlist": {
         "UILaunchStoryboardName": "SplashScreen"
       }
     },
     "android": {
-      "package": "com.personalos.app",
+      "package": "com.hieuminh.personalos",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#080812"
       }
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-sqlite",
-      "expo-asset"
-    ],
+    "plugins": ["expo-router", "expo-font", "expo-sqlite", "expo-asset"],
     "experiments": {
       "typedRoutes": true
     }

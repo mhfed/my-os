@@ -133,6 +133,8 @@ export default function TabsLayout() {
   const sharedTabOptions = {
     headerShown: false,
     animation: 'shift' as const,
+    detachInactiveScreens: false,
+    freezeOnBlur: false,
     tabBarActiveTintColor: colors.secondaryContainer,
     tabBarInactiveTintColor: colors.onSurfaceVariant + '99',
     tabBarBackground: () => <TabBarBackground />,
