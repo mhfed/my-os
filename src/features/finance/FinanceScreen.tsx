@@ -104,7 +104,10 @@ function initials(name: string): string {
 // ===========================================================================
 
 export function FinanceScreen() {
-  const ready = useFinanceStore((s) => s.ready);
+  const financeReady = useFinanceStore((s) => s.ready);
+  const debtReady = useDebtStore((s) => s.ready);
+  const savingsReady = useSavingsStore((s) => s.ready);
+  const ready = financeReady && debtReady && savingsReady;
   const activeMonth = useFinanceStore((s) => s.activeMonth);
 
   // Finance data

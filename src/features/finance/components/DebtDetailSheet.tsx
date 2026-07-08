@@ -462,20 +462,7 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
             </View>
           )}
 
-          {/* Settle link toggle (only when not yet settled) */}
-          {view.status !== 'settled' && (
-            <View style={styles.settleLinkRow}>
-              <Text style={styles.settleLinkLabel}>
-                Ghi vào giao dịch khi tất toán
-              </Text>
-              <Switch
-                value={linkTxnOnSettle}
-                onValueChange={setLinkTxnOnSettle}
-                trackColor={{ false: colors.track, true: tint(colors.purple, '55') }}
-                thumbColor={linkTxnOnSettle ? colors.purple : colors.muted}
-              />
-            </View>
-          )}
+
 
           {/* Payment timeline */}
           <Text style={styles.sectionTitle}>Lịch sử thanh toán</Text>

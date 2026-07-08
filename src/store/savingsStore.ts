@@ -188,7 +188,7 @@ export const useSavingsStore = create<SavingsState>()((set, get) => ({
     }));
   },
 
-  addContribution: async (goalId, amount, date, note, linkTxn = false) => {
+  addContribution: async (goalId, amount, date, note, linkTxn = true) => {
     const contribution: SavingsContribution = {
       id: newId(),
       goalId,

@@ -22,7 +22,7 @@ import type { Budget, Category, Transaction } from '@/types/finance';
 // Deterministic createdAt so seed rows have a stable, sortable origin.
 const SEED_CREATED_AT = Date.UTC(2024, 0, 1, 0, 0, 0);
 
-const CAT = {
+export const CAT = {
   rent: 'seed-cat-rent',
   food: 'seed-cat-food',
   transport: 'seed-cat-transport',

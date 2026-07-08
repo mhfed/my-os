@@ -87,6 +87,8 @@ export default function RootLayout() {
 
   const noteReady = useNoteStore((s) => s.ready);
   const goalReady = useGoalStore((s) => s.ready);
+  const debtReady = useDebtStore((s) => s.ready);
+  const savingsReady = useSavingsStore((s) => s.ready);
 
   const storesReady =
     financeReady &&
@@ -95,7 +97,9 @@ export default function RootLayout() {
     journalReady &&
     inboxReady &&
     noteReady &&
-    goalReady;
+    goalReady &&
+    debtReady &&
+    savingsReady;
   const ready = fontsLoaded && storesReady;
 
   // ── Auto-backup (Phase 0) ──────────────────────────────────────────────

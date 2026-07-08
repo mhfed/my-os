@@ -174,15 +174,6 @@ export const SCHEMA: string[] = [
     updatedAt INTEGER NOT NULL
   );`,
 
-  `CREATE TABLE IF NOT EXISTS milestones (
-    id TEXT PRIMARY KEY NOT NULL,
-    goalId TEXT NOT NULL,
-    title TEXT NOT NULL,
-    done INTEGER NOT NULL DEFAULT 0,
-    linkedTaskId TEXT,
-    createdAt INTEGER NOT NULL,
-    FOREIGN KEY(goalId) REFERENCES goals(id) ON DELETE CASCADE
-  );`,
 
   // Quick Capture inbox (PRD §2.1). `status`: 'inbox' | 'archived'.
   `CREATE TABLE IF NOT EXISTS inbox_items (
@@ -267,7 +258,6 @@ export const SCHEMA: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_workout_exercises_workoutId ON workout_exercises (workoutId);`,
   `CREATE INDEX IF NOT EXISTS idx_notes_updatedAt ON notes (updatedAt);`,
   `CREATE INDEX IF NOT EXISTS idx_goals_status ON goals (status);`,
-  `CREATE INDEX IF NOT EXISTS idx_milestones_goalId ON milestones (goalId);`,
   `CREATE INDEX IF NOT EXISTS idx_tasks_goalId ON tasks (goalId);`,
 
   `CREATE TABLE IF NOT EXISTS app_settings (

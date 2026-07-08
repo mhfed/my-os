@@ -487,15 +487,6 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
                   style={styles.noteInput}
                 />
 
-                <View style={styles.linkTxnRow}>
-                  <Text style={styles.linkTxnLabel}>Ghi vào chi tiêu Finance</Text>
-                  <Switch
-                    value={linkTxn}
-                    onValueChange={setLinkTxn}
-                    trackColor={{ false: colors.track, true: tint(view.color, '55') }}
-                    thumbColor={linkTxn ? view.color : colors.muted}
-                  />
-                </View>
 
                 <GameButton
                   label='Lưu'
