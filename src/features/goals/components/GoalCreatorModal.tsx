@@ -37,7 +37,11 @@ export function GoalCreatorModal({
   const createGoal = useGoalStore((s) => s.createGoal);
   const updateGoal = useGoalStore((s) => s.updateGoal);
 
-  const savingsGoals = useSavingsStore((s) => s.goals.filter((g) => g.status === 'active'));
+  const savingsGoals = useSavingsStore((s) => s.goals);
+  const activeSavingsGoals = useMemo(
+    () => savingsGoals.filter((g) => g.status === 'active'),
+    [savingsGoals],
+  );
   const habits = useHabitsStore((s) => s.habits);
 
   const isEditing = !!editGoalId;
@@ -294,7 +298,7 @@ export function GoalCreatorModal({
                 >
                   <Text style={[styles.linkChipText, savingsGoalId === '' && styles.linkChipTextSelected]}>Không liên kết</Text>
                 </PressableScale>
-                {savingsGoals.map((sg) => (
+                {activeSavingsGoals.map((sg) => (
                   <PressableScale
                     key={sg.id}
                     style={[styles.linkChip, savingsGoalId === sg.id && styles.linkChipSelected]}
