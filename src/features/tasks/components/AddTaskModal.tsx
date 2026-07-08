@@ -12,8 +12,10 @@ import {
 } from 'react-native';
 
 import { Icon } from '@/theme/icons';
-import { colors, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
+import { PressableScale } from '@/components/motion';
 import { startOfToday } from '@/utils/day';
 import { useTasksStore } from '@/store/tasksStore';
 import { useGoalStore } from '@/store/goalStore';
@@ -30,19 +32,14 @@ const DAY_MS = 86_400_000;
 type DueChoice = 'Today' | 'Tomorrow' | 'None';
 const DUE_CHOICES: DueChoice[] = ['Today', 'Tomorrow', 'None'];
 
-/** Color matching a priority badge — P0 red, P1 orange, P2/P3 teal. */
 function priorityColor(priority: Priority): string {
   switch (priority) {
-    case 'P0':
-      return colors.red;
-    case 'P1':
-      return colors.orange;
-    default:
-      return colors.teal;
+    case 'P0': return colors.red;
+    case 'P1': return colors.orange;
+    default: return colors.teal;
   }
 }
 
-/** Icon name matching priority arrow semantics (Jira-style). */
 function priorityIcon(
   priority: Priority,
 ):
@@ -51,33 +48,23 @@ function priorityIcon(
   | 'signal-cellular-1'
   | 'signal-cellular-outline' {
   switch (priority) {
-    case 'P0':
-      return 'signal-cellular-3';
-    case 'P1':
-      return 'signal-cellular-2';
-    case 'P2':
-      return 'signal-cellular-1';
-    case 'P3':
-      return 'signal-cellular-outline';
+    case 'P0': return 'signal-cellular-3';
+    case 'P1': return 'signal-cellular-2';
+    case 'P2': return 'signal-cellular-1';
+    case 'P3': return 'signal-cellular-outline';
   }
 }
 
 function dueDateFor(choice: DueChoice): number | undefined {
   switch (choice) {
-    case 'Today':
-      return startOfToday();
-    case 'Tomorrow':
-      return startOfToday() + DAY_MS;
-    default:
-      return undefined;
+    case 'Today': return startOfToday();
+    case 'Tomorrow': return startOfToday() + DAY_MS;
+    default: return undefined;
   }
 }
 
-/** Slide-up sheet to create a new task: title, priority, context, due. */
 export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const addTask = useTasksStore((s) => s.addTask);
-  // Only active goals are pickable — completed/dropped goals shouldn't gather
-  // new work (my-os-8u7.4).
   const goals = useGoalStore((s) => s.goals);
   const activeGoals = goals.filter((g) => g.status === 'active');
 
@@ -88,6 +75,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const [goalId, setGoalId] = useState<string | undefined>(undefined);
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
+  const [recurrence, setRecurrence] = useState<'none' | 'daily'>('none');
+  const [routineTime, setRoutineTime] = useState<string>('08:00');
 
   const canSave = title.trim().length > 0;
 
@@ -99,6 +88,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
     setGoalId(undefined);
     setSubtasks([]);
     setNewSubtask('');
+    setRecurrence('none');
+    setRoutineTime('08:00');
   }
 
   function handleClose() {
@@ -108,52 +99,59 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
 
   async function handleSave() {
     if (!canSave) return;
+    let dueDate = dueDateFor(due);
+    if (recurrence === 'daily') {
+      const todayBase = startOfToday();
+      const [h, m] = routineTime.split(':').map(Number);
+      dueDate = new Date(todayBase).setHours(h, m, 0, 0);
+    }
     await addTask({
       title: title.trim(),
       context: context.trim() || undefined,
       priority,
-      dueDate: dueDateFor(due),
+      dueDate,
       goalId,
       subtasks,
+      recurrence: recurrence === 'daily' ? 'daily' : 'none',
+      routineTime: recurrence === 'daily' ? routineTime : undefined,
     });
     handleClose();
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType='slide'
-      onRequestClose={handleClose}
-    >
+    <Modal visible={visible} transparent animationType='slide' onRequestClose={handleClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.backdrop}
       >
-        <Pressable style={styles.backdropFill} onPress={handleClose} />
+        <Pressable style={styles.backdropFill} onPress={handleClose}>
+          <View style={StyleSheet.absoluteFill} />
+        </Pressable>
         <View style={styles.sheet}>
           <View style={styles.grabber} />
-          <Text style={styles.heading}>New task</Text>
+          <Text style={styles.heading}>Nhiệm vụ mới</Text>
 
           <TextInput
             style={styles.input}
             value={title}
             onChangeText={setTitle}
-            placeholder='What needs doing?'
+            placeholder='Bạn cần làm gì?'
             placeholderTextColor={colors.tabInactive}
             autoFocus
             returnKeyType='done'
           />
 
-          <Text style={styles.fieldLabel}>PRIORITY</Text>
+          <Text style={styles.fieldLabel}>ĐỘ ƯU TIÊN</Text>
           <View style={styles.segments}>
             {PRIORITIES.map((p) => {
               const isActive = p === priority;
               const pColor = priorityColor(p);
               return (
-                <Pressable
+                <PressableScale
                   key={p}
                   onPress={() => setPriority(p)}
+                  scaleTo={0.95}
+                  haptic='light'
                   style={[
                     styles.segment,
                     isActive
@@ -166,36 +164,37 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                     size={18}
                     color={isActive ? pColor : colors.muted}
                   />
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
 
-          <Text style={styles.fieldLabel}>CONTEXT</Text>
+          <Text style={styles.fieldLabel}>BỐI CẢNH</Text>
           <TextInput
             style={styles.input}
             value={context}
             onChangeText={setContext}
-            placeholder='e.g. Work, Health (optional)'
+            placeholder='Ví dụ: Công việc, Sức khỏe (tùy chọn)'
             placeholderTextColor={colors.tabInactive}
             returnKeyType='done'
           />
 
           <Text style={styles.fieldLabel}>
-            SUBTASKS {subtasks.length > 0 ? `(${subtasks.length})` : ''}
+            NHIỆM VỤ PHỤ {subtasks.length > 0 ? `(${subtasks.length})` : ''}
           </Text>
           <View style={styles.subtasksList}>
             {subtasks.map((st, i) => (
               <View key={i} style={styles.subtaskItem}>
                 <Icon name='check' size={14} color={colors.muted} />
                 <Text style={styles.subtaskText}>{st}</Text>
-                <Pressable
-                  onPress={() =>
-                    setSubtasks(subtasks.filter((_, idx) => idx !== i))
-                  }
+                <PressableScale
+                  onPress={() => setSubtasks(subtasks.filter((_, idx) => idx !== i))}
+                  scaleTo={0.85}
+                  haptic='light'
+                  hitSlop={8}
                 >
                   <Icon name='close' size={14} color={colors.muted} />
-                </Pressable>
+                </PressableScale>
               </View>
             ))}
             <View style={styles.subtaskInputRow}>
@@ -204,7 +203,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                 style={styles.subtaskInput}
                 value={newSubtask}
                 onChangeText={setNewSubtask}
-                placeholder='Add subtask...'
+                placeholder='Thêm nhiệm vụ phụ...'
                 placeholderTextColor={colors.tabInactive}
                 returnKeyType='done'
                 onSubmitEditing={() => {
@@ -217,48 +216,135 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             </View>
           </View>
 
-          <Text style={styles.fieldLabel}>DUE</Text>
+          <Text style={styles.fieldLabel}>LẶP LẠI (ROUTINE)</Text>
           <View style={styles.segments}>
-            {DUE_CHOICES.map((choice) => {
-              const isActive = choice === due;
-              return (
-                <Pressable
-                  key={choice}
-                  onPress={() => setDue(choice)}
-                  style={[
-                    styles.segment,
-                    isActive
-                      ? {
-                          backgroundColor: tint(colors.purple),
-                          borderColor: colors.purple,
-                        }
-                      : styles.segmentInactive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      { color: isActive ? colors.purple : colors.muted },
-                    ]}
-                  >
-                    {choice}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            <PressableScale
+              onPress={() => setRecurrence('none')}
+              scaleTo={0.95}
+              haptic='light'
+              style={[
+                styles.segment,
+                recurrence === 'none'
+                  ? { backgroundColor: tint(colors.purple), borderColor: colors.purple }
+                  : styles.segmentInactive,
+              ]}
+            >
+              <Text style={[styles.segmentText, { color: recurrence === 'none' ? colors.purple : colors.muted }]}>
+                Không lặp
+              </Text>
+            </PressableScale>
+            <PressableScale
+              onPress={() => setRecurrence('daily')}
+              scaleTo={0.95}
+              haptic='light'
+              style={[
+                styles.segment,
+                recurrence === 'daily'
+                  ? { backgroundColor: tint(colors.purple), borderColor: colors.purple }
+                  : styles.segmentInactive,
+              ]}
+            >
+              <Text style={[styles.segmentText, { color: recurrence === 'daily' ? colors.purple : colors.muted }]}>
+                Hàng ngày
+              </Text>
+            </PressableScale>
           </View>
+
+          {recurrence === 'daily' ? (
+            <>
+              <Text style={styles.fieldLabel}>KHUNG GIỜ CỐ ĐỊNH</Text>
+              <View style={[styles.segments, { marginBottom: 8 }]}>
+                {[
+                  { label: 'Sáng 08:00', value: '08:00' },
+                  { label: 'Trưa 12:00', value: '12:00' },
+                  { label: 'Chiều 15:00', value: '15:00' },
+                  { label: 'Tối 20:00', value: '20:00' },
+                ].map((p) => {
+                  const isActive = routineTime === p.value;
+                  return (
+                    <PressableScale
+                      key={p.value}
+                      onPress={() => setRoutineTime(p.value)}
+                      scaleTo={0.95}
+                      haptic='light'
+                      style={[
+                        styles.segment,
+                        isActive
+                          ? { backgroundColor: tint(colors.teal), borderColor: colors.teal }
+                          : styles.segmentInactive,
+                        { paddingVertical: 8 }
+                      ]}
+                    >
+                      <Text style={[styles.segmentText, { fontSize: 10, color: isActive ? colors.teal : colors.muted }]}>
+                        {p.label}
+                      </Text>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+              <View style={styles.customTimeRow}>
+                <Text style={styles.customTimeLabel}>Giờ khác:</Text>
+                <TextInput
+                  style={styles.customTimeInput}
+                  value={routineTime}
+                  onChangeText={setRoutineTime}
+                  placeholder='08:00'
+                  placeholderTextColor={colors.tabInactive}
+                  maxLength={5}
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.fieldLabel}>HẠN CHÓT</Text>
+              <View style={styles.segments}>
+                {DUE_CHOICES.map((choice) => {
+                  const isActive = choice === due;
+                  const vietLabel = choice === 'Today' ? 'Hôm nay' : choice === 'Tomorrow' ? 'Ngày mai' : 'Không có';
+                  return (
+                    <PressableScale
+                      key={choice}
+                      onPress={() => setDue(choice)}
+                      scaleTo={0.95}
+                      haptic='light'
+                      style={[
+                        styles.segment,
+                        isActive
+                          ? {
+                              backgroundColor: tint(colors.purple),
+                              borderColor: colors.purple,
+                            }
+                          : styles.segmentInactive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.segmentText,
+                          { color: isActive ? colors.purple : colors.muted },
+                        ]}
+                      >
+                        {vietLabel}
+                      </Text>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
           {activeGoals.length > 0 ? (
             <>
-              <Text style={styles.fieldLabel}>GOAL</Text>
+              <Text style={styles.fieldLabel}>MỤC TIÊU</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.goalRow}
                 keyboardShouldPersistTaps='handled'
               >
-                <Pressable
+                <PressableScale
                   onPress={() => setGoalId(undefined)}
+                  scaleTo={0.95}
+                  haptic='light'
                   style={[
                     styles.goalChip,
                     goalId === undefined
@@ -273,20 +359,21 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                     style={[
                       styles.goalChipText,
                       {
-                        color:
-                          goalId === undefined ? colors.purple : colors.muted,
+                        color: goalId === undefined ? colors.purple : colors.muted,
                       },
                     ]}
                   >
-                    None
+                    Không ghim
                   </Text>
-                </Pressable>
+                </PressableScale>
                 {activeGoals.map((g) => {
                   const isActive = g.id === goalId;
                   return (
-                    <Pressable
+                    <PressableScale
                       key={g.id}
                       onPress={() => setGoalId(g.id)}
+                      scaleTo={0.95}
+                      haptic='light'
                       style={[
                         styles.goalChip,
                         isActive
@@ -311,7 +398,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                       >
                         {g.title}
                       </Text>
-                    </Pressable>
+                    </PressableScale>
                   );
                 })}
               </ScrollView>
@@ -319,16 +406,23 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
           ) : null}
 
           <View style={styles.actions}>
-            <Pressable style={styles.cancelButton} onPress={handleClose}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-            <Pressable
+            <PressableScale
+              style={styles.cancelButton}
+              onPress={handleClose}
+              scaleTo={0.97}
+              haptic='light'
+            >
+              <Text style={styles.cancelText}>Hủy</Text>
+            </PressableScale>
+            <PressableScale
               style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
               onPress={handleSave}
               disabled={!canSave}
+              scaleTo={canSave ? 0.97 : 1}
+              haptic={canSave ? 'medium' : undefined}
             >
-              <Text style={styles.saveText}>Save</Text>
-            </Pressable>
+              <Text style={styles.saveText}>Lưu</Text>
+            </PressableScale>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -340,62 +434,62 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(5,8,15,0.65)',
   },
   backdropFill: {
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.screenBg,
     borderTopWidth: 1,
-    borderColor: colors.border,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 34,
+    borderColor: 'rgba(255,255,255,0.06)',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.tabClear,
   },
   grabber: {
     alignSelf: 'center',
-    width: 40,
+    width: 36,
     height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 16,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginBottom: spacing.md,
   },
   heading: {
     fontFamily: fonts.semibold,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.text,
     letterSpacing: -0.3,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   input: {
-    backgroundColor: colors.screenBg,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.sm,
     fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
   },
   fieldLabel: {
     fontFamily: fonts.monoSemibold,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.muted,
-    letterSpacing: 0.5,
-    marginTop: 18,
-    marginBottom: 8,
+    letterSpacing: 0.8,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   segments: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.xs,
   },
   goalRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.xs,
     paddingRight: 4,
   },
   goalChip: {
@@ -403,9 +497,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     maxWidth: 180,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 11,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
   goalChipText: {
@@ -414,13 +508,13 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   subtasksList: {
-    gap: 8,
+    gap: spacing.xs,
     marginTop: 4,
   },
   subtaskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.xs,
     paddingVertical: 4,
   },
   subtaskText: {
@@ -432,7 +526,7 @@ const styles = StyleSheet.create({
   subtaskInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.xs,
   },
   subtaskInput: {
     flex: 1,
@@ -444,31 +538,31 @@ const styles = StyleSheet.create({
   segment: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 11,
-    borderRadius: 11,
+    paddingVertical: 10,
+    borderRadius: radius.md,
     borderWidth: 1,
   },
   segmentInactive: {
-    backgroundColor: colors.screenBg,
-    borderColor: colors.border,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   segmentText: {
     fontFamily: fonts.monoSemibold,
-    fontSize: 13,
+    fontSize: 12,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 26,
+    gap: spacing.sm,
+    marginTop: spacing.xl,
   },
   cancelButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.screenBg,
+    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cancelText: {
     fontFamily: fonts.medium,
@@ -478,8 +572,8 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: radius.md,
     backgroundColor: colors.purple,
   },
   saveButtonDisabled: {
@@ -489,5 +583,29 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.white,
+  },
+  customTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: 4,
+  },
+  customTimeLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  customTimeInput: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: radius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    fontFamily: fonts.monoRegular,
+    fontSize: 14,
+    color: colors.text,
+    width: 80,
+    textAlign: 'center',
   },
 });

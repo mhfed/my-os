@@ -1,17 +1,16 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, glass, radius, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 interface SectionHeaderProps {
   label: string;
   count: number;
-  /** Color of the leading dot + (for overdue) the label text. */
   tone: 'overdue' | 'today' | 'completed' | 'upcoming' | 'anytime';
 }
 
-/** Section heading: colored dot + uppercase label + muted mono count. */
 export const SectionHeader = memo(function SectionHeader({
   label,
   count,
@@ -55,24 +54,24 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    paddingHorizontal: 18,
-    paddingTop: 8,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 12,
+    gap: 6,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
   },
   label: {
     fontFamily: fonts.displayBold,

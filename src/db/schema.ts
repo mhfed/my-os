@@ -73,7 +73,9 @@ export const SCHEMA: string[] = [
     createdAt INTEGER NOT NULL,
     completedAt INTEGER,
     goalId TEXT,
-    sourceInboxId TEXT
+    sourceInboxId TEXT,
+    recurrence TEXT,
+    routine_time TEXT
   );`,
 
   `CREATE TABLE IF NOT EXISTS task_subtasks (
@@ -294,4 +296,7 @@ export const COLUMN_MIGRATIONS: ColumnMigration[] = [
   // Finance v2: debt netting columns
   { table: 'debt_payments', column: 'payment_method', definition: "TEXT NOT NULL DEFAULT 'cash'" },
   { table: 'debt_payments', column: 'linked_netting_id', definition: 'TEXT' },
+  // Tasks v2: recurrence and routine_time columns
+  { table: 'tasks', column: 'recurrence', definition: 'TEXT' },
+  { table: 'tasks', column: 'routine_time', definition: 'TEXT' },
 ];

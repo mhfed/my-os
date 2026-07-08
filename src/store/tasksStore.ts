@@ -19,10 +19,11 @@ import type {
   TasksState,
 } from '@/types/task';
 
-export const FILTERS: TaskFilter[] = ['Pending', 'Completed'];
+export const FILTERS: TaskFilter[] = ['Pending', 'Completed', 'Overdue'];
 
 const DAY_MS = 86_400_000;
 
+/** Row shape as returned by SQLite (done is 0/1, optionals are null). */
 /** Row shape as returned by SQLite (done is 0/1, optionals are null). */
 interface TaskRow {
   id: string;
@@ -36,6 +37,8 @@ interface TaskRow {
   completedAt: number | null;
   goalId: string | null;
   sourceInboxId: string | null;
+  recurrence: string | null;
+  routine_time: string | null;
 }
 
 interface SubtaskRow {
@@ -59,6 +62,8 @@ function mapRow(r: TaskRow, subtasks: SubtaskRow[] = []): Task {
     completedAt: r.completedAt ?? undefined,
     goalId: r.goalId ?? undefined,
     sourceInboxId: r.sourceInboxId ?? undefined,
+    recurrence: (r.recurrence as 'daily' | 'none' | null) ?? undefined,
+    routineTime: r.routine_time ?? undefined,
     subtasks: subtasks.map((s) => ({
       id: s.id,
       taskId: s.taskId,
@@ -79,8 +84,8 @@ function newId(): string {
 }
 
 const INSERT_SQL = `INSERT OR REPLACE INTO tasks
-  (id, userId, title, context, priority, done, dueDate, createdAt, completedAt, goalId, sourceInboxId)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+  (id, userId, title, context, priority, done, dueDate, createdAt, completedAt, goalId, sourceInboxId, recurrence, routine_time)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
 
 /** Seed tasks — stable ids, dueDates relative to local midnight today. */
 function seedTasks(): Task[] {
@@ -156,6 +161,8 @@ async function insertTask(task: Task): Promise<void> {
     task.completedAt ?? null,
     task.goalId ?? null,
     task.sourceInboxId ?? null,
+    task.recurrence ?? null,
+    task.routineTime ?? null,
   ]);
 }
 
@@ -178,6 +185,24 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
         for (const task of seedTasks()) {
           await insertTask(task);
         }
+      }
+
+      // Automatically reset completed daily routines from previous days
+      const startOfTodayMs = startOfToday();
+      const completedDailyRows = await allRows<TaskRow>(
+        "SELECT * FROM tasks WHERE recurrence = 'daily' AND done = 1 AND completedAt < ?;",
+        [startOfTodayMs]
+      );
+      for (const row of completedDailyRows) {
+        let newDueDate = startOfTodayMs;
+        if (row.routine_time) {
+          const [h, m] = row.routine_time.split(':').map(Number);
+          newDueDate = new Date(startOfTodayMs).setHours(h, m, 0, 0);
+        }
+        await runSql(
+          "UPDATE tasks SET done = 0, completedAt = NULL, dueDate = ? WHERE id = ?;",
+          [newDueDate, row.id]
+        );
       }
 
       const subtaskRows = await allRows<SubtaskRow>(
@@ -226,6 +251,8 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
       createdAt: now,
       goalId: input.goalId,
       sourceInboxId: input.sourceInboxId,
+      recurrence: input.recurrence,
+      routineTime: input.routineTime,
       subtasks,
     };
     await insertTask(task);
@@ -236,6 +263,17 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
       );
     }
     set((state) => ({ tasks: [task, ...state.tasks] }));
+    return task;
+  },
+
+  addTomorrowTask: async (title: string) => {
+    const tomorrowMidnight = startOfToday() + DAY_MS;
+    const dueDate = new Date(tomorrowMidnight).setHours(9, 0, 0, 0);
+    const task = await get().addTask({
+      title,
+      priority: 'P2',
+      dueDate,
+    });
     return task;
   },
 
@@ -330,6 +368,10 @@ export function taskTimeLabel(task: Task): string {
       return `✓ Done at ${hh}:${mm}`;
     }
     return '✓ Done';
+  }
+
+  if (task.recurrence === 'daily') {
+    return `Hàng ngày lúc ${task.routineTime ?? '00:00'}`;
   }
 
   const start = startOfToday();

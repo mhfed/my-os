@@ -1,49 +1,40 @@
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, glass, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon, IconName } from '@/theme/icons';
+import { PressableScale } from '@/components/motion';
 import type { Priority, Task } from '@/types/task';
 
 interface TaskCardProps {
   task: Task;
   timeLabel: string;
   overdue: boolean;
-  /** Title of the linked goal, if this task contributes to one (my-os-8u7.4). */
   goalTitle?: string;
   onToggle: (id: string) => void;
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
 }
 
-/** Color used for the priority icon. */
 function priorityColor(priority: Priority): string {
   switch (priority) {
-    case 'P0':
-      return colors.red;
-    case 'P1':
-      return colors.orange;
-    default:
-      return colors.teal;
+    case 'P0': return colors.red;
+    case 'P1': return colors.orange;
+    default: return colors.teal;
   }
 }
 
-/** Icon name for each priority level — matches Jira arrow semantics. */
 function priorityIcon(priority: Priority): IconName {
   switch (priority) {
-    case 'P0':
-      return 'signal-cellular-3';
-    case 'P1':
-      return 'signal-cellular-2';
-    case 'P2':
-      return 'signal-cellular-1';
-    case 'P3':
-      return 'signal-cellular-outline';
+    case 'P0': return 'signal-cellular-3';
+    case 'P1': return 'signal-cellular-2';
+    case 'P2': return 'signal-cellular-1';
+    case 'P3': return 'signal-cellular-outline';
   }
 }
 
-/** A single task row: checkbox, title + time, priority badge. Toggles on press. */
 export const TaskCard = memo(function TaskCard({
   task,
   timeLabel,
@@ -58,57 +49,39 @@ export const TaskCard = memo(function TaskCard({
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <PressableScale
         onPress={() => onToggle(task.id)}
+        scaleTo={0.98}
+        haptic='light'
         style={[
           styles.card,
           isOverdue && styles.cardOverdue,
           hasSubtasks && styles.cardWithSubtasks,
         ]}
       >
-        {/* Glass overlay */}
         <LinearGradient
-          colors={[
-            'rgba(255,255,255,0.04)',
-            'rgba(255,255,255,0.01)',
-            'rgba(255,255,255,0)',
-          ]}
+          colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)', 'rgba(255,255,255,0)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents='none'
         />
 
-        <View
-          style={[
-            styles.checkbox,
-            task.done ? styles.checkboxDone : styles.checkboxUndone,
-          ]}
-        >
-          {task.done && (
-            <Icon name='check-bold' size={15} color={colors.white} />
-          )}
+        <View style={[styles.checkbox, task.done ? styles.checkboxDone : styles.checkboxUndone]}>
+          {task.done && <Icon name='check-bold' size={14} color={colors.white} />}
         </View>
 
         <View style={styles.body}>
-          <Text
-            style={[styles.title, task.done && styles.titleDone]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.title, task.done && styles.titleDone]} numberOfLines={1}>
             {task.title}
           </Text>
           <View style={styles.metaRow}>
-            <Text
-              style={[
-                styles.time,
-                isOverdue ? styles.timeOverdue : styles.timeToday,
-              ]}
-            >
+            <Text style={[styles.time, isOverdue ? styles.timeOverdue : styles.timeToday]}>
               {timeLabel}
             </Text>
             {goalTitle ? (
               <View style={styles.goalBadge}>
-                <Icon name='target' size={11} color={colors.purple} />
+                <Icon name='target' size={10} color={colors.purple} />
                 <Text style={styles.goalBadgeText} numberOfLines={1}>
                   {goalTitle}
                 </Text>
@@ -117,43 +90,28 @@ export const TaskCard = memo(function TaskCard({
           </View>
         </View>
 
-        <View
-          style={[
-            styles.priorityBadge,
-            { backgroundColor: tint(priColor, '18') },
-          ]}
-        >
+        <View style={[styles.priorityBadge, { backgroundColor: tint(priColor, '18') }]}>
           <Icon name={priorityIcon(task.priority)} size={14} color={priColor} />
         </View>
-      </Pressable>
+      </PressableScale>
 
       {hasSubtasks && !task.done && (
         <View style={styles.subtasksContainer}>
           {task.subtasks!.map((sub) => (
-            <Pressable
+            <PressableScale
               key={sub.id}
               style={styles.subtaskRow}
-              onPress={() =>
-                onToggleSubtask && onToggleSubtask(task.id, sub.id)
-              }
+              onPress={() => onToggleSubtask && onToggleSubtask(task.id, sub.id)}
+              scaleTo={0.97}
+              haptic='light'
             >
-              <View
-                style={[
-                  styles.subtaskCheckbox,
-                  sub.done ? styles.checkboxDone : styles.checkboxUndone,
-                ]}
-              >
-                {sub.done && (
-                  <Icon name='check-bold' size={11} color={colors.white} />
-                )}
+              <View style={[styles.subtaskCheckbox, sub.done ? styles.checkboxDone : styles.checkboxUndone]}>
+                {sub.done && <Icon name='check-bold' size={10} color={colors.white} />}
               </View>
-              <Text
-                style={[styles.subtaskTitle, sub.done && styles.titleDone]}
-                numberOfLines={1}
-              >
+              <Text style={[styles.subtaskTitle, sub.done && styles.titleDone]} numberOfLines={1}>
                 {sub.title}
               </Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
       )}
@@ -163,19 +121,19 @@ export const TaskCard = memo(function TaskCard({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 10,
-    paddingHorizontal: 18,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
+    gap: spacing.sm,
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     overflow: 'hidden',
   },
   cardWithSubtasks: {
@@ -189,9 +147,9 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.red,
   },
   checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -220,8 +178,8 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 3,
+    gap: spacing.xs,
+    marginTop: 2,
   },
   time: {
     fontFamily: fonts.monoMedium,
@@ -233,8 +191,8 @@ const styles = StyleSheet.create({
     gap: 4,
     maxWidth: 160,
     paddingVertical: 2,
-    paddingHorizontal: 7,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    borderRadius: radius.sm,
     backgroundColor: tint(colors.purple, '18'),
   },
   goalBadgeText: {
@@ -250,9 +208,9 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   priorityBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -261,22 +219,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderTopWidth: 0,
     borderColor: glass.rim,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    paddingLeft: 48,
-    gap: 8,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingLeft: 40,
+    gap: spacing.xs,
   },
   subtaskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: spacing.xs,
+    paddingVertical: 4,
   },
   subtaskCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

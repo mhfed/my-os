@@ -30,12 +30,14 @@ export interface Task {
   /** Back-reference to the inbox item this task was triaged from. */
   sourceInboxId?: string;
   subtasks?: Subtask[];
+  recurrence?: 'daily' | 'none';
+  routineTime?: string; // e.g. "08:00"
 }
 
 /** Overdue = past-due & not done; Today = due today or undated. */
 export type TaskSection = 'overdue' | 'today' | 'upcoming';
 
-export type TaskFilter = 'Pending' | 'Completed';
+export type TaskFilter = 'Pending' | 'Completed' | 'Overdue';
 
 /** Input for creating a task (from the add form or inbox triage). */
 export interface NewTaskInput {
@@ -46,6 +48,8 @@ export interface NewTaskInput {
   goalId?: string;
   sourceInboxId?: string;
   subtasks?: string[]; // Array of titles to create initially
+  recurrence?: 'daily' | 'none';
+  routineTime?: string;
 }
 
 export interface TasksState {
@@ -55,6 +59,7 @@ export interface TasksState {
 
   init: () => Promise<void>;
   addTask: (input: NewTaskInput) => Promise<Task>;
+  addTomorrowTask: (title: string) => Promise<Task>;
   toggleTask: (id: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
