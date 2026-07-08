@@ -7,7 +7,7 @@
 
 import { create } from 'zustand';
 
-import { allRows, initDatabase, runSql, tableIsEmpty } from '@/db/database';
+import { allRows, firstRow, initDatabase, runSql, tableIsEmpty } from '@/db/database';
 import { colors } from '@/theme/colors';
 import { todayKey } from '@/utils/day';
 import { useHabitsStore } from '@/store/habitsStore';
@@ -76,6 +76,7 @@ let initPromise: Promise<void> | null = null;
 
 export const useInboxStore = create<InboxState>()((set, get) => ({
   items: [],
+  customSlang: {},
   ready: false,
 
   // ----- lifecycle -----
@@ -91,7 +92,14 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       const rows = await allRows<InboxItemRow>(
         'SELECT * FROM inbox_items ORDER BY createdAt DESC;',
       );
-      set({ items: rows.map(mapRow), ready: true });
+
+      const customSlangRow = await firstRow<{ value: string }>(
+        'SELECT value FROM app_settings WHERE key = ?;',
+        ['customSlang'],
+      );
+      const customSlang = customSlangRow ? JSON.parse(customSlangRow.value) : {};
+
+      set({ items: rows.map(mapRow), customSlang, ready: true });
     })();
 
     return initPromise;
@@ -136,7 +144,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
     set((s) => ({ items: s.items.filter((it) => it.id !== id) }));
   },
 
-  triage: async (id: string, target: TriageTarget) => {
+  triage: async (id: string, target: TriageTarget, confirmedAmount?: number) => {
     const item = get().items.find((it) => it.id === id);
     if (!item) return;
 
@@ -198,13 +206,13 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       }
       case 'transaction': {
         const { parseQuickCapture } = await import('@/utils/parser');
-        const parsed = parseQuickCapture(item.text);
+        const parsed = parseQuickCapture(item.text, get().customSlang);
         const { useFinanceStore } = await import('@/store/financeStore');
         const { CAT } = await import('@/data/seed');
         const finance = useFinanceStore.getState();
         if (!finance.ready) await finance.init();
 
-        const amount = parsed.metadata?.amount ?? 0;
+        const amount = confirmedAmount !== undefined ? confirmedAmount : (parsed.metadata?.amount ?? 0);
         const type = parsed.metadata?.transactionType ?? 'expense';
         const note = parsed.type === 'transaction' ? parsed.text : item.text;
 
@@ -215,11 +223,28 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
           note,
           date: Date.now(),
         });
+
+        if (confirmedAmount !== undefined) {
+          await get().learnSlang(item.text, confirmedAmount);
+        }
         break;
       }
     }
 
     await get().archive(id);
+  },
+
+  learnSlang: async (text: string, confirmedAmount: number) => {
+    const { learnSlangFromInput } = await import('@/utils/parser');
+    const learned = learnSlangFromInput(text, confirmedAmount);
+    if (learned) {
+      const nextSlang = { ...get().customSlang, [learned.word]: learned.multiplier };
+      set({ customSlang: nextSlang });
+      await runSql(
+        'INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);',
+        ['customSlang', JSON.stringify(nextSlang)],
+      );
+    }
   },
 
   // ----- selectors -----

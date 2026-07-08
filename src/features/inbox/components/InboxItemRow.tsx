@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, glass, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
@@ -8,6 +9,8 @@ import { IconBadge } from '@/components/game';
 import { PressableScale } from '@/components/motion';
 import { useInboxStore } from '@/store/inboxStore';
 import type { InboxItem, TriageTarget } from '@/types/inbox';
+
+import { parseQuickCapture } from '@/utils/parser';
 
 /** Relative "captured" label in Vietnamese, e.g. "vừa xong", "12 phút trước". */
 function capturedLabel(createdAt: number): string {
@@ -30,8 +33,10 @@ interface ConvertChip {
 
 const CONVERT_CHIPS: ConvertChip[] = [
   { label: 'Công việc', icon: 'checkbox-marked-circle-outline', target: 'task' },
-  { label: 'Ghi chú', icon: 'note-text-outline', target: 'note' },
+  { label: 'Tài chính', icon: 'cash', target: 'transaction' },
+  { label: 'Thói quen', icon: 'star-outline', target: 'habit' },
   { label: 'Mục tiêu', icon: 'flag-outline', target: 'goal' },
+  { label: 'Ghi chú', icon: 'note-text-outline', target: 'note' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -43,9 +48,10 @@ interface ChipProps {
   icon: IconName;
   color: string;
   onPress: () => void;
+  isSuggested?: boolean;
 }
 
-function TriageChip({ label, icon, color, onPress }: ChipProps) {
+function TriageChip({ label, icon, color, onPress, isSuggested }: ChipProps) {
   return (
     <PressableScale
       onPress={onPress}
@@ -53,10 +59,20 @@ function TriageChip({ label, icon, color, onPress }: ChipProps) {
       accessibilityRole='button'
       accessibilityLabel={label}
       hitSlop={4}
-      style={[styles.chip, { borderColor: tint(color, '55') }]}
+      style={[
+        styles.chip,
+        { borderColor: tint(color, '55') },
+        isSuggested && { backgroundColor: tint(color, '15'), borderWidth: 2 }
+      ]}
     >
       <Icon name={icon} size={15} color={color} />
-      <Text style={[styles.chipLabel, { color }]}>{label}</Text>
+      <Text style={[
+        styles.chipLabel,
+        { color },
+        isSuggested && { fontFamily: fonts.displayBold }
+      ]}>
+        {label}
+      </Text>
     </PressableScale>
   );
 }
@@ -74,6 +90,21 @@ export function InboxItemRow({ item }: Props) {
   const triage = useInboxStore((s) => s.triage);
   const archive = useInboxStore((s) => s.archive);
   const remove = useInboxStore((s) => s.remove);
+  const customSlang = useInboxStore((s) => s.customSlang);
+
+  const parsed = parseQuickCapture(item.text, customSlang);
+  const suggestedType = parsed.type;
+
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [amountText, setAmountText] = useState('');
+
+  const handleTriageTransaction = () => {
+    if (parsed.type === 'transaction' && parsed.metadata?.amount && parsed.metadata.amount > 0) {
+      triage(item.id, 'transaction');
+    } else {
+      setShowPrompt(true);
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -83,6 +114,11 @@ export function InboxItemRow({ item }: Props) {
           <Text style={styles.text} numberOfLines={4}>
             {item.text}
           </Text>
+          {parsed.type === 'transaction' && parsed.metadata?.amount !== undefined && (
+            <Text style={[styles.time, { color: colors.purple, fontFamily: fonts.semibold }]}>
+              Gợi ý Tài chính: {parsed.metadata.transactionType === 'income' ? '+' : '-'}{parsed.metadata.amount.toLocaleString('vi-VN')}đ ({parsed.text})
+            </Text>
+          )}
           <Text style={styles.time}>Ghi {capturedLabel(item.createdAt)}</Text>
         </View>
       </View>
@@ -90,15 +126,25 @@ export function InboxItemRow({ item }: Props) {
       <View style={styles.divider} />
 
       <View style={styles.chips}>
-        {CONVERT_CHIPS.map((chip) => (
-          <TriageChip
-            key={chip.target}
-            label={chip.label}
-            icon={chip.icon}
-            color={colors.purple}
-            onPress={() => triage(item.id, chip.target)}
-          />
-        ))}
+        {CONVERT_CHIPS.map((chip) => {
+          const isSuggested = chip.target === suggestedType;
+          return (
+            <TriageChip
+              key={chip.target}
+              label={isSuggested ? `${chip.label} ⭐` : chip.label}
+              icon={chip.icon}
+              color={isSuggested ? colors.purple : colors.muted}
+              isSuggested={isSuggested}
+              onPress={() => {
+                if (chip.target === 'transaction') {
+                  handleTriageTransaction();
+                } else {
+                  triage(item.id, chip.target);
+                }
+              }}
+            />
+          );
+        })}
         <View style={styles.spacer} />
         <TriageChip
           label='Xong'
@@ -113,6 +159,49 @@ export function InboxItemRow({ item }: Props) {
           onPress={() => remove(item.id)}
         />
       </View>
+
+      {/* Manual Amount Input Modal */}
+      <Modal visible={showPrompt} transparent animationType='fade' onRequestClose={() => setShowPrompt(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Nhập số tiền</Text>
+            <Text style={styles.modalSubtitle}>Không nhận diện được số tiền tự động từ: "{item.text}"</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ví dụ: 40000"
+              placeholderTextColor={colors.tabInactive}
+              keyboardType="number-pad"
+              value={amountText}
+              onChangeText={setAmountText}
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <PressableScale
+                style={[styles.modalButton, { borderColor: colors.muted }]}
+                onPress={() => {
+                  setShowPrompt(false);
+                  setAmountText('');
+                }}
+              >
+                <Text style={[styles.modalBtnText, { color: colors.muted }]}>Hủy</Text>
+              </PressableScale>
+              <PressableScale
+                style={[styles.modalButton, { backgroundColor: colors.purple, borderColor: colors.purple }]}
+                onPress={async () => {
+                  const val = parseInt(amountText.replace(/[^0-9]/g, ''), 10);
+                  if (val > 0) {
+                    await triage(item.id, 'transaction', val);
+                    setShowPrompt(false);
+                    setAmountText('');
+                  }
+                }}
+              >
+                <Text style={[styles.modalBtnText, { color: colors.white }]}>Xác nhận</Text>
+              </PressableScale>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -175,5 +264,63 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 13,
     letterSpacing: 0.2,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(20,29,48,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+  },
+  modalContent: {
+    backgroundColor: colors.cardAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 320,
+    gap: spacing.md,
+    alignItems: 'stretch',
+  },
+  modalTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 18,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  modalInput: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.track,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: 16,
+    color: colors.text,
+    fontFamily: fonts.monoMedium,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  modalButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnText: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
   },
 });

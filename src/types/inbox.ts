@@ -19,6 +19,7 @@ export type TriageTarget = 'task' | 'journal' | 'habit' | 'note' | 'goal' | 'tra
 
 export interface InboxState {
   items: InboxItem[];
+  customSlang: Record<string, number>;
   ready: boolean;
 
   init: () => Promise<void>;
@@ -31,7 +32,8 @@ export interface InboxState {
    * store) and archive it. Implemented in the inbox store, which imports the
    * tasks/journal/habits stores.
    */
-  triage: (id: string, target: TriageTarget) => Promise<void>;
+  triage: (id: string, target: TriageTarget, confirmedAmount?: number) => Promise<void>;
+  learnSlang: (text: string, confirmedAmount: number) => Promise<void>;
 
   // selectors
   open: () => InboxItem[];
