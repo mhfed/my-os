@@ -1,4 +1,12 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -10,6 +18,13 @@ import { Icon, type IconName } from '@/theme/icons';
 import { PressableScale } from '@/components/motion';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 import { exportAllData } from '@/utils/export';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import {
+  backupToCloud,
+  listBackups,
+  restoreLatestFromCloud,
+} from '@/services/backup';
+import { countRows } from '@/utils/backupData';
 
 interface SuperAppItemConfig {
   key: SuperAppItemKey;
@@ -19,15 +34,20 @@ interface SuperAppItemConfig {
 }
 
 const SUPER_APP_ALL: SuperAppItemConfig[] = [
-  { key: 'inbox',   label: 'Inbox',   icon: 'inbox',                  color: colors.purple },
-  { key: 'journal', label: 'Journal', icon: 'notebook',               color: colors.teal   },
-  { key: 'habits',  label: 'Habits',  icon: 'chart-box',              color: colors.purple },
-  { key: 'notes',   label: 'Notes',   icon: 'brain',                  color: colors.orange },
-  { key: 'goals',   label: 'Goals',   icon: 'target',                 color: colors.red    },
-  { key: 'today',   label: 'Today',   icon: 'view-grid',              color: colors.purple },
-  { key: 'tasks',   label: 'Tasks',   icon: 'checkbox-marked-outline',color: colors.teal   },
-  { key: 'health',  label: 'Health',  icon: 'heart-pulse',            color: colors.red    },
-  { key: 'finance', label: 'Finance', icon: 'wallet',                 color: colors.orange },
+  { key: 'inbox', label: 'Inbox', icon: 'inbox', color: colors.purple },
+  { key: 'journal', label: 'Journal', icon: 'notebook', color: colors.teal },
+  { key: 'habits', label: 'Habits', icon: 'chart-box', color: colors.purple },
+  { key: 'notes', label: 'Notes', icon: 'brain', color: colors.orange },
+  { key: 'goals', label: 'Goals', icon: 'target', color: colors.red },
+  { key: 'today', label: 'Today', icon: 'view-grid', color: colors.purple },
+  {
+    key: 'tasks',
+    label: 'Tasks',
+    icon: 'checkbox-marked-outline',
+    color: colors.teal,
+  },
+  { key: 'health', label: 'Health', icon: 'heart-pulse', color: colors.red },
+  { key: 'finance', label: 'Finance', icon: 'wallet', color: colors.orange },
 ];
 
 interface MoreItem {
@@ -39,17 +59,123 @@ interface MoreItem {
 }
 
 const ITEMS: MoreItem[] = [
-  { label: 'Inbox',   sub: 'Triage your quick captures',    icon: 'inbox',                  color: colors.purple, route: '/inbox'   },
-  { label: 'Journal', sub: 'Daily entry · mood · time capsule', icon: 'notebook',           color: colors.teal,   route: '/journal' },
-  { label: 'Habits',  sub: 'Streaks & weekly grid',         icon: 'chart-box',              color: colors.purple, route: '/habits'  },
-  { label: 'Notes',   sub: 'Second brain · reading list',   icon: 'brain',                  color: colors.orange, route: '/notes'   },
-  { label: 'Goals',   sub: 'OKRs & milestones',             icon: 'target',                 color: colors.red,    route: '/goals'   },
+  {
+    label: 'Inbox',
+    sub: 'Triage your quick captures',
+    icon: 'inbox',
+    color: colors.purple,
+    route: '/inbox',
+  },
+  {
+    label: 'Journal',
+    sub: 'Daily entry · mood · time capsule',
+    icon: 'notebook',
+    color: colors.teal,
+    route: '/journal',
+  },
+  {
+    label: 'Habits',
+    sub: 'Streaks & weekly grid',
+    icon: 'chart-box',
+    color: colors.purple,
+    route: '/habits',
+  },
+  {
+    label: 'Notes',
+    sub: 'Second brain · reading list',
+    icon: 'brain',
+    color: colors.orange,
+    route: '/notes',
+  },
+  {
+    label: 'Goals',
+    sub: 'OKRs & milestones',
+    icon: 'target',
+    color: colors.red,
+    route: '/goals',
+  },
 ];
 
 export default function MoreScreen() {
   const router = useRouter();
-  const pinnedItems  = useSettingsStore((s) => s.pinnedItems);
+  const pinnedItems = useSettingsStore((s) => s.pinnedItems);
   const togglePinned = useSettingsStore((s) => s.togglePinnedItem);
+  const [busy, setBusy] = useState<null | 'backup' | 'restore'>(null);
+
+  const notConfigured = () => {
+    Alert.alert(
+      'Chưa cấu hình Supabase',
+      'Hãy điền supabaseUrl / supabaseAnonKey trong app.json (expo.extra) rồi rebuild.',
+    );
+  };
+
+  const handleBackup = async () => {
+    if (busy) return;
+    if (!isSupabaseConfigured) {
+      notConfigured();
+      return;
+    }
+    setBusy('backup');
+    try {
+      const path = await backupToCloud();
+      Alert.alert(
+        'Backup thành công ✅',
+        `Đã upload snapshot lên cloud.\n${path}`,
+      );
+    } catch (err: any) {
+      Alert.alert('Backup thất bại', String(err?.message ?? err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (busy) return;
+    if (!isSupabaseConfigured) {
+      notConfigured();
+      return;
+    }
+    let backups;
+    try {
+      backups = await listBackups();
+    } catch (err: any) {
+      Alert.alert('Không kiểm tra được backup', String(err?.message ?? err));
+      return;
+    }
+    if (backups.length === 0) {
+      Alert.alert(
+        'Không có backup',
+        'Chưa tìm thấy bản backup nào trên cloud.',
+      );
+      return;
+    }
+    Alert.alert(
+      'Khôi phục dữ liệu?',
+      'Bản backup mới nhất sẽ GHI ĐÈ toàn bộ dữ liệu hiện tại trên máy này. Không thể hoàn tác.',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Khôi phục',
+          style: 'destructive',
+          onPress: async () => {
+            setBusy('restore');
+            try {
+              const payload = await restoreLatestFromCloud();
+              const total = payload ? countRows(payload) : 0;
+              Alert.alert(
+                'Khôi phục xong ✅',
+                `Đã ghi ${total} bản ghi.\nHãy KHỞI ĐỘNG LẠI app để tải lại dữ liệu.`,
+              );
+            } catch (err: any) {
+              Alert.alert('Khôi phục thất bại', String(err?.message ?? err));
+            } finally {
+              setBusy(null);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
@@ -63,15 +189,19 @@ export default function MoreScreen() {
 
       <Text style={styles.title}>More</Text>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
         {/* ── Super App settings ── */}
         <View style={styles.group}>
           <View style={styles.groupHeader}>
             <Icon name='view-grid-plus' size={14} color={colors.purple} />
             <Text style={styles.groupTitle}>Super App</Text>
           </View>
-          <Text style={styles.groupSub}>Chọn module hiển thị khi bấm nút giữa</Text>
+          <Text style={styles.groupSub}>
+            Chọn module hiển thị khi bấm nút giữa
+          </Text>
 
           <View style={styles.flatGroup}>
             {SUPER_APP_ALL.map((item, idx) => {
@@ -79,16 +209,26 @@ export default function MoreScreen() {
               return (
                 <PressableScale
                   key={item.key}
-                  style={[styles.flatRow, idx < SUPER_APP_ALL.length - 1 && styles.flatRowBorder]}
+                  style={[
+                    styles.flatRow,
+                    idx < SUPER_APP_ALL.length - 1 && styles.flatRowBorder,
+                  ]}
                   onPress={() => togglePinned(item.key)}
                   scaleTo={0.97}
                   haptic='light'
                 >
-                  <View style={[styles.rowIcon, { backgroundColor: tint(item.color) }]}>
+                  <View
+                    style={[
+                      styles.rowIcon,
+                      { backgroundColor: tint(item.color) },
+                    ]}
+                  >
                     <Icon name={item.icon} size={16} color={item.color} />
                   </View>
                   <Text style={styles.rowLabel}>{item.label}</Text>
-                  <View style={[styles.checkbox, pinned && styles.checkboxActive]}>
+                  <View
+                    style={[styles.checkbox, pinned && styles.checkboxActive]}
+                  >
                     {pinned && <Icon name='check' size={12} color='#fff' />}
                   </View>
                 </PressableScale>
@@ -110,21 +250,43 @@ export default function MoreScreen() {
               return (
                 <PressableScale
                   key={item.label}
-                  style={[styles.flatRow, idx < ITEMS.length - 1 && styles.flatRowBorder]}
+                  style={[
+                    styles.flatRow,
+                    idx < ITEMS.length - 1 && styles.flatRowBorder,
+                  ]}
                   onPress={() => item.route && router.push(item.route as any)}
                   scaleTo={enabled ? 0.97 : 1}
                   haptic={enabled ? 'light' : undefined}
                 >
-                  <View style={[styles.rowIcon, { backgroundColor: tint(item.color) }]}>
+                  <View
+                    style={[
+                      styles.rowIcon,
+                      { backgroundColor: tint(item.color) },
+                    ]}
+                  >
                     <Icon name={item.icon} size={18} color={item.color} />
                   </View>
                   <View style={styles.rowTextWrap}>
-                    <Text style={[styles.rowLabel, !enabled && { opacity: 0.4 }]}>{item.label}</Text>
+                    <Text
+                      style={[styles.rowLabel, !enabled && { opacity: 0.4 }]}
+                    >
+                      {item.label}
+                    </Text>
                     <Text style={styles.rowSub}>{item.sub}</Text>
                   </View>
-                  {enabled
-                    ? <Icon name='chevron-right' size={16} color={colors.tabInactive} />
-                    : <Icon name='lock-outline' size={14} color={colors.tabInactive} />}
+                  {enabled ? (
+                    <Icon
+                      name='chevron-right'
+                      size={16}
+                      color={colors.tabInactive}
+                    />
+                  ) : (
+                    <Icon
+                      name='lock-outline'
+                      size={14}
+                      color={colors.tabInactive}
+                    />
+                  )}
                 </PressableScale>
               );
             })}
@@ -139,19 +301,89 @@ export default function MoreScreen() {
           </View>
 
           <View style={styles.flatGroup}>
-            <PressableScale style={styles.flatRow} onPress={exportAllData} scaleTo={0.97} haptic='light'>
-              <View style={[styles.rowIcon, { backgroundColor: tint(colors.muted) }]}>
+            <PressableScale
+              style={styles.flatRow}
+              onPress={exportAllData}
+              scaleTo={0.97}
+              haptic='light'
+            >
+              <View
+                style={[
+                  styles.rowIcon,
+                  { backgroundColor: tint(colors.muted) },
+                ]}
+              >
                 <Icon name='database-export' size={18} color={colors.muted} />
               </View>
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Export Data</Text>
-                <Text style={styles.rowSub}>Backup all SQLite tables as JSON</Text>
+                <Text style={styles.rowSub}>
+                  Backup all SQLite tables as JSON
+                </Text>
               </View>
               <Icon name='chevron-right' size={16} color={colors.tabInactive} />
             </PressableScale>
+
+            <PressableScale
+              style={[styles.flatRow, styles.flatRowBorder]}
+              onPress={handleBackup}
+              scaleTo={busy ? 1 : 0.97}
+              haptic='light'
+            >
+              <View
+                style={[styles.rowIcon, { backgroundColor: tint(colors.teal) }]}
+              >
+                <Icon name='cloud-upload' size={18} color={colors.teal} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Backup to Cloud</Text>
+                <Text style={styles.rowSub}>
+                  Upload snapshot to Supabase Storage
+                </Text>
+              </View>
+              {busy === 'backup' ? (
+                <ActivityIndicator size='small' color={colors.muted} />
+              ) : (
+                <Icon
+                  name='chevron-right'
+                  size={16}
+                  color={colors.tabInactive}
+                />
+              )}
+            </PressableScale>
+
+            <PressableScale
+              style={styles.flatRow}
+              onPress={handleRestore}
+              scaleTo={busy ? 1 : 0.97}
+              haptic='light'
+            >
+              <View
+                style={[
+                  styles.rowIcon,
+                  { backgroundColor: tint(colors.orange) },
+                ]}
+              >
+                <Icon name='cloud-download' size={18} color={colors.orange} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Restore from Cloud</Text>
+                <Text style={styles.rowSub}>
+                  Ghi đè dữ liệu bằng bản backup mới nhất
+                </Text>
+              </View>
+              {busy === 'restore' ? (
+                <ActivityIndicator size='small' color={colors.muted} />
+              ) : (
+                <Icon
+                  name='chevron-right'
+                  size={16}
+                  color={colors.tabInactive}
+                />
+              )}
+            </PressableScale>
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

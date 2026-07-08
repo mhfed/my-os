@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -31,6 +32,7 @@ import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
 import { GlobalCapture } from '@/components/GlobalCapture';
 import { SuperAppSheet } from '@/components/SuperAppSheet';
+import { autoBackup } from '@/services/backup';
 
 // Keep the splash screen visible while we bootstrap fonts + every module store.
 SplashScreen.preventAutoHideAsync();
@@ -95,6 +97,32 @@ export default function RootLayout() {
     noteReady &&
     goalReady;
   const ready = fontsLoaded && storesReady;
+
+  // ── Auto-backup (Phase 0) ──────────────────────────────────────────────
+  // Back up on first ready, and whenever the app moves to background/inactive.
+  // `autoBackup` is debounced + no-ops when Supabase is unconfigured, so this
+  // is safe to fire liberally and never blocks the UI.
+  const appState = useRef(AppState.currentState);
+  const didInitialBackup = useRef(false);
+
+  useEffect(() => {
+    if (storesReady && !didInitialBackup.current) {
+      didInitialBackup.current = true;
+      void autoBackup();
+    }
+  }, [storesReady]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
+      const prev = appState.current;
+      appState.current = next;
+      // Going to background/inactive → snapshot current state.
+      if (prev === 'active' && (next === 'background' || next === 'inactive')) {
+        void autoBackup();
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const onLayoutRootView = useCallback(() => {
     if (ready) {
