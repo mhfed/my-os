@@ -4,18 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, glass, radius, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
-import { EmptyState, GameIconButton, ListRow } from '@/components/game';
+import { EmptyState, GameIconButton } from '@/components/game';
 import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useNoteStore } from '@/store/noteStore';
 import type { Note } from '@/types/note';
 
 import { NoteEditorModal } from './components/NoteEditorModal';
 
-/** Date label — "Hôm nay" / "Hôm qua" / "dd/mm". */
 function noteDate(updatedAt: number): string {
   const now = new Date();
   const d = new Date(updatedAt);
@@ -27,7 +26,6 @@ function noteDate(updatedAt: number): string {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
-/** Notes screen (DESIGN_SPEC §5.9) — second brain with searchable note cards. */
 export function NotesScreen() {
   const router = useRouter();
   const ready = useNoteStore((s) => s.ready);
@@ -39,11 +37,7 @@ export function NotesScreen() {
   const handleBack = () => router.navigate('/more');
 
   if (!ready) {
-    return (
-      <View style={[styles.screen, styles.center]}>
-        <View />
-      </View>
-    );
+    return <View style={[styles.screen, styles.center]} />;
   }
 
   return (
@@ -56,59 +50,80 @@ export function NotesScreen() {
         pointerEvents='none'
       />
 
-      {/* Header */}
-      <AnimatedCard index={0} style={styles.headerWrap}>
-        <View style={styles.headerCard}>
-          <View style={styles.header}>
-            <PressableScale
-              onPress={handleBack}
-              haptic='light'
-              hitSlop={8}
-              style={styles.back}
-              accessibilityRole='button'
-              accessibilityLabel='Quay lại'
-            >
-              <Icon name='arrow-left' size={24} color={colors.text} />
-            </PressableScale>
-            <Text style={styles.title}>Second Brain</Text>
-          </View>
+      {/* Header — flat, no card */}
+      <View style={styles.headerWrap}>
+        <PressableScale
+          onPress={handleBack}
+          haptic='light'
+          hitSlop={8}
+          style={styles.back}
+          accessibilityRole='button'
+          accessibilityLabel='Quay lại'
+        >
+          <Icon name='arrow-left' size={22} color={colors.text} />
+        </PressableScale>
+        <View>
+          <Text style={styles.title}>Second Brain</Text>
+          <Text style={styles.subtitle}>{notes.length} ghi chú</Text>
         </View>
-      </AnimatedCard>
+        <PressableScale
+          onPress={() => { setEditingNote(undefined); setEditorOpen(true); }}
+          haptic='light'
+          style={styles.addBtn}
+          accessibilityLabel='Tạo ghi chú mới'
+        >
+          <Icon name='plus' size={20} color={colors.text} />
+        </PressableScale>
+      </View>
+
+      {/* Divider */}
+      <View style={styles.headerDivider} />
 
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={
-          notes.length === 0 ? styles.emptyContent : styles.listContent
-        }
+        contentContainerStyle={notes.length === 0 ? styles.emptyContent : styles.listContent}
         showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item, index }) => (
           <AnimatedCard index={index + 1}>
             <PressableScale
               onPress={() => { setEditingNote(item); setEditorOpen(true); }}
               haptic='light'
-              style={styles.card}
+              style={styles.noteRow}
             >
-              <ListRow
-                icon='note-text-outline'
-                title={item.title || 'Chưa có tiêu đề'}
-                subtitle={noteDate(item.updatedAt)}
-                trailing={item.content ? undefined : 'empty'}
-              />
-              {item.content ? (
-                <Text style={styles.preview} numberOfLines={2}>
-                  {item.content}
-                </Text>
-              ) : null}
-              {item.tags && item.tags.length > 0 ? (
-                <View style={styles.tagRow}>
-                  {item.tags.map((t) => (
-                    <View key={t} style={styles.tagPill}>
-                      <Text style={styles.tagText}>#{t}</Text>
-                    </View>
-                  ))}
+              {/* Icon */}
+              <View style={styles.noteIconWrap}>
+                <Icon name='note-text-outline' size={18} color={colors.purple} />
+              </View>
+
+              {/* Content */}
+              <View style={styles.noteContent}>
+                <View style={styles.noteTopRow}>
+                  <Text style={styles.noteTitle} numberOfLines={1}>
+                    {item.title || 'Chưa có tiêu đề'}
+                  </Text>
+                  <Text style={styles.noteDate}>{noteDate(item.updatedAt)}</Text>
                 </View>
-              ) : null}
+
+                {item.content ? (
+                  <Text style={styles.notePreview} numberOfLines={2}>
+                    {item.content}
+                  </Text>
+                ) : null}
+
+                {item.tags && item.tags.length > 0 ? (
+                  <View style={styles.tagRow}>
+                    {item.tags.slice(0, 3).map((t) => (
+                      <View key={t} style={styles.tagPill}>
+                        <Text style={styles.tagText}>#{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+
+              <Icon name='chevron-right' size={14} color={colors.tabInactive} />
             </PressableScale>
           </AnimatedCard>
         )}
@@ -154,39 +169,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // ── Header (flat, no card) ──────────────────────
   headerWrap: {
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
-  },
-  headerCard: {
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   back: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: -spacing.xs,
   },
   title: {
     fontFamily: fonts.displayBold,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 20,
     color: colors.text,
+    letterSpacing: -0.3,
   },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 1,
+  },
+  addBtn: {
+    marginLeft: 'auto',
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: radius.sm,
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+  },
+
+  // ── List ────────────────────────────────────────
   listContent: {
-    padding: spacing.lg,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.tabClear,
   },
   emptyContent: {
@@ -194,44 +224,78 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  card: {
-    backgroundColor: glass.fillStrong,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginLeft: 36 + spacing.sm, // align with text, skip icon
   },
-  preview: {
-    fontFamily: fonts.regular,
+
+  // ── Note row (flat, no card) ────────────────────
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingVertical: 12,
+  },
+  noteIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    backgroundColor: tint(colors.purple, '12'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  noteContent: {
+    flex: 1,
+    gap: 3,
+  },
+  noteTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  noteTitle: {
+    flex: 1,
+    fontFamily: fonts.semibold,
     fontSize: 14,
+    color: colors.text,
+  },
+  noteDate: {
+    fontFamily: fonts.monoRegular,
+    fontSize: 10,
+    color: colors.tabInactive,
+  },
+  notePreview: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
     color: colors.muted,
-    lineHeight: 20,
-    marginTop: spacing.xs,
-    paddingLeft: 48,
+    lineHeight: 18,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: spacing.sm,
-    paddingLeft: 48,
+    gap: 4,
+    marginTop: 2,
   },
   tagPill: {
-    backgroundColor: tint(colors.purple, '18'),
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: tint(colors.purple, '14'),
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: tint(colors.purple, '30'),
   },
   tagText: {
     fontFamily: fonts.monoMedium,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.purple,
   },
+
+  // ── FAB ─────────────────────────────────────────
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.xxl,
+    bottom: spacing.tabClear,
   },
 });

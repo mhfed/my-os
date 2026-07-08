@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
-  Pressable,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
+import { PressableScale } from '@/components/motion';
 import { useNoteStore } from '@/store/noteStore';
 import type { Note } from '@/types/note';
 
@@ -23,16 +26,13 @@ interface NoteEditorModalProps {
   onClose: () => void;
 }
 
-export function NoteEditorModal({
-  visible,
-  existingNote,
-  onClose,
-}: NoteEditorModalProps) {
-  const saveNote = useNoteStore((s) => s.saveNote);
+export function NoteEditorModal({ visible, existingNote, onClose }: NoteEditorModalProps) {
+  const insets = useSafeAreaInsets();
+  const saveNote   = useNoteStore((s) => s.saveNote);
   const deleteNote = useNoteStore((s) => s.deleteNote);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle]       = useState('');
+  const [content, setContent]   = useState('');
   const [tagsInput, setTagsInput] = useState('');
 
   useEffect(() => {
@@ -47,12 +47,10 @@ export function NoteEditorModal({
 
   async function handleSave() {
     if (!canSave) return;
-
     const tags = tagsInput
       .split(',')
       .map((t) => t.trim().toLowerCase())
       .filter((t) => t.length > 0);
-
     await saveNote({
       id: existingNote?.id,
       title: title.trim(),
@@ -65,9 +63,7 @@ export function NoteEditorModal({
   }
 
   async function handleDelete() {
-    if (existingNote) {
-      await deleteNote(existingNote.id);
-    }
+    if (existingNote) await deleteNote(existingNote.id);
     onClose();
   }
 
@@ -77,65 +73,95 @@ export function NoteEditorModal({
         style={styles.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.header}>
-          <Pressable onPress={onClose} hitSlop={8}>
-            <Text style={styles.headerBtn}>Cancel</Text>
-          </Pressable>
-          <Text style={styles.headerTitle}>
-            {existingNote ? 'Edit Note' : 'New Note'}
+        {/* Screen glow */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+
+        {/* Top bar */}
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+          <PressableScale onPress={onClose} hitSlop={8} scaleTo={0.9} haptic='light'>
+            <Text style={styles.topBarBtn}>Hủy</Text>
+          </PressableScale>
+
+          <Text style={styles.topBarTitle}>
+            {existingNote ? 'Sửa ghi chú' : 'Ghi chú mới'}
           </Text>
-          <Pressable onPress={handleSave} hitSlop={8} disabled={!canSave}>
-            <Text
-              style={[
-                styles.headerBtn,
-                styles.saveBtn,
-                !canSave && styles.disabledBtn,
-              ]}
-            >
-              Save
+
+          <PressableScale
+            onPress={handleSave}
+            hitSlop={8}
+            scaleTo={canSave ? 0.9 : 1}
+            haptic={canSave ? 'light' : undefined}
+            disabled={!canSave}
+          >
+            <Text style={[styles.topBarBtn, styles.saveBtn, !canSave && styles.disabledBtn]}>
+              Lưu
             </Text>
-          </Pressable>
+          </PressableScale>
         </View>
+
+        {/* Divider */}
+        <View style={styles.divider} />
 
         <ScrollView
           style={styles.body}
           contentContainerStyle={{ paddingBottom: 60 }}
           showsVerticalScrollIndicator={false}
+          keyboardDismissMode='interactive'
         >
+          {/* Title */}
           <TextInput
             style={styles.titleInput}
             value={title}
             onChangeText={setTitle}
-            placeholder='Title'
-            placeholderTextColor={colors.muted}
+            placeholder='Tiêu đề...'
+            placeholderTextColor={colors.tabInactive}
             autoFocus={!existingNote}
+            returnKeyType='next'
           />
 
-          <TextInput
-            style={styles.tagsInput}
-            value={tagsInput}
-            onChangeText={setTagsInput}
-            placeholder='Tags (comma separated)...'
-            placeholderTextColor={colors.track}
-          />
+          {/* Tags */}
+          <View style={styles.tagsRow}>
+            <Icon name='tag-outline' size={14} color={colors.muted} />
+            <TextInput
+              style={styles.tagsInput}
+              value={tagsInput}
+              onChangeText={setTagsInput}
+              placeholder='Tags, ngăn cách bằng dấu phẩy...'
+              placeholderTextColor={colors.tabInactive}
+              returnKeyType='next'
+            />
+          </View>
 
           <View style={styles.divider} />
 
+          {/* Content */}
           <TextInput
             style={styles.contentInput}
             value={content}
             onChangeText={setContent}
-            placeholder='Write using markdown...'
-            placeholderTextColor={colors.muted}
+            placeholder='Viết bằng markdown...'
+            placeholderTextColor={colors.tabInactive}
             multiline
             textAlignVertical='top'
           />
 
+          {/* Delete */}
           {existingNote && (
-            <Pressable style={styles.deleteBtn} onPress={handleDelete}>
-              <Icon name='trash-can-outline' size={20} color={colors.red} />
-              <Text style={styles.deleteText}>Delete Note</Text>
-            </Pressable>
+            <PressableScale
+              style={styles.deleteBtn}
+              onPress={handleDelete}
+              scaleTo={0.96}
+              haptic='medium'
+            >
+              <Icon name='trash-can-outline' size={18} color={colors.red} />
+              <Text style={styles.deleteText}>Xóa ghi chú</Text>
+            </PressableScale>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -146,27 +172,28 @@ export function NoteEditorModal({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0F0F13',
+    backgroundColor: colors.screenBg,
   },
-  header: {
+  screenGlow: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  // ── Top bar ──────────────────────────────────────
+  topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 22,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: colors.screenBg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  headerTitle: {
+  topBarTitle: {
     fontFamily: fonts.semibold,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.text,
   },
-  headerBtn: {
+  topBarBtn: {
     fontFamily: fonts.medium,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.muted,
   },
   saveBtn: {
@@ -174,52 +201,67 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
   },
   disabledBtn: {
-    opacity: 0.5,
+    opacity: 0.35,
   },
+
+  // ── Divider ──────────────────────────────────────
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.sm,
+  },
+
+  // ── Body ─────────────────────────────────────────
   body: {
     flex: 1,
-    paddingHorizontal: 22,
-    paddingTop: 16,
+    paddingHorizontal: spacing.lg,
   },
   titleInput: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.displayBold,
     fontSize: 24,
     color: colors.text,
-    marginBottom: 8,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+    letterSpacing: -0.3,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingBottom: spacing.sm,
   },
   tagsInput: {
+    flex: 1,
     fontFamily: fonts.monoRegular,
     fontSize: 13,
     color: colors.teal,
-    marginBottom: 16,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginBottom: 16,
   },
   contentInput: {
     fontFamily: fonts.regular,
     fontSize: 16,
     color: colors.text,
-    lineHeight: 24,
+    lineHeight: 26,
     minHeight: 200,
+    paddingTop: spacing.xs,
   },
+
+  // ── Delete ───────────────────────────────────────
   deleteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginTop: 40,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+    marginTop: 48,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    backgroundColor: tint(colors.red, '10'),
     borderWidth: 1,
-    borderColor: 'rgba(255, 69, 58, 0.3)',
+    borderColor: tint(colors.red, '22'),
   },
   deleteText: {
     fontFamily: fonts.medium,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.red,
   },
 });
