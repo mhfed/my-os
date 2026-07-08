@@ -197,16 +197,16 @@ export function AddTaskModal({ visible, onClose, taskToEdit }: AddTaskModalProps
         <View style={styles.sheet}>
           <View style={styles.grabber} />
           <Text style={styles.heading}>{taskToEdit ? 'Chỉnh sửa nhiệm vụ' : 'Nhiệm vụ mới'}</Text>
-
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder='Bạn cần làm gì?'
-            placeholderTextColor={colors.tabInactive}
-            autoFocus
-            returnKeyType='done'
-          />
+          <ScrollView style={styles.formScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder='Bạn cần làm gì?'
+              placeholderTextColor={colors.tabInactive}
+              autoFocus
+              returnKeyType='done'
+            />
 
           <Text style={styles.fieldLabel}>ĐỘ ƯU TIÊN</Text>
           <View style={styles.segments}>
@@ -492,6 +492,7 @@ export function AddTaskModal({ visible, onClose, taskToEdit }: AddTaskModalProps
               </ScrollView>
             </>
           ) : null}
+          </ScrollView>
 
           <View style={styles.actions}>
             {taskToEdit && (
@@ -549,6 +550,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.tabClear,
+    maxHeight: '90%',
   },
   grabber: {
     alignSelf: 'center',
@@ -732,5 +734,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tint(colors.red, '25'),
     backgroundColor: 'rgba(239,68,68,0.05)',
+  },
+  formScroll: {
+    flexGrow: 0,
+    marginBottom: spacing.xs,
   },
 });
