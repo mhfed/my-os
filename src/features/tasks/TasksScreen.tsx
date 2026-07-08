@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
 
-import { colors, glass, radius, tint } from '@/theme/colors';
+import { colors, glass, radius, tint, glow } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
@@ -68,6 +68,16 @@ interface TaskItem {
 
 type ListItem = SectionItem | TaskItem;
 
+interface EqualizerBarData {
+  key: TimeSegment;
+  label: string;
+  total: number;
+  completed: number;
+  pending: number;
+  urgent: number;
+  color: string;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -96,14 +106,14 @@ export function TasksScreen() {
   const tomorrowStart = startToDay + DAY_MS;
   const dayAfterTomorrowStart = tomorrowStart + DAY_MS;
 
-  // goalId -> title lookup so each task row can show its contributing goal.
+  // goalId -> title lookup
   const goalTitleById = useMemo(() => {
     const map: Record<string, string> = {};
     for (const g of goals) map[g.id] = g.title;
     return map;
   }, [goals]);
 
-  // Counts for the filters
+  // General counts
   const activeCount = useMemo(
     () => tasks.filter((t) => !t.done && (t.dueDate == null || t.dueDate >= startToDay)).length,
     [tasks],
@@ -169,30 +179,42 @@ export function TasksScreen() {
     return todayActive + todayCompletedTasks.length;
   }, [tasks, todayCompletedTasks, tomorrowStart]);
 
-  // Glow Capsule segments widths
-  const proportions = useMemo(() => {
-    const total = urgentTasks.length + highPriorityTasks.length + dailyRoutines.filter(r => !r.done).length + todayCompletedTasks.length;
-    if (total === 0) return { urgent: 0, high: 0, routine: 0, completed: 0 };
-    return {
-      urgent: (urgentTasks.length / total) * 100,
-      high: (highPriorityTasks.length / total) * 100,
-      routine: (dailyRoutines.filter(r => !r.done).length / total) * 100,
-      completed: (todayCompletedTasks.length / total) * 100,
-    };
-  }, [urgentTasks, highPriorityTasks, dailyRoutines, todayCompletedTasks]);
+  // Compute Equalizer Data per period
+  const equalizerData = useMemo<EqualizerBarData[]>(() => {
+    const segments: { key: TimeSegment; label: string; color: string }[] = [
+      { key: 'morning', label: 'SÁNG', color: colors.teal },
+      { key: 'afternoon', label: 'TRƯA', color: colors.orange },
+      { key: 'evening', label: 'TỐI', color: colors.purple },
+      { key: 'anytime', label: 'CHỜ', color: colors.blue },
+    ];
 
-  // Timeline segment counts
-  const timelineCounts = useMemo(() => {
-    const counts = { morning: 0, afternoon: 0, evening: 0, anytime: 0 };
-    const todayTasks = tasks.filter((t) => !t.done && (t.dueDate == null || t.dueDate < tomorrowStart));
-    for (const t of todayTasks) {
-      const seg = getTaskTimeSegment(t);
-      counts[seg]++;
-    }
-    return counts;
-  }, [tasks, tomorrowStart]);
+    const todayTasks = tasks.filter((t) => t.dueDate == null || t.dueDate < tomorrowStart);
 
-  // Filtered lists depending on timeline click
+    return segments.map((seg) => {
+      const segmentTasks = todayTasks.filter((t) => getTaskTimeSegment(t) === seg.key);
+      const total = segmentTasks.length;
+      const completed = segmentTasks.filter((t) => t.done).length;
+      const urgentCount = segmentTasks.filter((t) => {
+        if (t.done) return false;
+        if (t.recurrence === 'daily') return false;
+        if (t.dueDate != null && t.dueDate < startToDay) return true;
+        if (t.priority === 'P0') return true;
+        return false;
+      }).length;
+      const pending = total - completed - urgentCount;
+
+      return {
+        key: seg.key,
+        label: seg.label,
+        total,
+        completed,
+        pending: pending > 0 ? pending : 0,
+        urgent: urgentCount,
+        color: seg.color,
+      };
+    });
+  }, [tasks, startToDay, tomorrowStart]);
+
   const filterByTimeline = useCallback(<T extends Task>(list: T[]): T[] => {
     if (activeTimeSegment === 'all') return list;
     return list.filter((t) => getTaskTimeSegment(t) === activeTimeSegment);
@@ -406,12 +428,18 @@ export function TasksScreen() {
     [toggleTask, toggleSubtask],
   );
 
+  // Calculate highest task count in equalizer segments for scaling bar heights
+  const maxTotal = useMemo(() => {
+    const maxVal = Math.max(...equalizerData.map((d) => d.total));
+    return maxVal > 0 ? maxVal : 1;
+  }, [equalizerData]);
+
   if (!ready) return <View style={styles.screen} />;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <LinearGradient
-        colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0)']}
+        colors={['rgba(0,240,255,0.04)', 'rgba(0,0,0,0)']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.screenGlow}
@@ -443,128 +471,143 @@ export function TasksScreen() {
 
       {screenMode === 'dashboard' ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* Visual Overview Banner with Glow Proportions Bar */}
-          <View style={styles.overviewCard}>
+          
+          {/* Cyber Equalizer Monitor Card */}
+          <View style={styles.equalizerCard}>
             <LinearGradient
               colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0)']}
               style={StyleSheet.absoluteFillObject}
             />
-            <View style={styles.overviewMeta}>
+            
+            <View style={styles.eqHeader}>
               <View>
-                <Text style={styles.overviewLabel}>TIẾN ĐỘ HÔM NAY</Text>
-                <Text style={styles.overviewTitle}>
-                  {todayTotalCount > 0
-                    ? `Hoàn thành ${todayCompletedTasks.length}/${todayTotalCount}`
-                    : 'Không có nhiệm vụ'}
-                </Text>
+                <Text style={styles.eqLabel}>CYBER MONITORING CORE</Text>
+                <Text style={styles.eqTitle}>Mật độ nhiệm vụ trong ngày</Text>
               </View>
-              <Text style={styles.overviewPercent}>
-                {todayTotalCount > 0
-                  ? `${Math.round((todayCompletedTasks.length / todayTotalCount) * 100)}%`
-                  : '0%'}
-              </Text>
-            </View>
-
-            {/* Proportional Glow Capsule Bar */}
-            <View style={styles.capsuleTrack}>
-              {todayTotalCount === 0 ? (
-                <View style={[styles.capsuleSegment, { width: '100%', backgroundColor: 'rgba(255,255,255,0.06)' }]} />
-              ) : (
-                <>
-                  {proportions.urgent > 0 && (
-                    <View style={[styles.capsuleSegment, { width: `${proportions.urgent}%`, backgroundColor: colors.red }]} />
-                  )}
-                  {proportions.high > 0 && (
-                    <View style={[styles.capsuleSegment, { width: `${proportions.high}%`, backgroundColor: colors.orange }]} />
-                  )}
-                  {proportions.routine > 0 && (
-                    <View style={[styles.capsuleSegment, { width: `${proportions.routine}%`, backgroundColor: colors.teal }]} />
-                  )}
-                  {proportions.completed > 0 && (
-                    <View style={[styles.capsuleSegment, { width: `${proportions.completed}%`, backgroundColor: colors.green }]} />
-                  )}
-                </>
+              {activeTimeSegment !== 'all' && (
+                <PressableScale
+                  onPress={() => setActiveTimeSegment('all')}
+                  style={styles.resetFilterBtn}
+                  scaleTo={0.92}
+                >
+                  <Text style={styles.resetFilterText}>Xem tất cả</Text>
+                </PressableScale>
               )}
             </View>
 
-            {/* Legend for the energy bar */}
-            <View style={styles.legendRow}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.red }]} />
-                <Text style={styles.legendText}>Khẩn cấp ({urgentTasks.length})</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.orange }]} />
-                <Text style={styles.legendText}>Ưu tiên ({highPriorityTasks.length})</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.teal }]} />
-                <Text style={styles.legendText}>Lặp lại ({dailyRoutines.filter(r => !r.done).length})</Text>
-              </View>
-            </View>
-          </View>
+            {/* Glowing Equalizer Columns */}
+            <View style={styles.eqGrid}>
+              {equalizerData.map((bar) => {
+                const isActive = activeTimeSegment === bar.key;
+                
+                // Calculate proportional heights (max height is 100px)
+                const totalHeight = (bar.total / maxTotal) * 100;
+                const completedPct = bar.total > 0 ? (bar.completed / bar.total) * 100 : 0;
+                const urgentPct = bar.total > 0 ? (bar.urgent / bar.total) * 100 : 0;
+                const pendingPct = bar.total > 0 ? (bar.pending / bar.total) * 100 : 0;
 
-          {/* Interactive Cyber Timeline Grid */}
-          <View style={styles.timelineContainer}>
-            <Text style={styles.sectionTitle}>BẢN ĐỒ THỜI GIAN</Text>
-            <View style={styles.timelineTrack}>
-              {[
-                { key: 'all', label: 'TẤT CẢ', count: tasks.filter(t => !t.done).length, color: colors.blue },
-                { key: 'morning', label: 'SÁNG (6-12h)', count: timelineCounts.morning, color: colors.teal },
-                { key: 'afternoon', label: 'CHIỀU (12-18h)', count: timelineCounts.afternoon, color: colors.orange },
-                { key: 'evening', label: 'TỐI (18-24h)', count: timelineCounts.evening, color: colors.purple },
-              ].map((slot) => {
-                const isActive = activeTimeSegment === slot.key;
                 return (
                   <PressableScale
-                    key={slot.key}
-                    onPress={() => setActiveTimeSegment(isActive ? 'all' : (slot.key as TimeSegment))}
-                    style={[
-                      styles.timelineCell,
-                      isActive ? { borderColor: slot.color, backgroundColor: tint(slot.color, '0F') } : null,
-                    ]}
-                    scaleTo={0.96}
-                    haptic='light'
+                    key={bar.key}
+                    onPress={() => setActiveTimeSegment(isActive ? 'all' : bar.key)}
+                    style={[styles.eqColContainer]}
+                    scaleTo={0.95}
+                    haptic='medium'
                   >
-                    <Text style={[styles.timelineCellLabel, { color: isActive ? slot.color : colors.muted }]}>
-                      {slot.label}
+                    <View
+                      style={[
+                        styles.eqBarChannel,
+                        isActive && { borderColor: bar.color, borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.03)' },
+                      ]}
+                    >
+                      {bar.total > 0 ? (
+                        <View style={[styles.eqActiveBar, { height: `${totalHeight}%` }]}>
+                          {/* Completed: Green bottom */}
+                          {completedPct > 0 && (
+                            <View style={[styles.eqSegment, { height: `${completedPct}%`, backgroundColor: colors.green }]} />
+                          )}
+                          {/* Pending: Blue middle */}
+                          {pendingPct > 0 && (
+                            <View style={[styles.eqSegment, { height: `${pendingPct}%`, backgroundColor: colors.blue }]} />
+                          )}
+                          {/* Urgent: Red top */}
+                          {urgentPct > 0 && (
+                            <View
+                              style={[
+                                styles.eqSegment,
+                                {
+                                  height: `${urgentPct}%`,
+                                  backgroundColor: colors.red,
+                                  borderTopLeftRadius: radius.sm - 4,
+                                  borderTopRightRadius: radius.sm - 4,
+                                },
+                                glow(colors.red, 0.4, 8)
+                              ]}
+                            />
+                          )}
+                        </View>
+                      ) : (
+                        // Empty slot indicator dot
+                        <View style={styles.eqEmptyDot} />
+                      )}
+                    </View>
+                    <Text style={[styles.eqColLabel, { color: isActive ? bar.color : colors.muted }]}>
+                      {bar.label}
                     </Text>
-                    <Text style={[styles.timelineCellCount, { color: colors.text }]}>
-                      {slot.count}
+                    <Text style={styles.eqColCount}>
+                      {bar.total}
                     </Text>
                   </PressableScale>
                 );
               })}
             </View>
+
+            {/* Micro details row */}
+            <View style={styles.eqLegend}>
+              <View style={styles.eqLegendItem}>
+                <View style={[styles.eqDot, { backgroundColor: colors.red }]} />
+                <Text style={styles.eqLegendText}>Khẩn cấp</Text>
+              </View>
+              <View style={styles.eqLegendItem}>
+                <View style={[styles.eqDot, { backgroundColor: colors.blue }]} />
+                <Text style={styles.eqLegendText}>Chờ xử lý</Text>
+              </View>
+              <View style={styles.eqLegendItem}>
+                <View style={[styles.eqDot, { backgroundColor: colors.green }]} />
+                <Text style={styles.eqLegendText}>Hoàn thành</Text>
+              </View>
+            </View>
           </View>
 
-          {/* 1. Urgent / Overdue / P0 due today Section */}
+          {/* 1. Urgent / ASAP Section */}
           {filterByTimeline(urgentTasks).length > 0 && (
             <View style={styles.dashboardSection}>
-              <View style={styles.dashboardSectionHeader}>
-                <Icon name='alert-decagram' size={16} color={colors.red} />
-                <Text style={[styles.dashboardSectionTitle, { color: colors.red }]}>KHẨN CẤP / QUÁ HẠN</Text>
+              <View style={styles.sectionHeaderWrap}>
+                <View style={[styles.glowBullet, { backgroundColor: colors.red }, glow(colors.red, 0.4, 10)]} />
+                <Text style={[styles.sectionTitle, { color: colors.red }]}>KHẨN CẤP / QUÁ HẠN</Text>
               </View>
-              {filterByTimeline(urgentTasks).map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  timeLabel={taskTimeLabel(task)}
-                  overdue={task.dueDate != null && task.dueDate < startToDay}
-                  goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
-                  onToggle={toggleTask}
-                  onToggleSubtask={toggleSubtask}
-                />
-              ))}
+              <View style={styles.urgentWrapper}>
+                {filterByTimeline(urgentTasks).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    timeLabel={taskTimeLabel(task)}
+                    overdue={task.dueDate != null && task.dueDate < startToDay}
+                    goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
+                    onToggle={toggleTask}
+                    onToggleSubtask={toggleSubtask}
+                  />
+                ))}
+              </View>
             </View>
           )}
 
           {/* 2. High Priority Section */}
           {filterByTimeline(highPriorityTasks).length > 0 && (
             <View style={styles.dashboardSection}>
-              <View style={styles.dashboardSectionHeader}>
-                <Icon name='star' size={16} color={colors.orange} />
-                <Text style={[styles.dashboardSectionTitle, { color: colors.orange }]}>NHIỆM VỤ ƯU TIÊN CAO</Text>
+              <View style={styles.sectionHeaderWrap}>
+                <View style={[styles.glowBullet, { backgroundColor: colors.orange }, glow(colors.orange, 0.4, 10)]} />
+                <Text style={[styles.sectionTitle, { color: colors.orange }]}>NHIỆM VỤ ƯU TIÊN CAO</Text>
               </View>
               {filterByTimeline(highPriorityTasks).map((task) => (
                 <TaskCard
@@ -580,33 +623,65 @@ export function TasksScreen() {
             </View>
           )}
 
-          {/* 3. Daily Routines Section */}
+          {/* 3. Daily Routines Section (Vertical Timeline Layout) */}
           {filterByTimeline(dailyRoutines).length > 0 && (
             <View style={styles.dashboardSection}>
-              <View style={styles.dashboardSectionHeader}>
-                <Icon name='sync' size={16} color={colors.teal} />
-                <Text style={[styles.dashboardSectionTitle, { color: colors.teal }]}>ROUTINE HÀNG NGÀY THEO GIỜ</Text>
+              <View style={styles.sectionHeaderWrap}>
+                <View style={[styles.glowBullet, { backgroundColor: colors.teal }, glow(colors.teal, 0.4, 10)]} />
+                <Text style={[styles.sectionTitle, { color: colors.teal }]}>ROUTINE HÀNG NGÀY THEO GIỜ</Text>
               </View>
-              {filterByTimeline(dailyRoutines).map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  timeLabel={taskTimeLabel(task)}
-                  overdue={false}
-                  goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
-                  onToggle={toggleTask}
-                  onToggleSubtask={toggleSubtask}
-                />
-              ))}
+              
+              {/* Timeline Container */}
+              <View style={styles.timelineAxisWrapper}>
+                {/* Dashed Line Background */}
+                <View style={styles.timelineDashedLine} />
+
+                {filterByTimeline(dailyRoutines).map((task, idx) => {
+                  const isLast = idx === filterByTimeline(dailyRoutines).length - 1;
+                  return (
+                    <View key={task.id} style={[styles.timelineRow, isLast && { marginBottom: 0 }]}>
+                      {/* Node Circle */}
+                      <View
+                        style={[
+                          styles.timelineNode,
+                          task.done
+                            ? { backgroundColor: colors.green, borderColor: colors.greenDeep }
+                            : { backgroundColor: colors.teal, borderColor: colors.tealDeep },
+                          glow(task.done ? colors.green : colors.teal, 0.35, 10)
+                        ]}
+                      />
+                      
+                      {/* Left-side Hour tag */}
+                      <View style={styles.timelineTimeBox}>
+                        <Text style={[styles.timelineTimeText, { color: task.done ? colors.muted : colors.text }]}>
+                          {task.routineTime ?? '00:00'}
+                        </Text>
+                      </View>
+
+                      {/* Right-side content card */}
+                      <View style={styles.timelineCard}>
+                        <TaskCard
+                          task={task}
+                          timeLabel="" // Remove time label in card since hour tag shows it on the left
+                          overdue={false}
+                          goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
+                          onToggle={toggleTask}
+                          onToggleSubtask={toggleSubtask}
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           )}
 
-          {/* 4. Tomorrow's Plan & Quick Input Section */}
+          {/* 4. Tomorrow's Plan Section & Quick Input */}
           {activeTimeSegment === 'all' && (
             <View style={styles.dashboardSection}>
-              <View style={styles.dashboardSectionHeader}>
-                <Icon name='calendar-arrow-right' size={16} color={colors.purple} />
-                <Text style={[styles.dashboardSectionTitle, { color: colors.purple }]}>KẾ HOẠCH NGÀY MAI</Text>
+              <View style={styles.sectionHeaderWrap}>
+                <View style={[styles.glowBullet, { backgroundColor: colors.purple }, glow(colors.purple, 0.4, 10)]} />
+                <Text style={[styles.sectionTitle, { color: colors.purple }]}>KẾ HOẠCH NGÀY MAI</Text>
               </View>
 
               {/* Tomorrow's tasks list */}
@@ -729,7 +804,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: spacing.tabClear + 40,
   },
-  overviewCard: {
+  
+  // Cyber Equalizer Styles
+  equalizerCard: {
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
@@ -739,111 +816,186 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     overflow: 'hidden',
   },
-  overviewMeta: {
+  eqHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
-  overviewLabel: {
+  eqLabel: {
     fontFamily: fonts.monoSemibold,
-    fontSize: 10,
+    fontSize: 9,
     color: colors.muted,
-    letterSpacing: 0.6,
+    letterSpacing: 1.2,
   },
-  overviewTitle: {
+  eqTitle: {
     fontFamily: fonts.semibold,
-    fontSize: 17,
+    fontSize: 16,
     color: colors.text,
     marginTop: 2,
   },
-  overviewPercent: {
-    fontFamily: fonts.displayBold,
-    fontSize: 24,
-    color: colors.green,
+  resetFilterBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  capsuleTrack: {
-    height: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: radius.pill,
+  resetFilterText: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.blue,
+  },
+  eqGrid: {
     flexDirection: 'row',
-    overflow: 'hidden',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 140,
+    paddingHorizontal: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  eqColContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  eqBarChannel: {
+    width: 24,
+    height: 100,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.02)',
+    borderRadius: radius.sm - 2,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginBottom: 8,
   },
-  capsuleSegment: {
-    height: '100%',
+  eqActiveBar: {
+    width: '100%',
+    borderRadius: radius.sm - 2,
+    justifyContent: 'flex-end',
   },
-  legendRow: {
+  eqSegment: {
+    width: '100%',
+  },
+  eqEmptyDot: {
+    width: 4,
+    height: 4,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginBottom: 8,
+  },
+  eqColLabel: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 9,
+    letterSpacing: 0.4,
+  },
+  eqColCount: {
+    fontFamily: fonts.monoRegular,
+    fontSize: 10,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  eqLegend: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    justifyContent: 'center',
+    gap: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.03)',
+    paddingTop: spacing.sm,
+    marginTop: spacing.xs,
   },
-  legendItem: {
+  eqLegendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  legendDot: {
-    width: 8,
-    height: 8,
+  eqDot: {
+    width: 6,
+    height: 6,
     borderRadius: radius.pill,
   },
-  legendText: {
+  eqLegendText: {
     fontFamily: fonts.medium,
-    fontSize: 11,
-    color: colors.muted,
-  },
-  timelineContainer: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontFamily: fonts.monoSemibold,
     fontSize: 10,
     color: colors.muted,
-    letterSpacing: 0.8,
-    marginBottom: spacing.xs,
   },
-  timelineTrack: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  timelineCell: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    borderRadius: radius.md,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.01)',
-  },
-  timelineCellLabel: {
-    fontFamily: fonts.monoSemibold,
-    fontSize: 8,
-    letterSpacing: 0.2,
-  },
-  timelineCellCount: {
-    fontFamily: fonts.displayBold,
-    fontSize: 15,
-    marginTop: 2,
-  },
+
+  // Section Styles
   dashboardSection: {
     marginBottom: spacing.md,
   },
-  dashboardSectionHeader: {
+  sectionHeaderWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  dashboardSectionTitle: {
+  glowBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+  },
+  sectionTitle: {
     fontFamily: fonts.monoSemibold,
     fontSize: 11,
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
   },
+  
+  // Urgent Alerts Glowing Border Box
+  urgentWrapper: {
+    borderColor: tint(colors.red, '15'),
+    borderWidth: 1,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.md,
+    backgroundColor: 'rgba(239,68,68,0.01)',
+  },
+
+  // Vertical Timeline Layout Styles
+  timelineAxisWrapper: {
+    marginHorizontal: spacing.md,
+    paddingLeft: spacing.xl,
+    position: 'relative',
+  },
+  timelineDashedLine: {
+    position: 'absolute',
+    left: 4,
+    top: 12,
+    bottom: 12,
+    width: 1,
+    borderWidth: 1,
+    borderColor: tint(colors.teal, '30'),
+    borderStyle: 'dashed',
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    position: 'relative',
+  },
+  timelineNode: {
+    position: 'absolute',
+    left: -28, // Căn chính giữa trục line
+    width: 10,
+    height: 10,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    zIndex: 2,
+  },
+  timelineTimeBox: {
+    width: 50,
+  },
+  timelineTimeText: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: 12,
+  },
+  timelineCard: {
+    flex: 1,
+    paddingHorizontal: 0,
+  },
+
+  // Tomorrow Quick Planner Input
   quickInputCard: {
     flexDirection: 'row',
     alignItems: 'center',
