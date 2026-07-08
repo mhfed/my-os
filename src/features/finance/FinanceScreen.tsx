@@ -365,7 +365,7 @@ export function FinanceScreen() {
                   Vượt ngân sách {period === 'monthly' ? 'tháng' : 'tuần'}!
                 </Text>
                 <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  Bạn đã tiêu {formatVND(overview.spent)} vượt mức {formatVND(overview.budget)} (+{formatVND(overview.spent - overview.budget)}).
+                  Bạn đã tiêu <Text testID="money-display">{formatVND(overview.spent)}</Text> vượt mức <Text testID="money-display">{formatVND(overview.budget)}</Text> (+<Text testID="money-display">{formatVND(overview.spent - overview.budget)}</Text>).
                 </Text>
               </View>
             </View>
@@ -533,7 +533,7 @@ export function FinanceScreen() {
             <Text style={styles.txSummaryLabel}>Tổng chi tiêu chu kỳ:</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               {recentTabIncome > 0 && (
-                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.green }}>
+                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.green }}>
                   +{formatVND(recentTabIncome)}
                 </Text>
               )}
@@ -541,11 +541,11 @@ export function FinanceScreen() {
                 <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted }}>|</Text>
               )}
               {recentTabExpense > 0 ? (
-                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.red }}>
+                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.red }}>
                   -{formatVND(recentTabExpense)}
                 </Text>
               ) : recentTabIncome === 0 ? (
-                <Text style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.muted }}>
+                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.muted }}>
                   0 ₫
                 </Text>
               ) : null}
@@ -596,7 +596,7 @@ export function FinanceScreen() {
                         </Text>
                       </View>
 
-                      <Text style={[styles.statementAmount, { color: amountColor }]}>
+                      <Text testID="money-display" style={[styles.statementAmount, { color: amountColor }]}>
                         {amountPrefix}{formatVND(txn.amount)}
                       </Text>
                     </PressableScale>

@@ -93,7 +93,7 @@ export function FinancePortfolio({
               </View>
               <Text style={styles.debtBlockLabel}>Cho mượn (Thu về)</Text>
             </View>
-            <Text style={[styles.debtAmount, { color: colors.green }]}>
+            <Text testID="money-display" style={[styles.debtAmount, { color: colors.green }]}>
               {formatVND(totalLend)}
             </Text>
             <Text style={styles.debtCount}>{lendCount} đối tác nợ</Text>
@@ -113,7 +113,7 @@ export function FinancePortfolio({
               </View>
               <Text style={styles.debtBlockLabel}>Đi vay (Cần trả)</Text>
             </View>
-            <Text style={[styles.debtAmount, { color: colors.red }]}>
+            <Text testID="money-display" style={[styles.debtAmount, { color: colors.red }]}>
               {formatVND(totalBorrow)}
             </Text>
             <Text style={styles.debtCount}>Nợ {borrowCount} đối tác</Text>
@@ -167,10 +167,10 @@ export function FinancePortfolio({
 
                     <View style={styles.goalBottomRow}>
                       <Text style={styles.goalAmount}>
-                        {formatCompactVND(goal.currentAmount)}
+                        <Text testID="money-display">{formatCompactVND(goal.currentAmount)}</Text>
                       </Text>
                       <Text style={styles.goalTarget}>
-                        mục tiêu {formatCompactVND(goal.targetAmount)}
+                        mục tiêu <Text testID="money-display">{formatCompactVND(goal.targetAmount)}</Text>
                       </Text>
                     </View>
                   </View>

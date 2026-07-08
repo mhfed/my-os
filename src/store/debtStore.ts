@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { allRows, runSql } from '@/db/database';
 import { SYS_CAT } from '@/data/seed';
+import { calcAccruedInterest } from '@/utils/financeMath';
 import {
   cancelNotification,
   scheduleNotification,
@@ -22,31 +23,10 @@ function newId(): string {
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-// ---------------------------------------------------------------------------
-// Interest calculation
-// ---------------------------------------------------------------------------
-
-function calcAccruedInterest(entry: DebtEntry, paidAmount: number): number {
-  if (entry.interestType === 'none' || !entry.interestRate) return 0;
-  const principal = entry.originalAmount - paidAmount;
-  if (principal <= 0) return 0;
-  const rate = entry.interestRate / 100;
-  const now = Date.now();
-  const msPerPeriod =
-    entry.interestPeriod === 'year'
-      ? 365.25 * 24 * 3600 * 1000
-      : 30.44 * 24 * 3600 * 1000;
-  const periods = (now - entry.startDate) / msPerPeriod;
-  if (entry.interestType === 'simple') {
-    return Math.round(principal * rate * periods);
-  }
-  return Math.round(principal * (Math.pow(1 + rate, periods) - 1));
-}
-
 function buildView(entry: DebtEntry, payments: DebtPayment[]): DebtView {
   const entryPayments = payments.filter((p) => p.debtId === entry.id);
   const paidAmount = entryPayments.reduce((s, p) => s + p.amount, 0);
-  const accruedInterest = calcAccruedInterest(entry, paidAmount);
+  const accruedInterest = calcAccruedInterest(entry, entryPayments);
   const remainingPrincipal = Math.max(0, entry.originalAmount - paidAmount);
   const totalOwed = remainingPrincipal + accruedInterest;
   const progressPct =

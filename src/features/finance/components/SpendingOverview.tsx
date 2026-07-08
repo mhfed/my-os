@@ -66,13 +66,15 @@ export function SpendingOverview({
       ]}
     >
       <Text style={styles.label}>SPENT THIS MONTH</Text>
-      <Counter
-        value={spent}
-        prefix='₫'
-        separator=','
-        duration={timing.reveal.duration}
-        style={[styles.amount, { color: amountColor }]}
-      />
+      <View testID="money-display">
+        <Counter
+          value={spent}
+          prefix='₫'
+          separator=','
+          duration={timing.reveal.duration}
+          style={[styles.amount, { color: amountColor }]}
+        />
+      </View>
 
       <View style={styles.track}>
         <Animated.View style={[styles.fillWrap, fillStyle]}>
@@ -99,7 +101,7 @@ export function SpendingOverview({
               ? 'Sắp đến giới hạn'
               : `${Math.round(pct * 100)}% of budget`}
         </Text>
-        <Text style={[styles.footerLeft, isOver && { color: colors.red }]}>
+        <Text testID="money-display" style={[styles.footerLeft, isOver && { color: colors.red }]}>
           {isOver
             ? `+${formatVND(Math.abs(remaining))}`
             : `${formatVND(remaining)} left`}

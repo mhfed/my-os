@@ -323,8 +323,8 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
                 <Icon name={view.icon as IconName} size={28} color={view.color} />
               </View>
               <View style={styles.progressAmounts}>
-                <Text style={styles.progressCurrent}>{formatVND(view.currentAmount)}</Text>
-                <Text style={styles.progressTarget}>/ {formatVND(view.targetAmount)}</Text>
+                <Text testID="money-display" style={styles.progressCurrent}>{formatVND(view.currentAmount)}</Text>
+                <Text testID="money-display" style={styles.progressTarget}>/ {formatVND(view.targetAmount)}</Text>
               </View>
               {view.isAchieved && <Text style={styles.celebrateEmoji}>{'\u{1F389}'}</Text>}
             </View>
@@ -350,7 +350,7 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
             <View style={styles.progressMeta}>
               <Text style={styles.metaText}>{Math.round(view.progressPct * 100)}% hoàn thành</Text>
               <Text style={[styles.metaText, { color: view.remaining > 0 ? colors.text : colors.teal }]}>
-                {view.remaining > 0 ? `Còn ${formatCompactVND(view.remaining)}` : 'Đã đạt!'}
+                {view.remaining > 0 ? <>Còn <Text testID="money-display">{formatCompactVND(view.remaining)}</Text></> : 'Đã đạt!'}
               </Text>
             </View>
 
@@ -370,7 +370,7 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
                 </Text>
                 {view.monthlyNeeded && (
                   <Text style={styles.monthlyNeeded}>
-                    ~{formatCompactVND(view.monthlyNeeded)}/tháng
+                    ~<Text testID="money-display">{formatCompactVND(view.monthlyNeeded)}</Text>/tháng
                   </Text>
                 )}
               </View>
@@ -401,7 +401,7 @@ export function GoalDetailSheet({ goalId, onClose }: GoalDetailSheetProps) {
                       <Text style={styles.linkedBadge}>Ghi vào chi tiêu</Text>
                     )}
                   </View>
-                  <Text style={[styles.contribAmount, { color: progressColor }]}>
+                  <Text testID="money-display" style={[styles.contribAmount, { color: progressColor }]}>
                     +{formatCompactVND(c.amount)}
                   </Text>
                 </View>

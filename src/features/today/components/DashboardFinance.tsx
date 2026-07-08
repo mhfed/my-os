@@ -84,14 +84,14 @@ export const DashboardFinance = memo(function DashboardFinance() {
         <View style={styles.leftCol}>
           <View style={styles.netWorthWrap}>
             <Text style={styles.netWorthLabel}>TÀI SẢN RÒNG</Text>
-            <Text style={[styles.netWorthValue, netWorth < 0 && { color: colors.red }]} numberOfLines={1}>
+            <Text testID="money-display" style={[styles.netWorthValue, netWorth < 0 && { color: colors.red }]} numberOfLines={1}>
               {formatCompactVND(netWorth)}
             </Text>
           </View>
 
           <View style={styles.budgetWrap}>
             <Text style={styles.budgetLabel} numberOfLines={1}>
-              Ngân sách: {formatCompactVND(overview.spent)} / {formatCompactVND(overview.budget)}
+              Ngân sách: <Text testID="money-display">{formatCompactVND(overview.spent)}</Text> / <Text testID="money-display">{formatCompactVND(overview.budget)}</Text>
             </Text>
             <View style={styles.progressTrack}>
               {overview.budget > 0 ? (
@@ -107,13 +107,13 @@ export const DashboardFinance = memo(function DashboardFinance() {
 
           <View style={styles.minisRow}>
             <View style={styles.miniStat}>
-              <Text style={[styles.miniValue, { color: colors.green }]} numberOfLines={1}>
+              <Text testID="money-display" style={[styles.miniValue, { color: colors.green }]} numberOfLines={1}>
                 +{formatCompactVND(overview.income)}
               </Text>
               <Text style={styles.miniLabel}>Thu</Text>
             </View>
             <View style={styles.miniStat}>
-              <Text style={[styles.miniValue, { color: colors.purple }]} numberOfLines={1}>
+              <Text testID="money-display" style={[styles.miniValue, { color: colors.purple }]} numberOfLines={1}>
                 {formatCompactVND(overview.saved)}
               </Text>
               <Text style={styles.miniLabel}>T.Kiệm</Text>

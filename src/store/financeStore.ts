@@ -20,6 +20,7 @@ import {
 } from '@/db/database';
 import { ensureSystemCategories, seedDatabase } from '@/data/seed';
 import { addMonths, currentMonthKey, monthRange, weekRange, getWeekKey } from '@/utils/date';
+import { getWeeklyBudget } from '@/utils/financeMath';
 import * as FileSystem from 'expo-file-system';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import type {
@@ -279,7 +280,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .reduce((sum, b) => sum + b.amount, 0);
 
     const budgetUsed =
-      budget > 0 ? Math.min(1, Math.max(0, spent / budget)) : 0;
+      budget > 0 ? spent / budget : 0;
 
     return {
       month: activeMonth,
@@ -370,7 +371,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       const budget = budgets
         .filter((b) => b.month === month)
         .reduce((s, b) => s + b.amount, 0);
-      const budgetUsed = budget > 0 ? Math.min(1, spent / budget) : 0;
+      const budgetUsed = budget > 0 ? spent / budget : 0;
       result.push({
         month,
         spent,
@@ -397,12 +398,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       else spent += t.amount;
     }
 
-    const budget = budgets
-      .filter((b) => b.month === weekKey)
-      .reduce((sum, b) => sum + b.amount, 0);
+    const budget = getWeeklyBudget(budgets, start);
 
     const budgetUsed =
-      budget > 0 ? Math.min(1, Math.max(0, spent / budget)) : 0;
+      budget > 0 ? spent / budget : 0;
 
     return {
       week: weekKey,
@@ -432,9 +431,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     for (const category of categories) {
       const amount = totals.get(category.id) ?? 0;
       if (amount <= 0) continue;
-      const catBudget = budgets.find(
-        (b) => b.categoryId === category.id && b.month === weekKey,
-      )?.amount ?? 0;
+      const catBudget = getWeeklyBudget(budgets, start, category.id);
       result.push({
         categoryId: category.id,
         name: category.name,
@@ -468,11 +465,9 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         else spent += t.amount;
       }
 
-      const budget = budgets
-        .filter((b) => b.month === weekKey)
-        .reduce((s, b) => s + b.amount, 0);
+      const budget = getWeeklyBudget(budgets, start);
 
-      const budgetUsed = budget > 0 ? Math.min(1, spent / budget) : 0;
+      const budgetUsed = budget > 0 ? spent / budget : 0;
 
       result.push({
         week: weekKey,

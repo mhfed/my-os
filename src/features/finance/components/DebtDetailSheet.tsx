@@ -386,13 +386,14 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
             <View style={styles.progressAmounts}>
               <View>
                 <Text style={styles.progressLabel}>Số tiền gốc</Text>
-                <Text style={styles.progressOriginal}>
+                <Text testID="money-display" style={styles.progressOriginal}>
                   {formatVND(view.originalAmount)}
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.progressLabel}>Còn lại</Text>
                 <Text
+                  testID="money-display"
                   style={[
                     styles.progressRemaining,
                     { color: progressColorDeep },
@@ -415,14 +416,14 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
 
             <View style={styles.progressMeta}>
               <Text style={styles.progressMetaText}>
-                Đã trả: {formatCompactVND(view.paidAmount)} (
+                Đã trả: <Text testID="money-display">{formatCompactVND(view.paidAmount)}</Text> (
                 {Math.round(view.progressPct * 100)}%)
               </Text>
               {view.accruedInterest > 0 && (
                 <Text
                   style={[styles.progressMetaText, { color: colors.orangeDeep }]}
                 >
-                  Lãi: +{formatCompactVND(view.accruedInterest)}
+                  Lãi: +<Text testID="money-display">{formatCompactVND(view.accruedInterest)}</Text>
                 </Text>
               )}
             </View>
@@ -443,7 +444,7 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
               <View style={{ flex: 1 }}>
                 <Text style={styles.nettingTitle}>⚡ Phát hiện khoản vay chéo!</Text>
                 <Text style={styles.nettingSub}>
-                  Bạn có thể cấn trừ tối đa {formatCompactVND(Math.min(view.totalOwed, opposingView.totalOwed))} ₫ để giảm dư nợ.
+                  Bạn có thể cấn trừ tối đa <Text testID="money-display">{formatCompactVND(Math.min(view.totalOwed, opposingView.totalOwed))}</Text> ₫ để giảm dư nợ.
                 </Text>
               </View>
               <PressableScale
@@ -502,7 +503,7 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                         <Text style={styles.paymentNote}>{p.note}</Text>
                       )}
                     </View>
-                    <Text style={[styles.paymentAmount, { color: pColor }]}>
+                    <Text testID="money-display" style={[styles.paymentAmount, { color: pColor }]}>
                       +{formatCompactVND(p.amount)}
                     </Text>
                     <Pressable
@@ -643,12 +644,12 @@ export function DebtDetailSheet({ debtId, onClose }: DebtDetailSheetProps) {
                   <View style={styles.nettingCompareRow}>
                     <View style={styles.nettingCompareCell}>
                       <Text style={styles.nettingCompareLabel}>Khoản hiện tại</Text>
-                      <Text style={styles.nettingCompareVal}>{formatCompactVND(view.totalOwed)} ₫</Text>
+                      <Text testID="money-display" style={styles.nettingCompareVal}>{formatCompactVND(view.totalOwed)} ₫</Text>
                     </View>
                     <Icon name='swap-horizontal' size={20} color={colors.muted} />
                     <View style={styles.nettingCompareCell}>
                       <Text style={styles.nettingCompareLabel}>Khoản đối ứng</Text>
-                      <Text style={styles.nettingCompareVal}>{formatCompactVND(opposingView.totalOwed)} ₫</Text>
+                      <Text testID="money-display" style={styles.nettingCompareVal}>{formatCompactVND(opposingView.totalOwed)} ₫</Text>
                     </View>
                   </View>
                 )}

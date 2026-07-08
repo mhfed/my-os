@@ -49,7 +49,7 @@ export function TransactionRow({ txn, onDelete, onEdit, borderless = false }: Tr
         </Text>
       </View>
 
-      <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
+      <Text testID="money-display" style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
     </PressableScale>
   );
 

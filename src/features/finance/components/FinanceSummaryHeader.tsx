@@ -80,7 +80,7 @@ export function FinanceSummaryHeader({
       {/* Main Net Worth Display */}
       <View style={styles.netWorthSection}>
         <Text style={styles.netWorthLabel}>TÀI SẢN RÒNG (NET WORTH)</Text>
-        <Text style={[styles.netWorthValue, { color: netWorth >= 0 ? colors.text : colors.red }]}>
+        <Text testID="money-display" style={[styles.netWorthValue, { color: netWorth >= 0 ? colors.text : colors.red }]}>
           {formatVND(netWorth)}
         </Text>
       </View>
@@ -89,7 +89,7 @@ export function FinanceSummaryHeader({
       <View style={styles.allocationBar}>
         <PressableScale onPress={onPressBalance} style={styles.allocItem} haptic='light'>
           <Text style={styles.allocLabel}>Tiền mặt</Text>
-          <Text style={[styles.allocValue, { color: totalBalance >= 0 ? colors.text : colors.red }]}>
+          <Text testID="money-display" style={[styles.allocValue, { color: totalBalance >= 0 ? colors.text : colors.red }]}>
             {formatCompactVND(totalBalance)}
           </Text>
         </PressableScale>
@@ -98,7 +98,7 @@ export function FinanceSummaryHeader({
 
         <View style={styles.allocItem}>
           <Text style={styles.allocLabel}>Tiết kiệm</Text>
-          <Text style={[styles.allocValue, { color: colors.teal }]}>
+          <Text testID="money-display" style={[styles.allocValue, { color: colors.teal }]}>
             {formatCompactVND(totalSavings)}
           </Text>
         </View>
@@ -107,7 +107,7 @@ export function FinanceSummaryHeader({
 
         <View style={styles.allocItem}>
           <Text style={styles.allocLabel}>Sẽ thu</Text>
-          <Text style={[styles.allocValue, { color: colors.purple }]}>
+          <Text testID="money-display" style={[styles.allocValue, { color: colors.purple }]}>
             {formatCompactVND(totalReceivable)}
           </Text>
         </View>
@@ -116,7 +116,7 @@ export function FinanceSummaryHeader({
 
         <View style={styles.allocItem}>
           <Text style={styles.allocLabel}>Phải trả</Text>
-          <Text style={[styles.allocValue, { color: colors.red }]}>
+          <Text testID="money-display" style={[styles.allocValue, { color: colors.red }]}>
             {formatCompactVND(totalPayable)}
           </Text>
         </View>
@@ -132,7 +132,7 @@ export function FinanceSummaryHeader({
           <Text style={styles.summaryLabel}>Thu nhập {period === 'monthly' ? 'tháng' : 'tuần'}</Text>
           <View style={styles.summaryAmountRow}>
             <Icon name='arrow-bottom-left' size={14} color={colors.green} />
-            <Text style={[styles.summaryAmount, { color: colors.green }]}>
+            <Text testID="money-display" style={[styles.summaryAmount, { color: colors.green }]}>
               {formatVND(income)}
             </Text>
           </View>
@@ -146,7 +146,7 @@ export function FinanceSummaryHeader({
           <Text style={styles.summaryLabel}>Đã chi tiêu {period === 'monthly' ? 'tháng' : 'tuần'}</Text>
           <View style={styles.summaryAmountRow}>
             <Icon name='arrow-top-right' size={14} color={colors.red} />
-            <Text style={[styles.summaryAmount, { color: colors.red }]}>
+            <Text testID="money-display" style={[styles.summaryAmount, { color: colors.red }]}>
               {formatVND(spent)}
             </Text>
           </View>

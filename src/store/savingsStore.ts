@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { allRows, runSql } from '@/db/database';
 import { SYS_CAT } from '@/data/seed';
+import { calcMonthlyNeeded } from '@/utils/financeMath';
 import type {
   SavingsContribution,
   SavingsGoal,
@@ -38,8 +39,7 @@ function buildView(goal: SavingsGoal, contributions: SavingsContribution[]): Sav
     daysUntilDeadline = Math.round((goal.deadline - now) / 86_400_000);
     isOverdue = !isAchieved && now > goal.deadline;
     if (!isOverdue && remaining > 0) {
-      const monthsLeft = (goal.deadline - now) / (30.44 * 24 * 3600 * 1000);
-      monthlyNeeded = monthsLeft >= 0.5 ? Math.ceil(remaining / monthsLeft) : remaining;
+      monthlyNeeded = calcMonthlyNeeded(goal.targetAmount, goal.currentAmount, goal.deadline, now);
     }
   }
 

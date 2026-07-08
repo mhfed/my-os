@@ -113,13 +113,13 @@ function DebtRow({
 
           <View style={styles.rowBottom}>
             <Text style={styles.paidText}>
-              {formatCompactVND(view.paidAmount)} /{' '}
-              {formatCompactVND(view.originalAmount)}
+              <Text testID="money-display">{formatCompactVND(view.paidAmount)}</Text> /{' '}
+              <Text testID="money-display">{formatCompactVND(view.originalAmount)}</Text>
             </Text>
             <Text style={[styles.remainText, { color: accent }]}>
               {view.status === 'settled'
                 ? '✓'
-                : `còn ${formatCompactVND(view.totalOwed)}`}
+                : <>còn <Text testID="money-display">{formatCompactVND(view.totalOwed)}</Text></>}
             </Text>
           </View>
         </View>
@@ -192,14 +192,14 @@ export function DebtLedgerSheet({ visible, onClose }: DebtLedgerSheetProps) {
         <View style={styles.summaryBar}>
           <View style={styles.summaryCol}>
             <Text style={styles.summaryLabel}>Thu về</Text>
-            <Text style={[styles.summaryValue, { color: colors.greenDeep }]}>
+            <Text testID="money-display" style={[styles.summaryValue, { color: colors.greenDeep }]}>
               +{formatCompactVND(summary.totalReceivable)}
             </Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryCol}>
             <Text style={styles.summaryLabel}>Phải trả</Text>
-            <Text style={[styles.summaryValue, { color: colors.redDeep }]}>
+            <Text testID="money-display" style={[styles.summaryValue, { color: colors.redDeep }]}>
               -{formatCompactVND(summary.totalPayable)}
             </Text>
           </View>
