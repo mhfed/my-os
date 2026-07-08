@@ -4,6 +4,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -86,42 +87,44 @@ export function AddHabitModal({ visible, onClose }: AddHabitModalProps) {
           <View style={styles.grabber} />
           <Text style={styles.heading}>New habit</Text>
 
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder='Habit name (e.g. Read 10 pages)'
-            placeholderTextColor={colors.tabInactive}
-            autoFocus
-            returnKeyType='next'
-          />
+          <ScrollView style={styles.formScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder='Habit name (e.g. Read 10 pages)'
+              placeholderTextColor={colors.tabInactive}
+              autoFocus
+              returnKeyType='next'
+            />
 
-          <TextInput
-            style={[styles.input, { marginTop: 10 }]}
-            value={sub}
-            onChangeText={setSub}
-            placeholder='Subtitle / Frequency details'
-            placeholderTextColor={colors.tabInactive}
-            returnKeyType='done'
-          />
+            <TextInput
+              style={[styles.input, { marginTop: 10 }]}
+              value={sub}
+              onChangeText={setSub}
+              placeholder='Subtitle / Frequency details'
+              placeholderTextColor={colors.tabInactive}
+              returnKeyType='done'
+            />
 
-          <Text style={styles.fieldLabel}>COLOR</Text>
-          <View style={styles.segments}>
-            {COMMON_COLORS.map((c) => {
-              const isActive = c === color;
-              return (
-                <Pressable
-                  key={c}
-                  onPress={() => setColor(c)}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: c },
-                    isActive && styles.colorOptionActive,
-                  ]}
-                />
-              );
-            })}
-          </View>
+            <Text style={styles.fieldLabel}>COLOR</Text>
+            <View style={styles.segments}>
+              {COMMON_COLORS.map((c) => {
+                const isActive = c === color;
+                return (
+                  <Pressable
+                    key={c}
+                    onPress={() => setColor(c)}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: c },
+                      isActive && styles.colorOptionActive,
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          </ScrollView>
 
           <View style={styles.actions}>
             <Pressable style={styles.cancelButton} onPress={handleClose}>
@@ -163,6 +166,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 12,
     paddingBottom: 34,
+    maxHeight: '90%',
   },
   grabber: {
     alignSelf: 'center',
@@ -244,5 +248,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.white,
+  },
+  formScroll: {
+    flexGrow: 0,
+    marginBottom: 8,
   },
 });
