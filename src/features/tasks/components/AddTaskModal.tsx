@@ -76,7 +76,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
   const [recurrence, setRecurrence] = useState<'none' | 'daily'>('none');
-  const [routineTime, setRoutineTime] = useState<string>('08:00');
+  const [hasTime, setHasTime] = useState(false);
+  const [timeStr, setTimeStr] = useState('09:00');
 
   const canSave = title.trim().length > 0;
 
@@ -89,7 +90,8 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
     setSubtasks([]);
     setNewSubtask('');
     setRecurrence('none');
-    setRoutineTime('08:00');
+    setHasTime(false);
+    setTimeStr('09:00');
   }
 
   function handleClose() {
@@ -99,12 +101,20 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
 
   async function handleSave() {
     if (!canSave) return;
+    
     let dueDate = dueDateFor(due);
+    let finalRoutineTime: string | undefined = undefined;
+
     if (recurrence === 'daily') {
+      finalRoutineTime = timeStr;
       const todayBase = startOfToday();
-      const [h, m] = routineTime.split(':').map(Number);
+      const [h, m] = timeStr.split(':').map(Number);
       dueDate = new Date(todayBase).setHours(h, m, 0, 0);
+    } else if (hasTime && dueDate !== undefined) {
+      const [h, m] = timeStr.split(':').map(Number);
+      dueDate = new Date(dueDate).setHours(h, m, 0, 0);
     }
+
     await addTask({
       title: title.trim(),
       context: context.trim() || undefined,
@@ -113,7 +123,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
       goalId,
       subtasks,
       recurrence: recurrence === 'daily' ? 'daily' : 'none',
-      routineTime: recurrence === 'daily' ? routineTime : undefined,
+      routineTime: finalRoutineTime,
     });
     handleClose();
   }
@@ -250,51 +260,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
             </PressableScale>
           </View>
 
-          {recurrence === 'daily' ? (
-            <>
-              <Text style={styles.fieldLabel}>KHUNG GIỜ CỐ ĐỊNH</Text>
-              <View style={[styles.segments, { marginBottom: 8 }]}>
-                {[
-                  { label: 'Sáng 08:00', value: '08:00' },
-                  { label: 'Trưa 12:00', value: '12:00' },
-                  { label: 'Chiều 15:00', value: '15:00' },
-                  { label: 'Tối 20:00', value: '20:00' },
-                ].map((p) => {
-                  const isActive = routineTime === p.value;
-                  return (
-                    <PressableScale
-                      key={p.value}
-                      onPress={() => setRoutineTime(p.value)}
-                      scaleTo={0.95}
-                      haptic='light'
-                      style={[
-                        styles.segment,
-                        isActive
-                          ? { backgroundColor: tint(colors.teal), borderColor: colors.teal }
-                          : styles.segmentInactive,
-                        { paddingVertical: 8 }
-                      ]}
-                    >
-                      <Text style={[styles.segmentText, { fontSize: 10, color: isActive ? colors.teal : colors.muted }]}>
-                        {p.label}
-                      </Text>
-                    </PressableScale>
-                  );
-                })}
-              </View>
-              <View style={styles.customTimeRow}>
-                <Text style={styles.customTimeLabel}>Giờ khác:</Text>
-                <TextInput
-                  style={styles.customTimeInput}
-                  value={routineTime}
-                  onChangeText={setRoutineTime}
-                  placeholder='08:00'
-                  placeholderTextColor={colors.tabInactive}
-                  maxLength={5}
-                />
-              </View>
-            </>
-          ) : (
+          {recurrence === 'none' && (
             <>
               <Text style={styles.fieldLabel}>HẠN CHÓT</Text>
               <View style={styles.segments}>
@@ -317,18 +283,83 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
                           : styles.segmentInactive,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.segmentText,
-                          { color: isActive ? colors.purple : colors.muted },
-                        ]}
-                      >
+                      <Text style={[styles.segmentText, { color: isActive ? colors.purple : colors.muted }]}>
                         {vietLabel}
                       </Text>
                     </PressableScale>
                   );
                 })}
               </View>
+            </>
+          )}
+
+          {(recurrence === 'daily' || due !== 'None') && (
+            <>
+              {recurrence === 'none' && (
+                <View style={styles.toggleTimeRow}>
+                  <Text style={[styles.fieldLabel, { marginTop: 0 }]}>HẸN GIỜ CỤ THỂ</Text>
+                  <PressableScale
+                    onPress={() => setHasTime(!hasTime)}
+                    scaleTo={0.95}
+                    style={[
+                      styles.timeToggleBtn,
+                      hasTime
+                        ? { backgroundColor: tint(colors.teal), borderColor: colors.teal }
+                        : styles.segmentInactive,
+                    ]}
+                  >
+                    <Text style={[styles.segmentText, { fontSize: 11, color: hasTime ? colors.teal : colors.muted }]}>
+                      {hasTime ? 'Đang bật' : 'Đang tắt'}
+                    </Text>
+                  </PressableScale>
+                </View>
+              )}
+
+              {(recurrence === 'daily' || hasTime) && (
+                <>
+                  <Text style={styles.fieldLabel}>KHUNG GIỜ CHỌN (GIỜ:PHÚT)</Text>
+                  <View style={[styles.segments, { marginBottom: 8 }]}>
+                    {[
+                      { label: 'Sáng 08:00', value: '08:00' },
+                      { label: 'Trưa 12:00', value: '12:00' },
+                      { label: 'Chiều 15:00', value: '15:00' },
+                      { label: 'Tối 20:00', value: '20:00' },
+                    ].map((p) => {
+                      const isActive = timeStr === p.value;
+                      return (
+                        <PressableScale
+                          key={p.value}
+                          onPress={() => setTimeStr(p.value)}
+                          scaleTo={0.95}
+                          haptic='light'
+                          style={[
+                            styles.segment,
+                            isActive
+                              ? { backgroundColor: tint(colors.teal), borderColor: colors.teal }
+                              : styles.segmentInactive,
+                            { paddingVertical: 8 }
+                          ]}
+                        >
+                          <Text style={[styles.segmentText, { fontSize: 10, color: isActive ? colors.teal : colors.muted }]}>
+                            {p.label}
+                          </Text>
+                        </PressableScale>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.customTimeRow}>
+                    <Text style={styles.customTimeLabel}>Giờ tự chọn:</Text>
+                    <TextInput
+                      style={styles.customTimeInput}
+                      value={timeStr}
+                      onChangeText={setTimeStr}
+                      placeholder='09:00'
+                      placeholderTextColor={colors.tabInactive}
+                      maxLength={5}
+                    />
+                  </View>
+                </>
+              )}
             </>
           )}
 
@@ -607,5 +638,19 @@ const styles = StyleSheet.create({
     color: colors.text,
     width: 80,
     textAlign: 'center',
+  },
+  toggleTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+  },
+  timeToggleBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
