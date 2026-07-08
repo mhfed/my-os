@@ -69,7 +69,7 @@ export interface DebtState {
   addDebt: (input: Omit<DebtEntry, 'id' | 'status' | 'createdAt'>) => Promise<void>;
   updateDebt: (id: string, patch: Partial<Pick<DebtEntry, 'party' | 'originalAmount' | 'note' | 'dueDate' | 'interestType' | 'interestRate' | 'interestPeriod'>>) => Promise<void>;
   deleteDebt: (id: string) => Promise<void>;
-  addPayment: (debtId: string, amount: number, date: number, note?: string, paymentMethod?: 'cash' | 'netting', linkedNettingId?: string) => Promise<void>;
+  addPayment: (debtId: string, amount: number, date: number, note?: string, paymentMethod?: 'cash' | 'netting', linkedNettingId?: string, linkTxn?: boolean) => Promise<void>;
   deletePayment: (paymentId: string, debtId: string, amount: number) => Promise<void>;
   settleDebt: (id: string, linkToFinance: boolean) => Promise<void>;
   addNetting: (party: string, amount: number, borrowId: string, lendId: string, note?: string) => Promise<void>;

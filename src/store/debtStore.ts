@@ -279,7 +279,7 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     cancelDebtNotifications(id);
   },
 
-  addPayment: async (debtId, amount, date, note, paymentMethod = 'cash', linkedNettingId) => {
+  addPayment: async (debtId, amount, date, note, paymentMethod = 'cash', linkedNettingId, linkTxn = true) => {
     const payment: DebtPayment = {
       id: newId(),
       debtId,
@@ -304,6 +304,28 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
         payment.createdAt,
       ],
     );
+
+    // Auto-sync with Finance: log a transaction if paying via cash
+    if (paymentMethod === 'cash' && linkTxn) {
+      try {
+        const { useFinanceStore } = await import('@/store/financeStore');
+        const entry = get().entries.find((e) => e.id === debtId);
+        if (entry) {
+          const categoryId = entry.type === 'lend' ? SYS_CAT.debtIncome : SYS_CAT.debtExpense;
+          await useFinanceStore.getState().addTransaction({
+            type: entry.type === 'lend' ? 'income' : 'expense',
+            amount,
+            categoryId,
+            note: entry.type === 'lend' 
+              ? `Thu nợ từ ${entry.party}${note ? `: ${note}` : ''}` 
+              : `Trả nợ ${entry.party}${note ? `: ${note}` : ''}`,
+            date,
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to link debt payment to finance transaction', e);
+      }
+    }
 
     // Recalculate status
     const { entries, payments: existingPayments } = get();
@@ -358,7 +380,7 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     set(() => ({ payments: remaining }));
   },
 
-  settleDebt: async (id, linkToFinance) => {
+  settleDebt: async (id, linkToFinance = true) => {
     const view = get().getDebtView(id);
     if (!view) return;
 

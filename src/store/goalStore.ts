@@ -23,6 +23,20 @@ export interface GoalProgress {
   contributingTasks: Task[];
 }
 
+function parseLinkedIds(fieldValue?: string | null): string[] {
+  if (!fieldValue) return [];
+  const trimmed = fieldValue.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      return JSON.parse(trimmed) as string[];
+    } catch (e) {
+      // fallback
+    }
+  }
+  return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export function computeGoalProgress(
   goal: Goal,
   linkedTasks: Task[],
@@ -42,29 +56,37 @@ export function computeGoalProgress(
   let total = milestoneTotal + taskTotal;
   let done = milestoneDone + taskDone;
 
-  // Add savings goal if linked
-  if (goal.savingsGoalId) {
+  // Add savings goals if linked
+  const savingsGoalIds = parseLinkedIds(goal.savingsGoalId);
+  if (savingsGoalIds.length > 0) {
     try {
       const { useSavingsStore } = require('./savingsStore');
-      const sg = useSavingsStore.getState().goals.find((g: any) => g.id === goal.savingsGoalId);
-      if (sg) {
-        total += 1;
-        const progress = sg.targetAmount > 0 ? Math.min(1, sg.currentAmount / sg.targetAmount) : 0;
-        done += progress;
+      const savingsGoals = useSavingsStore.getState().goals;
+      for (const sgId of savingsGoalIds) {
+        const sg = savingsGoals.find((g: any) => g.id === sgId);
+        if (sg) {
+          total += 1;
+          const progress = sg.targetAmount > 0 ? Math.min(1, sg.currentAmount / sg.targetAmount) : 0;
+          done += progress;
+        }
       }
     } catch (e) {
       console.warn('Failed to load savings goal progress', e);
     }
   }
 
-  // Add habit if linked
-  if (goal.habitId) {
+  // Add habits if linked
+  const habitIds = parseLinkedIds(goal.habitId);
+  if (habitIds.length > 0) {
     try {
       const { useHabitsStore } = require('./habitsStore');
-      const habitView = useHabitsStore.getState().views().find((h: any) => h.id === goal.habitId);
-      if (habitView) {
-        total += 1;
-        done += (habitView.pct / 100);
+      const habitViews = useHabitsStore.getState().views();
+      for (const hId of habitIds) {
+        const habitView = habitViews.find((h: any) => h.id === hId);
+        if (habitView) {
+          total += 1;
+          done += (habitView.pct / 100);
+        }
       }
     } catch (e) {
       console.warn('Failed to load habit progress', e);
@@ -102,18 +124,20 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
       const rows = await allRows<any>(
         'SELECT * FROM goals ORDER BY createdAt DESC;',
       );
-      const mRows = await allRows<any>('SELECT * FROM milestones;');
+      const taskRows = await allRows<any>(
+        'SELECT * FROM tasks WHERE goalId IS NOT NULL;',
+      );
 
-      const mByGoal = mRows.reduce(
-        (acc, m) => {
-          if (!acc[m.goalId]) acc[m.goalId] = [];
-          acc[m.goalId].push({
-            id: m.id,
-            goalId: m.goalId,
-            title: m.title,
-            done: m.done === 1,
-            linkedTaskId: m.linkedTaskId ?? undefined,
-            createdAt: m.createdAt,
+      const mByGoal = taskRows.reduce(
+        (acc, t) => {
+          if (!acc[t.goalId]) acc[t.goalId] = [];
+          acc[t.goalId].push({
+            id: t.id,
+            goalId: t.goalId,
+            title: t.title,
+            done: t.done === 1,
+            linkedTaskId: t.id,
+            createdAt: t.createdAt,
           });
           return acc;
         },
@@ -142,6 +166,13 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
   createGoal: async (input) => {
     const goalId = newId();
     const now = Date.now();
+    const savingsGoalIdVal = Array.isArray(input.savingsGoalId)
+      ? JSON.stringify(input.savingsGoalId)
+      : input.savingsGoalId ?? null;
+    const habitIdVal = Array.isArray(input.habitId)
+      ? JSON.stringify(input.habitId)
+      : input.habitId ?? null;
+
     await runSql(
       `INSERT INTO goals (id, userId, title, description, deadline, status, savingsGoalId, habitId, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -152,8 +183,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
         input.description ?? null,
         input.deadline ?? null,
         'active',
-        input.savingsGoalId ?? null,
-        input.habitId ?? null,
+        savingsGoalIdVal,
+        habitIdVal,
         now,
         now,
       ],
@@ -162,9 +193,7 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     const createdMilestones: Milestone[] = [];
     for (const mTitle of input.milestones) {
       if (!mTitle.trim()) continue;
-      const mId = newId();
 
-      // PRD: "Milestone tự động tạo task tương ứng trong Task Manager."
       const tasksStr = useTasksStore.getState();
       if (!tasksStr.ready) await tasksStr.init();
 
@@ -173,15 +202,11 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
         priority: 'P1',
         dueDate: input.deadline,
         context: input.title,
+        goalId: goalId,
       });
 
-      await runSql(
-        `INSERT INTO milestones (id, goalId, title, done, linkedTaskId, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?);`,
-        [mId, goalId, mTitle, 0, task.id, now],
-      );
       createdMilestones.push({
-        id: mId,
+        id: task.id,
         goalId,
         title: mTitle,
         done: false,
@@ -196,8 +221,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
       description: input.description,
       deadline: input.deadline,
       status: 'active',
-      savingsGoalId: input.savingsGoalId,
-      habitId: input.habitId,
+      savingsGoalId: Array.isArray(input.savingsGoalId) ? JSON.stringify(input.savingsGoalId) : input.savingsGoalId,
+      habitId: Array.isArray(input.habitId) ? JSON.stringify(input.habitId) : input.habitId,
       createdAt: now,
       updatedAt: now,
       milestones: createdMilestones,
@@ -208,6 +233,12 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
 
   updateGoal: async (id, updates) => {
     const now = Date.now();
+    const savingsGoalIdVal = Array.isArray(updates.savingsGoalId)
+      ? JSON.stringify(updates.savingsGoalId)
+      : updates.savingsGoalId ?? null;
+    const habitIdVal = Array.isArray(updates.habitId)
+      ? JSON.stringify(updates.habitId)
+      : updates.habitId ?? null;
 
     // Update goal base info
     await runSql(
@@ -216,8 +247,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
         updates.title,
         updates.description ?? null,
         updates.deadline ?? null,
-        updates.savingsGoalId ?? null,
-        updates.habitId ?? null,
+        savingsGoalIdVal,
+        habitIdVal,
         now,
         id,
       ],
@@ -230,22 +261,17 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
 
       for (const mTitle of updates.newMilestones) {
         if (!mTitle.trim()) continue;
-        const mId = newId();
 
         const task = await tasksStr.addTask({
           title: mTitle,
           priority: 'P1',
           dueDate: updates.deadline,
           context: updates.title,
+          goalId: id,
         });
 
-        await runSql(
-          `INSERT INTO milestones (id, goalId, title, done, linkedTaskId, createdAt)
-           VALUES (?, ?, ?, ?, ?, ?);`,
-          [mId, id, mTitle, 0, task.id, now],
-        );
         createdMilestones.push({
-          id: mId,
+          id: task.id,
           goalId: id,
           title: mTitle,
           done: false,
@@ -263,8 +289,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
           title: updates.title,
           description: updates.description,
           deadline: updates.deadline,
-          savingsGoalId: updates.savingsGoalId,
-          habitId: updates.habitId,
+          savingsGoalId: Array.isArray(updates.savingsGoalId) ? JSON.stringify(updates.savingsGoalId) : updates.savingsGoalId,
+          habitId: Array.isArray(updates.habitId) ? JSON.stringify(updates.habitId) : updates.habitId,
           updatedAt: now,
           milestones: [...g.milestones, ...createdMilestones],
         };
@@ -286,25 +312,11 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
   },
 
   toggleMilestone: async (goalId, milestoneId) => {
-    const goal = get().goals.find((g) => g.id === goalId);
-    if (!goal) return;
-    const milestone = goal.milestones.find((m) => m.id === milestoneId);
-    if (!milestone) return;
-
-    const done = !milestone.done;
-    await runSql('UPDATE milestones SET done = ? WHERE id = ?;', [
-      done ? 1 : 0,
-      milestoneId,
-    ]);
-
-    // Automatically complete the linked task if it exists?
-    // Yes, this is an advanced UX detail. Let's do it if tasksStore is loaded.
-    if (milestone.linkedTaskId) {
-      const ts = useTasksStore.getState();
-      const foundTask = ts.tasks.find((t) => t.id === milestone.linkedTaskId);
-      if (foundTask && foundTask.done !== done) {
-        await ts.toggleTask(milestone.linkedTaskId);
-      }
+    const ts = useTasksStore.getState();
+    if (!ts.ready) await ts.init();
+    const foundTask = ts.tasks.find((t) => t.id === milestoneId);
+    if (foundTask) {
+      await ts.toggleTask(milestoneId);
     }
 
     set((state) => ({
@@ -313,7 +325,7 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
           return {
             ...g,
             milestones: g.milestones.map((m) =>
-              m.id === milestoneId ? { ...m, done } : m,
+              m.id === milestoneId ? { ...m, done: !m.done } : m,
             ),
           };
         }
@@ -324,6 +336,8 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
 
   deleteGoal: async (id) => {
     await runSql('DELETE FROM goals WHERE id = ?;', [id]);
+    // Optionally clean up tasks associated with this goal
+    await runSql('UPDATE tasks SET goalId = NULL WHERE goalId = ?;', [id]);
     set((state) => ({ goals: state.goals.filter((g) => g.id !== id) }));
   },
 }));

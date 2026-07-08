@@ -118,13 +118,34 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
 
   // ----- mutations -----
   addTransaction: async (input) => {
+    const { savingsGoalId, debtId, ...rest } = input as any;
     const txn: Transaction = {
-      ...input,
+      ...rest,
       id: newId(),
       createdAt: Date.now(),
     };
     await dbInsertTransaction(txn);
     set((state) => ({ transactions: [txn, ...state.transactions] }));
+
+    if (savingsGoalId) {
+      try {
+        const { useSavingsStore } = await import('@/store/savingsStore');
+        const savings = useSavingsStore.getState();
+        if (!savings.ready) await savings.init();
+        await savings.addContribution(savingsGoalId, txn.amount, txn.date, txn.note ?? '', false);
+      } catch (e) {
+        console.warn('Failed to sync transaction to savings goal', e);
+      }
+    } else if (debtId) {
+      try {
+        const { useDebtStore } = await import('@/store/debtStore');
+        const debt = useDebtStore.getState();
+        if (!debt.ready) await debt.init();
+        await debt.addPayment(debtId, txn.amount, txn.date, txn.note ?? '', 'cash', undefined, false);
+      } catch (e) {
+        console.warn('Failed to sync transaction to debt payment', e);
+      }
+    }
   },
 
   deleteTransaction: async (id) => {

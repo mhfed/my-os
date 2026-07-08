@@ -108,13 +108,15 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       createdAt: Date.now(),
     };
 
-    await runSql(
-      `INSERT INTO inbox_items (id, userId, text, status, createdAt)
-       VALUES (?, ?, ?, ?, ?);`,
-      [item.id, null, item.text, item.status, item.createdAt],
-    );
-
-    set((s) => ({ items: [item, ...s.items] }));
+    try {
+      await runSql(
+        `INSERT INTO inbox_items (id, userId, text, status, createdAt) VALUES (?, ?, ?, ?, ?);`,
+        [item.id, null, item.text, item.status, item.createdAt],
+      );
+      set((s) => ({ items: [item, ...s.items] }));
+    } catch (e) {
+      console.warn('Failed to save capture to inbox', e);
+    }
   },
 
   archive: async (id: string) => {
@@ -191,6 +193,27 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
         await useGoalStore.getState().createGoal({
           title: item.text,
           milestones: [],
+        });
+        break;
+      }
+      case 'transaction': {
+        const { parseQuickCapture } = await import('@/utils/parser');
+        const parsed = parseQuickCapture(item.text);
+        const { useFinanceStore } = await import('@/store/financeStore');
+        const { CAT } = await import('@/data/seed');
+        const finance = useFinanceStore.getState();
+        if (!finance.ready) await finance.init();
+
+        const amount = parsed.metadata?.amount ?? 0;
+        const type = parsed.metadata?.transactionType ?? 'expense';
+        const note = parsed.type === 'transaction' ? parsed.text : item.text;
+
+        await finance.addTransaction({
+          type,
+          amount,
+          categoryId: type === 'expense' ? CAT.food : CAT.salary,
+          note,
+          date: Date.now(),
         });
         break;
       }
