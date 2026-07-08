@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, glass, radius, tint } from '@/theme/colors';
@@ -16,6 +16,7 @@ interface TaskCardProps {
   goalTitle?: string;
   onToggle: (id: string) => void;
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
+  onEdit?: (task: Task) => void;
 }
 
 function priorityColor(priority: Priority): string {
@@ -42,6 +43,7 @@ export const TaskCard = memo(function TaskCard({
   goalTitle,
   onToggle,
   onToggleSubtask,
+  onEdit,
 }: TaskCardProps) {
   const isOverdue = overdue;
   const priColor = priorityColor(task.priority);
@@ -50,7 +52,7 @@ export const TaskCard = memo(function TaskCard({
   return (
     <View style={styles.container}>
       <PressableScale
-        onPress={() => onToggle(task.id)}
+        onPress={() => onEdit?.(task)}
         scaleTo={0.98}
         haptic='light'
         style={[
@@ -67,9 +69,16 @@ export const TaskCard = memo(function TaskCard({
           pointerEvents='none'
         />
 
-        <View style={[styles.checkbox, task.done ? styles.checkboxDone : styles.checkboxUndone]}>
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            onToggle(task.id);
+          }}
+          hitSlop={8}
+          style={[styles.checkbox, task.done ? styles.checkboxDone : styles.checkboxUndone]}
+        >
           {task.done && <Icon name='check-bold' size={14} color={colors.white} />}
-        </View>
+        </Pressable>
 
         <View style={styles.body}>
           <Text style={[styles.title, task.done && styles.titleDone]} numberOfLines={1}>

@@ -277,6 +277,47 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
     return task;
   },
 
+  updateTask: async (id: string, input: Omit<NewTaskInput, 'subtasks'>) => {
+    await runSql(
+      `UPDATE tasks SET 
+        title = ?, 
+        context = ?, 
+        priority = ?, 
+        dueDate = ?, 
+        goalId = ?, 
+        recurrence = ?, 
+        routine_time = ?
+       WHERE id = ?;`,
+      [
+        input.title,
+        input.context ?? null,
+        input.priority,
+        input.dueDate ?? null,
+        input.goalId ?? null,
+        input.recurrence ?? null,
+        input.routineTime ?? null,
+        id,
+      ]
+    );
+
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              title: input.title,
+              context: input.context,
+              priority: input.priority,
+              dueDate: input.dueDate,
+              goalId: input.goalId,
+              recurrence: input.recurrence,
+              routineTime: input.routineTime,
+            }
+          : t,
+      ),
+    }));
+  },
+
   toggleTask: async (id: string) => {
     const current = get().tasks.find((t) => t.id === id);
     if (!current) return;

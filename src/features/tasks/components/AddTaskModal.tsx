@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -19,11 +19,12 @@ import { PressableScale } from '@/components/motion';
 import { startOfToday } from '@/utils/day';
 import { useTasksStore } from '@/store/tasksStore';
 import { useGoalStore } from '@/store/goalStore';
-import type { Priority } from '@/types/task';
+import type { Priority, Task } from '@/types/task';
 
 interface AddTaskModalProps {
   visible: boolean;
   onClose: () => void;
+  taskToEdit?: Task;
 }
 
 const PRIORITIES: Priority[] = ['P0', 'P1', 'P2', 'P3'];
@@ -63,8 +64,10 @@ function dueDateFor(choice: DueChoice): number | undefined {
   }
 }
 
-export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
+export function AddTaskModal({ visible, onClose, taskToEdit }: AddTaskModalProps) {
   const addTask = useTasksStore((s) => s.addTask);
+  const updateTask = useTasksStore((s) => s.updateTask);
+  const deleteTask = useTasksStore((s) => s.deleteTask);
   const goals = useGoalStore((s) => s.goals);
   const activeGoals = goals.filter((g) => g.status === 'active');
 
@@ -78,6 +81,48 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
   const [recurrence, setRecurrence] = useState<'none' | 'daily'>('none');
   const [hasTime, setHasTime] = useState(false);
   const [timeStr, setTimeStr] = useState('09:00');
+
+  useEffect(() => {
+    if (visible) {
+      if (taskToEdit) {
+        setTitle(taskToEdit.title);
+        setPriority(taskToEdit.priority);
+        setContext(taskToEdit.context ?? '');
+        setGoalId(taskToEdit.goalId);
+        setSubtasks(taskToEdit.subtasks?.map((s) => s.title) ?? []);
+        setRecurrence(taskToEdit.recurrence ?? 'none');
+
+        if (taskToEdit.recurrence === 'daily' && taskToEdit.routineTime) {
+          setHasTime(true);
+          setTimeStr(taskToEdit.routineTime);
+        } else if (taskToEdit.dueDate) {
+          const d = new Date(taskToEdit.dueDate);
+          const hasSpecificTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+          setHasTime(hasSpecificTime);
+          if (hasSpecificTime) {
+            setTimeStr(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+          } else {
+            setTimeStr('09:00');
+          }
+        } else {
+          setHasTime(false);
+          setTimeStr('09:00');
+        }
+
+        if (taskToEdit.dueDate) {
+          const dStart = new Date(taskToEdit.dueDate).setHours(0, 0, 0, 0);
+          const base = startOfToday();
+          if (dStart === base) setDue('Today');
+          else if (dStart === base + DAY_MS) setDue('Tomorrow');
+          else setDue('None');
+        } else {
+          setDue('None');
+        }
+      } else {
+        reset();
+      }
+    }
+  }, [visible, taskToEdit]);
 
   const canSave = title.trim().length > 0;
 
@@ -115,16 +160,28 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
       dueDate = new Date(dueDate).setHours(h, m, 0, 0);
     }
 
-    await addTask({
-      title: title.trim(),
-      context: context.trim() || undefined,
-      priority,
-      dueDate,
-      goalId,
-      subtasks,
-      recurrence: recurrence === 'daily' ? 'daily' : 'none',
-      routineTime: finalRoutineTime,
-    });
+    if (taskToEdit) {
+      await updateTask(taskToEdit.id, {
+        title: title.trim(),
+        context: context.trim() || undefined,
+        priority,
+        dueDate,
+        goalId,
+        recurrence: recurrence === 'daily' ? 'daily' : 'none',
+        routineTime: finalRoutineTime,
+      });
+    } else {
+      await addTask({
+        title: title.trim(),
+        context: context.trim() || undefined,
+        priority,
+        dueDate,
+        goalId,
+        subtasks,
+        recurrence: recurrence === 'daily' ? 'daily' : 'none',
+        routineTime: finalRoutineTime,
+      });
+    }
     handleClose();
   }
 
@@ -139,7 +196,7 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
         </Pressable>
         <View style={styles.sheet}>
           <View style={styles.grabber} />
-          <Text style={styles.heading}>Nhiệm vụ mới</Text>
+          <Text style={styles.heading}>{taskToEdit ? 'Chỉnh sửa nhiệm vụ' : 'Nhiệm vụ mới'}</Text>
 
           <TextInput
             style={styles.input}
@@ -437,6 +494,19 @@ export function AddTaskModal({ visible, onClose }: AddTaskModalProps) {
           ) : null}
 
           <View style={styles.actions}>
+            {taskToEdit && (
+              <PressableScale
+                style={styles.deleteButton}
+                onPress={async () => {
+                  await deleteTask(taskToEdit.id);
+                  handleClose();
+                }}
+                scaleTo={0.97}
+                haptic='medium'
+              >
+                <Icon name='delete-outline' size={20} color={colors.red} />
+              </PressableScale>
+            )}
             <PressableScale
               style={styles.cancelButton}
               onPress={handleClose}
@@ -652,5 +722,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  deleteButton: {
+    width: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: tint(colors.red, '25'),
+    backgroundColor: 'rgba(239,68,68,0.05)',
   },
 });

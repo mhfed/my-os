@@ -59,6 +59,7 @@ export interface TasksState {
 
   init: () => Promise<void>;
   addTask: (input: NewTaskInput) => Promise<Task>;
+  updateTask: (id: string, input: Omit<NewTaskInput, 'subtasks'>) => Promise<void>;
   addTomorrowTask: (title: string) => Promise<Task>;
   toggleTask: (id: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;

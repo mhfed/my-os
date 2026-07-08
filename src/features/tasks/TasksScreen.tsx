@@ -97,6 +97,11 @@ export function TasksScreen() {
   const [activeTimeSegment, setActiveTimeSegment] = useState<TimeSegment>('all');
   const [addVisible, setAddVisible] = useState(false);
   const [tomorrowTitle, setTomorrowTitle] = useState('');
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+
+  const handleEditTask = useCallback((task: Task) => {
+    setEditingTask(task);
+  }, []);
 
   useEffect(() => {
     void init();
@@ -422,6 +427,7 @@ export function TasksScreen() {
           goalTitle={item.goalTitle}
           onToggle={toggleTask}
           onToggleSubtask={toggleSubtask}
+          onEdit={handleEditTask}
         />
       );
     },
@@ -596,6 +602,7 @@ export function TasksScreen() {
                     goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
                     onToggle={toggleTask}
                     onToggleSubtask={toggleSubtask}
+                    onEdit={handleEditTask}
                   />
                 ))}
               </View>
@@ -618,6 +625,7 @@ export function TasksScreen() {
                   goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
                   onToggle={toggleTask}
                   onToggleSubtask={toggleSubtask}
+                  onEdit={handleEditTask}
                 />
               ))}
             </View>
@@ -667,6 +675,7 @@ export function TasksScreen() {
                           goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
                           onToggle={toggleTask}
                           onToggleSubtask={toggleSubtask}
+                          onEdit={handleEditTask}
                         />
                       </View>
                     </View>
@@ -694,6 +703,7 @@ export function TasksScreen() {
                   goalTitle={task.goalId ? goalTitleById[task.goalId] : undefined}
                   onToggle={toggleTask}
                   onToggleSubtask={toggleSubtask}
+                  onEdit={handleEditTask}
                 />
               ))}
 
@@ -747,7 +757,14 @@ export function TasksScreen() {
         </LinearGradient>
       </PressableScale>
 
-      <AddTaskModal visible={addVisible} onClose={() => setAddVisible(false)} />
+      <AddTaskModal
+        visible={addVisible || editingTask !== undefined}
+        taskToEdit={editingTask}
+        onClose={() => {
+          setAddVisible(false);
+          setEditingTask(undefined);
+        }}
+      />
     </SafeAreaView>
   );
 }
