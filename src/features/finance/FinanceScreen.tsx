@@ -282,6 +282,7 @@ export function FinanceScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.screenGlow}
+        pointerEvents='none'
       />
 
       <ScrollView
@@ -322,22 +323,26 @@ export function FinanceScreen() {
         {/* ---- Period Selector (Weekly vs Monthly) ---- */}
         <View style={styles.periodSelectorContainer}>
           <View style={styles.periodSelectorInner}>
-            <Pressable
+            <PressableScale
               onPress={() => setPeriod('monthly')}
               style={[styles.periodSelectorBtn, period === 'monthly' && styles.periodSelectorBtnActive]}
+              haptic='light'
+              scaleTo={0.96}
             >
               <Text style={[styles.periodSelectorText, period === 'monthly' && styles.periodSelectorTextActive]}>
                 Báo cáo tháng
               </Text>
-            </Pressable>
-            <Pressable
+            </PressableScale>
+            <PressableScale
               onPress={() => setPeriod('weekly')}
               style={[styles.periodSelectorBtn, period === 'weekly' && styles.periodSelectorBtnActive]}
+              haptic='light'
+              scaleTo={0.96}
             >
               <Text style={[styles.periodSelectorText, period === 'weekly' && styles.periodSelectorTextActive]}>
                 Báo cáo tuần
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </View>
 
@@ -500,9 +505,9 @@ export function FinanceScreen() {
               <View style={[styles.analyticsDot, { backgroundColor: colors.gold }]} />
               <Text style={styles.recentSectionTitle}>Nhật ký giao dịch</Text>
             </View>
-            <Pressable onPress={() => setHistoryOpen(true)}>
+            <PressableScale onPress={() => setHistoryOpen(true)} haptic='light' scaleTo={0.95}>
               <Text style={styles.seeAllBtnText}>Tất cả lịch sử</Text>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {/* Sub-tabs for transaction scope */}
@@ -604,11 +609,13 @@ export function FinanceScreen() {
       </ScrollView>
 
       {/* ---- FAB ---- */}
-      <Pressable
+      <PressableScale
         style={styles.fab}
         onPress={() => setPettyCashOpen(true)}
         onLongPress={() => setSheetOpen(true)}
         delayLongPress={300}
+        scaleTo={0.93}
+        haptic='medium'
       >
         <LinearGradient
           colors={FAB_GRADIENT}
@@ -618,7 +625,7 @@ export function FinanceScreen() {
         >
           <Icon name="plus" size={28} color={colors.white} />
         </LinearGradient>
-      </Pressable>
+      </PressableScale>
 
       {/* ---- Modals / Sheets ---- */}
       <AddTransactionSheet
@@ -741,7 +748,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: 16,
     gap: 16,
   },
@@ -1000,7 +1007,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
   },
   emptyStatementText: {
     fontFamily: fonts.displayBold,
@@ -1018,10 +1025,10 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: 104,
+    bottom: spacing.tabClear,
     width: 56,
     height: 56,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     shadowColor: colors.gold,
     shadowOpacity: 0.45,
     shadowRadius: 24,
@@ -1030,7 +1037,7 @@ const styles = StyleSheet.create({
   },
   fabGradient: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },

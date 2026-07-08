@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
   },

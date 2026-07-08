@@ -1,13 +1,13 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { colors, glass, radius, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { spacing } from '@/theme/spacing';
 import { Icon, type IconName } from '@/theme/icons';
-import { AnimatedCard } from '@/components/motion';
+import { PressableScale } from '@/components/motion';
 import { useSettingsStore, type SuperAppItemKey } from '@/store/settingsStore';
 import { exportAllData } from '@/utils/export';
 
@@ -19,15 +19,15 @@ interface SuperAppItemConfig {
 }
 
 const SUPER_APP_ALL: SuperAppItemConfig[] = [
-  { key: 'inbox', label: 'Inbox', icon: 'inbox', color: colors.purple },
-  { key: 'journal', label: 'Journal', icon: 'notebook', color: colors.teal },
-  { key: 'habits', label: 'Habits', icon: 'chart-box', color: colors.purple },
-  { key: 'notes', label: 'Notes', icon: 'brain', color: colors.orange },
-  { key: 'goals', label: 'Goals', icon: 'target', color: colors.red },
-  { key: 'today', label: 'Today', icon: 'view-grid', color: colors.purple },
-  { key: 'tasks', label: 'Tasks', icon: 'checkbox-marked-outline', color: colors.teal },
-  { key: 'health', label: 'Health', icon: 'heart-pulse', color: colors.red },
-  { key: 'finance', label: 'Finance', icon: 'wallet', color: colors.orange },
+  { key: 'inbox',   label: 'Inbox',   icon: 'inbox',                  color: colors.purple },
+  { key: 'journal', label: 'Journal', icon: 'notebook',               color: colors.teal   },
+  { key: 'habits',  label: 'Habits',  icon: 'chart-box',              color: colors.purple },
+  { key: 'notes',   label: 'Notes',   icon: 'brain',                  color: colors.orange },
+  { key: 'goals',   label: 'Goals',   icon: 'target',                 color: colors.red    },
+  { key: 'today',   label: 'Today',   icon: 'view-grid',              color: colors.purple },
+  { key: 'tasks',   label: 'Tasks',   icon: 'checkbox-marked-outline',color: colors.teal   },
+  { key: 'health',  label: 'Health',  icon: 'heart-pulse',            color: colors.red    },
+  { key: 'finance', label: 'Finance', icon: 'wallet',                 color: colors.orange },
 ];
 
 interface MoreItem {
@@ -35,50 +35,20 @@ interface MoreItem {
   sub: string;
   icon: IconName;
   color: string;
-  route?: '/inbox' | '/journal' | '/habits' | '/notes' | '/goals';
+  route?: string;
 }
 
 const ITEMS: MoreItem[] = [
-  {
-    label: 'Inbox',
-    sub: 'Triage your quick captures',
-    icon: 'inbox',
-    color: colors.purple,
-    route: '/inbox',
-  },
-  {
-    label: 'Journal',
-    sub: 'Daily entry · mood · time capsule',
-    icon: 'notebook',
-    color: colors.teal,
-    route: '/journal',
-  },
-  {
-    label: 'Habits',
-    sub: 'Streaks & weekly grid',
-    icon: 'chart-box',
-    color: colors.purple,
-    route: '/habits',
-  },
-  {
-    label: 'Notes',
-    sub: 'Second brain · reading list',
-    icon: 'brain',
-    color: colors.orange,
-    route: '/notes' as any,
-  },
-  {
-    label: 'Goals',
-    sub: 'OKRs & milestones',
-    icon: 'target',
-    color: colors.red,
-    route: '/goals' as any,
-  },
+  { label: 'Inbox',   sub: 'Triage your quick captures',    icon: 'inbox',                  color: colors.purple, route: '/inbox'   },
+  { label: 'Journal', sub: 'Daily entry · mood · time capsule', icon: 'notebook',           color: colors.teal,   route: '/journal' },
+  { label: 'Habits',  sub: 'Streaks & weekly grid',         icon: 'chart-box',              color: colors.purple, route: '/habits'  },
+  { label: 'Notes',   sub: 'Second brain · reading list',   icon: 'brain',                  color: colors.orange, route: '/notes'   },
+  { label: 'Goals',   sub: 'OKRs & milestones',             icon: 'target',                 color: colors.red,    route: '/goals'   },
 ];
 
 export default function MoreScreen() {
   const router = useRouter();
-  const pinnedItems = useSettingsStore((s) => s.pinnedItems);
+  const pinnedItems  = useSettingsStore((s) => s.pinnedItems);
   const togglePinned = useSettingsStore((s) => s.togglePinnedItem);
 
   return (
@@ -93,130 +63,95 @@ export default function MoreScreen() {
 
       <Text style={styles.title}>More</Text>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        {/* Super App settings */}
-        <AnimatedCard index={0} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name='view-grid-plus' size={16} color={colors.purple} />
-            <Text style={styles.sectionTitle}>Super App</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+
+        {/* ── Super App settings ── */}
+        <View style={styles.group}>
+          <View style={styles.groupHeader}>
+            <Icon name='view-grid-plus' size={14} color={colors.purple} />
+            <Text style={styles.groupTitle}>Super App</Text>
           </View>
-          <Text style={styles.sectionSub}>
-            Choose what appears when you tap the center button
-          </Text>
-          <View style={styles.toggleList}>
-            {SUPER_APP_ALL.map((item) => {
+          <Text style={styles.groupSub}>Chọn module hiển thị khi bấm nút giữa</Text>
+
+          <View style={styles.flatGroup}>
+            {SUPER_APP_ALL.map((item, idx) => {
               const pinned = pinnedItems.includes(item.key);
               return (
-                <Pressable
+                <PressableScale
                   key={item.key}
-                  style={({ pressed }) => [
-                    styles.toggleRow,
-                    pressed && { opacity: 0.7 },
-                  ]}
+                  style={[styles.flatRow, idx < SUPER_APP_ALL.length - 1 && styles.flatRowBorder]}
                   onPress={() => togglePinned(item.key)}
+                  scaleTo={0.97}
+                  haptic='light'
                 >
-                  <View
-                    style={[
-                      styles.toggleIcon,
-                      { backgroundColor: tint(item.color) },
-                    ]}
-                  >
+                  <View style={[styles.rowIcon, { backgroundColor: tint(item.color) }]}>
                     <Icon name={item.icon} size={16} color={item.color} />
                   </View>
-                  <Text style={styles.toggleLabel}>{item.label}</Text>
-                  <View
-                    style={[
-                      styles.toggleCheck,
-                      pinned && styles.toggleCheckActive,
-                    ]}
-                  >
-                    {pinned && (
-                      <Icon name='check' size={14} color='#fff' />
-                    )}
+                  <Text style={styles.rowLabel}>{item.label}</Text>
+                  <View style={[styles.checkbox, pinned && styles.checkboxActive]}>
+                    {pinned && <Icon name='check' size={12} color='#fff' />}
                   </View>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
-        </AnimatedCard>
+        </View>
 
-        {/* Feature links */}
-        <AnimatedCard index={1} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name='apps' size={16} color={colors.muted} />
-            <Text style={styles.sectionTitle}>All Features</Text>
+        {/* ── All Features ── */}
+        <View style={styles.group}>
+          <View style={styles.groupHeader}>
+            <Icon name='apps' size={14} color={colors.muted} />
+            <Text style={styles.groupTitle}>All Features</Text>
           </View>
-          <View style={styles.featureList}>
-            {ITEMS.map((item) => {
+
+          <View style={styles.flatGroup}>
+            {ITEMS.map((item, idx) => {
               const enabled = !!item.route;
               return (
-                <Pressable
+                <PressableScale
                   key={item.label}
-                  disabled={!enabled}
-                  onPress={() => item.route && router.push(item.route)}
-                  style={({ pressed }) => [
-                    styles.row,
-                    pressed && enabled ? styles.rowPressed : null,
-                    !enabled ? styles.rowDisabled : null,
-                  ]}
+                  style={[styles.flatRow, idx < ITEMS.length - 1 && styles.flatRowBorder]}
+                  onPress={() => item.route && router.push(item.route as any)}
+                  scaleTo={enabled ? 0.97 : 1}
+                  haptic={enabled ? 'light' : undefined}
                 >
-                  <View
-                    style={[
-                      styles.iconChip,
-                      { backgroundColor: tint(item.color) },
-                    ]}
-                  >
-                    <Icon name={item.icon} size={20} color={item.color} />
+                  <View style={[styles.rowIcon, { backgroundColor: tint(item.color) }]}>
+                    <Icon name={item.icon} size={18} color={item.color} />
                   </View>
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowLabel}>{item.label}</Text>
+                  <View style={styles.rowTextWrap}>
+                    <Text style={[styles.rowLabel, !enabled && { opacity: 0.4 }]}>{item.label}</Text>
                     <Text style={styles.rowSub}>{item.sub}</Text>
                   </View>
-                  {enabled ? (
-                    <Icon name='chevron-right' size={20} color={colors.muted} />
-                  ) : (
-                    <Icon
-                      name='lock-outline'
-                      size={16}
-                      color={colors.tabInactive}
-                    />
-                  )}
-                </Pressable>
+                  {enabled
+                    ? <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+                    : <Icon name='lock-outline' size={14} color={colors.tabInactive} />}
+                </PressableScale>
               );
             })}
           </View>
-        </AnimatedCard>
+        </View>
 
-        {/* Data */}
-        <AnimatedCard index={2} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name='database' size={16} color={colors.muted} />
-            <Text style={styles.sectionTitle}>Data</Text>
+        {/* ── Data ── */}
+        <View style={styles.group}>
+          <View style={styles.groupHeader}>
+            <Icon name='database' size={14} color={colors.muted} />
+            <Text style={styles.groupTitle}>Data</Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.row,
-              pressed ? styles.rowPressed : null,
-            ]}
-            onPress={exportAllData}
-          >
-            <View
-              style={[
-                styles.iconChip,
-                { backgroundColor: tint(colors.muted) },
-              ]}
-            >
-              <Icon name='database-export' size={20} color={colors.white} />
-            </View>
-            <View style={styles.rowText}>
-              <Text style={styles.rowLabel}>Export Data</Text>
-              <Text style={styles.rowSub}>Backup all SQLite tables as JSON</Text>
-            </View>
-          </Pressable>
-        </AnimatedCard>
+
+          <View style={styles.flatGroup}>
+            <PressableScale style={styles.flatRow} onPress={exportAllData} scaleTo={0.97} haptic='light'>
+              <View style={[styles.rowIcon, { backgroundColor: tint(colors.muted) }]}>
+                <Icon name='database-export' size={18} color={colors.muted} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Export Data</Text>
+                <Text style={styles.rowSub}>Backup all SQLite tables as JSON</Text>
+              </View>
+              <Icon name='chevron-right' size={16} color={colors.tabInactive} />
+            </PressableScale>
+          </View>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -240,120 +175,93 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.tabClear,
-    gap: spacing.md,
-  },
-  section: {
     gap: spacing.sm,
-    backgroundColor: glass.fillStrong,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    padding: spacing.md,
   },
 
-  /* Section headers */
-  sectionHeader: {
+  // ── Group (replaces card section) ──────────────
+  group: {
+    gap: spacing.xs,
+  },
+  groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: spacing.xs,
+    marginBottom: 2,
   },
-  sectionTitle: {
+  groupTitle: {
     fontFamily: fonts.semibold,
-    fontSize: 13,
+    fontSize: 11,
     color: colors.muted,
-    letterSpacing: 0.3,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  sectionSub: {
+  groupSub: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.tabInactive,
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.xs,
   },
 
-  /* Toggle rows (Super App settings) */
-  toggleList: {
-    gap: 6,
+  // ── Flat group with top border container ────────
+  flatGroup: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
   },
-  toggleRow: {
+  flatRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.xl,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 11,
+    paddingHorizontal: spacing.xs,
+    // NO background, NO border-radius — flat
   },
-  toggleIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+  flatRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+
+  // ── Row contents ────────────────────────────────
+  rowIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleLabel: {
+  rowLabel: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.text,
   },
-  toggleCheck: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: glass.rim,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toggleCheckActive: {
-    backgroundColor: colors.purple,
-    borderColor: colors.purple,
-  },
-
-  /* Feature link rows */
-  featureList: {
-    gap: 6,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.rim,
-    borderRadius: radius.xl,
-    padding: 14,
-  },
-  rowPressed: {
-    opacity: 0.7,
-  },
-  rowDisabled: {
-    opacity: 0.5,
-  },
-  iconChip: {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowText: {
+  rowTextWrap: {
     flex: 1,
-    minWidth: 0,
-  },
-  rowLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.text,
+    gap: 1,
   },
   rowSub: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.muted,
-    marginTop: 2,
+  },
+
+  // ── Checkbox (Super App toggle) ─────────────────
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxActive: {
+    backgroundColor: colors.purple,
+    borderColor: colors.purple,
   },
 });

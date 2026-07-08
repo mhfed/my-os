@@ -8,7 +8,7 @@ import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
-import { AnimatedCard } from '@/components/motion';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useGymStore } from '@/store/gymStore';
 import { formatTxnDate } from '@/utils/date';
 
@@ -51,7 +51,7 @@ export function HealthDashboard() {
       >
         {/* Start Workout card */}
         <AnimatedCard index={1} style={styles.section}>
-          <Pressable onPress={() => startWorkout('Chest & Triceps')}>
+          <PressableScale onPress={() => startWorkout('Chest & Triceps')} scaleTo={0.97} haptic='medium'>
             <LinearGradient
               colors={gradients.gem}
               start={{ x: 0, y: 0 }}
@@ -71,7 +71,7 @@ export function HealthDashboard() {
               </View>
               <Icon name='arrow-right' size={20} color={colors.white} />
             </LinearGradient>
-          </Pressable>
+          </PressableScale>
         </AnimatedCard>
 
         {/* Run Tracker (placeholder) */}
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.lg,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.34)',
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.md,
   },
   historyHeader: {

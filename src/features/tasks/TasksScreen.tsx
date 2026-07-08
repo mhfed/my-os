@@ -9,7 +9,7 @@ import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
 import { GamePanel } from '@/components/game';
-import { AnimatedCard } from '@/components/motion';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
 import { useGoalStore } from '@/store/goalStore';
 import type { Task } from '@/types/task';
@@ -301,7 +301,7 @@ export function TasksScreen() {
         contentContainerStyle={styles.listContent}
       />
 
-      <Pressable style={styles.fab} onPress={() => setAddVisible(true)}>
+      <PressableScale style={styles.fab} onPress={() => setAddVisible(true)} scaleTo={0.93} haptic='medium'>
         <LinearGradient
           colors={FAB_GRADIENT}
           start={{ x: 0.17, y: 0 }}
@@ -310,7 +310,7 @@ export function TasksScreen() {
         >
           <Icon name='plus' size={28} color={colors.white} />
         </LinearGradient>
-      </Pressable>
+      </PressableScale>
 
       <AddTaskModal visible={addVisible} onClose={() => setAddVisible(false)} />
     </SafeAreaView>
@@ -354,10 +354,10 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: 104,
+    bottom: spacing.tabClear,
     width: 56,
     height: 56,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     shadowColor: colors.blue,
     shadowOpacity: 0.45,
     shadowRadius: 24,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   fabGradient: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },

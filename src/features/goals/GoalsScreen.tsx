@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
   },
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   // ---- skeleton ----------------------------------------------------------
   skeletonCard: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: glass.rim,
     backgroundColor: glass.fill,

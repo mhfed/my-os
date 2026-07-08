@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, glass, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
-import { AnimatedCard } from '@/components/motion';
+import { AnimatedCard, PressableScale } from '@/components/motion';
 import { Icon, IconName } from '@/theme/icons';
 import { useJournalStore } from '@/store/journalStore';
 
@@ -91,12 +91,13 @@ export function JournalScreen() {
             returnKeyType='search'
           />
           {isSearching ? (
-            <Pressable
+            <PressableScale
               onPress={() => { setSearchQuery(''); setIsSearching(false); }}
               hitSlop={8}
+              scaleTo={0.9}
             >
               <Icon name='close' size={18} color={colors.muted} />
-            </Pressable>
+            </PressableScale>
           ) : null}
         </View>
       </View>
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
   },
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fillStrong,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.sm,
     paddingVertical: 10,
     gap: 10,
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: glass.fill,
     borderWidth: 1,
     borderColor: glass.rim,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.md,
   },
   resultDate: {
