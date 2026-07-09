@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
 import { colors, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -13,6 +13,8 @@ import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useNoteStore } from '@/store/noteStore';
 import type { Note } from '@/types/note';
 
+import { InboxScreen } from '@/features/inbox/InboxScreen';
+import { JournalScreen } from '@/features/journal/JournalScreen';
 import { NoteEditorModal } from './components/NoteEditorModal';
 
 function noteDate(updatedAt: number): string {
@@ -27,42 +29,61 @@ function noteDate(updatedAt: number): string {
 }
 
 export function NotesScreen() {
-  const router = useRouter();
   const ready = useNoteStore((s) => s.ready);
   const notes = useNoteStore((s) => s.notes);
+
+  const params = useLocalSearchParams<{ create_inbox?: string; create?: string; tab?: string }>();
+  const [activeTab, setActiveTab] = useState<'inbox' | 'notes' | 'journal'>('notes');
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | undefined>(undefined);
 
-  const handleBack = () => router.navigate('/more');
+  useEffect(() => {
+    if (params.tab === 'inbox' || params.create_inbox === 'true') {
+      setActiveTab('inbox');
+    } else if (params.tab === 'journal') {
+      setActiveTab('journal');
+    } else if (params.tab === 'notes') {
+      setActiveTab('notes');
+    }
+    if (params.create === 'true') {
+      setEditingNote(undefined);
+      setEditorOpen(true);
+    }
+  }, [params.tab, params.create, params.create_inbox]);
 
   if (!ready) {
     return <View style={[styles.screen, styles.center]} />;
   }
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+  const renderSegmentControl = () => (
+    <View style={styles.segmentWrapper}>
+      <PressableScale
+        onPress={() => setActiveTab('inbox')}
+        style={[styles.segmentBtn, activeTab === 'inbox' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'inbox' && styles.segmentTextActive]}>Hộp nháp</Text>
+      </PressableScale>
+      <PressableScale
+        onPress={() => setActiveTab('notes')}
+        style={[styles.segmentBtn, activeTab === 'notes' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'notes' && styles.segmentTextActive]}>Ghi chú</Text>
+      </PressableScale>
+      <PressableScale
+        onPress={() => setActiveTab('journal')}
+        style={[styles.segmentBtn, activeTab === 'journal' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'journal' && styles.segmentTextActive]}>Nhật ký</Text>
+      </PressableScale>
+    </View>
+  );
 
+  const renderNotesTab = () => (
+    <>
       {/* Header — flat, no card */}
       <View style={styles.headerWrap}>
-        <PressableScale
-          onPress={handleBack}
-          haptic='light'
-          hitSlop={8}
-          style={styles.back}
-          accessibilityRole='button'
-          accessibilityLabel='Quay lại'
-        >
-          <Icon name='arrow-left' size={22} color={colors.text} />
-        </PressableScale>
-        <View>
+        <View style={{ paddingLeft: spacing.xs }}>
           <Text style={styles.title}>Second Brain</Text>
           <Text style={styles.subtitle}>{notes.length} ghi chú</Text>
         </View>
@@ -147,6 +168,24 @@ export function NotesScreen() {
         onPress={() => { setEditingNote(undefined); setEditorOpen(true); }}
         accessibilityLabel='Tạo ghi chú mới'
       />
+    </>
+  );
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGlow}
+        pointerEvents='none'
+      />
+
+      {renderSegmentControl()}
+
+      {activeTab === 'notes' && renderNotesTab()}
+      {activeTab === 'inbox' && <InboxScreen isEmbedded />}
+      {activeTab === 'journal' && <JournalScreen isEmbedded />}
 
       <NoteEditorModal
         visible={editorOpen}
@@ -297,5 +336,33 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: spacing.lg,
     bottom: spacing.tabClear,
+  },
+  segmentWrapper: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: radius.pill,
+    padding: 3,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: radius.pill,
+  },
+  segmentBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  segmentText: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  segmentTextActive: {
+    color: colors.text,
   },
 });

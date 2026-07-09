@@ -23,7 +23,7 @@ import { TimeCapsule } from './components/TimeCapsule';
 import { vnDateHeader, vnTimeAgo } from './format';
 
 /** Journal screen (DESIGN_SPEC §5.7) — daily entry, search, time capsule. */
-export function JournalScreen() {
+export function JournalScreen({ isEmbedded }: { isEmbedded?: boolean }) {
   const ready = useJournalStore((s) => s.ready);
   const init = useJournalStore((s) => s.init);
   const entries = useJournalStore((s) => s.entries);
@@ -43,6 +43,7 @@ export function JournalScreen() {
     : [];
 
   if (!ready) {
+    if (isEmbedded) return <View style={styles.center} />;
     return (
       <SafeAreaView style={[styles.screen, styles.center]} edges={['top']}>
         <View />
@@ -50,15 +51,17 @@ export function JournalScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+  const renderContent = () => (
+    <View style={{ flex: 1 }}>
+      {!isEmbedded && (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+      )}
 
       {/* Header */}
       <AnimatedCard index={0} style={styles.headerWrap}>
@@ -68,7 +71,7 @@ export function JournalScreen() {
             {streakCount > 0 ? (
               <View style={styles.streakPill}>
                 <Text style={styles.streakIcon}>🔥</Text>
-                <Text style={styles.streakNum}>{streakCount}</Text>
+                <Text style={streakCount > 0 ? styles.streakNum : styles.streakLabel}>{streakCount}</Text>
                 <Text style={styles.streakLabel}>ngày</Text>
               </View>
             ) : null}
@@ -134,6 +137,14 @@ export function JournalScreen() {
           <TimeCapsule />
         </ScrollView>
       )}
+    </View>
+  );
+
+  if (isEmbedded) return renderContent();
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      {renderContent()}
     </SafeAreaView>
   );
 }

@@ -178,7 +178,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name='tasks'
         options={{
-          title: 'Tasks',
+          title: 'Action',
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
               iconName='checkbox-marked-outline'
@@ -196,15 +196,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name='health'
+        name='notes'
         options={{
-          title: 'Health',
+          title: 'Brain',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon iconName='heart-pulse' color={color} focused={focused} />
+            <TabIcon iconName='brain' color={color} focused={focused} />
           ),
-          ...(isWorkoutActive
-            ? { tabBarStyle: { display: 'none' as const } }
-            : {}),
         }}
       />
       <Tabs.Screen
@@ -222,7 +219,15 @@ export default function TabsLayout() {
       <Tabs.Screen name='inbox' options={{ href: null }} />
       <Tabs.Screen name='journal' options={{ href: null }} />
       <Tabs.Screen name='habits' options={{ href: null }} />
-      <Tabs.Screen name='notes' options={{ href: null }} />
+      <Tabs.Screen
+        name='health'
+        options={{
+          href: null,
+          ...(isWorkoutActive
+            ? { tabBarStyle: { display: 'none' as const } }
+            : {}),
+        }}
+      />
       <Tabs.Screen name='goals' options={{ href: null }} />
     </Tabs>
   );

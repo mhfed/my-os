@@ -14,7 +14,7 @@ import { useInboxStore } from '@/store/inboxStore';
 import { InboxItemRow } from '@/features/inbox/components/InboxItemRow';
 
 /** Inbox screen (DESIGN_SPEC §5.10) — capture triage centre. */
-export function InboxScreen() {
+export function InboxScreen({ isEmbedded }: { isEmbedded?: boolean }) {
   const router = useRouter();
   const ready = useInboxStore((s) => s.ready);
   const open = useInboxStore((s) => s.open);
@@ -28,31 +28,35 @@ export function InboxScreen() {
   const items = open();
   const count = openCount();
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+  const renderContent = () => (
+    <View style={{ flex: 1 }}>
+      {!isEmbedded && (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+      )}
 
       {/* Header */}
       <AnimatedCard index={0} style={styles.headerWrap}>
         <View style={styles.headerCard}>
           <View style={styles.header}>
-            <PressableScale
-              onPress={() => router.back()}
-              haptic='light'
-              hitSlop={10}
-              style={styles.back}
-              accessibilityRole='button'
-              accessibilityLabel='Quay lại'
-            >
-              <Icon name='chevron-left' size={26} color={colors.text} />
-            </PressableScale>
-            <Text style={styles.title}>Inbox</Text>
+            {!isEmbedded && (
+              <PressableScale
+                onPress={() => router.back()}
+                haptic='light'
+                hitSlop={10}
+                style={styles.back}
+                accessibilityRole='button'
+                accessibilityLabel='Quay lại'
+              >
+                <Icon name='chevron-left' size={26} color={colors.text} />
+              </PressableScale>
+            )}
+            <Text style={[styles.title, isEmbedded && { paddingLeft: spacing.xs }]}>Inbox</Text>
             {count > 0 ? (
               <View style={styles.countChip}>
                 <Text style={styles.countText}>{count}</Text>
@@ -86,6 +90,14 @@ export function InboxScreen() {
           ))}
         </ScrollView>
       )}
+    </View>
+  );
+
+  if (isEmbedded) return renderContent();
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      {renderContent()}
     </SafeAreaView>
   );
 }

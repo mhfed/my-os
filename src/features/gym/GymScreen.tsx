@@ -21,7 +21,7 @@ import { FinishBar } from './components/FinishBar';
  * Gym Tracker screen (DESIGN_SPEC §5.4) — active workout logging with
  * exercise cards, set tracking, and finish bar.
  */
-export function GymScreen() {
+export function GymScreen({ isEmbedded }: { isEmbedded?: boolean }) {
   const router = useRouter();
   const logged = useGymStore((state) => state.logged);
   const active = useGymStore((state) => state.active);
@@ -37,31 +37,35 @@ export function GymScreen() {
     router.back();
   }, [cancelWorkout, router]);
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+  const renderContent = () => (
+    <View style={{ flex: 1 }}>
+      {!isEmbedded && (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+      )}
 
       {/* Header */}
       <AnimatedCard index={0} style={styles.headerWrap}>
         <GamePanel style={styles.headerPanel}>
           <View style={styles.header}>
-            <PressableScale
-              onPress={handleBack}
-              haptic='light'
-              hitSlop={8}
-              style={styles.back}
-              accessibilityRole='button'
-              accessibilityLabel='Quay lại'
-            >
-              <Icon name='arrow-left' size={24} color={colors.text} />
-            </PressableScale>
-            <View style={styles.headerCenter}>
+            {!isEmbedded && (
+              <PressableScale
+                onPress={handleBack}
+                haptic='light'
+                hitSlop={8}
+                style={styles.back}
+                accessibilityRole='button'
+                accessibilityLabel='Quay lại'
+              >
+                <Icon name='arrow-left' size={24} color={colors.text} />
+              </PressableScale>
+            )}
+            <View style={[styles.headerCenter, isEmbedded && { paddingLeft: spacing.sm, paddingVertical: spacing.xs }]}>
               <Text style={styles.title}>Tập luyện</Text>
               <Text style={styles.subtitle}>{progressLabel}</Text>
             </View>
@@ -99,6 +103,14 @@ export function GymScreen() {
       </ScrollView>
 
       <FinishBar onFinish={finishWorkout} />
+    </View>
+  );
+
+  if (isEmbedded) return renderContent();
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      {renderContent()}
     </SafeAreaView>
   );
 }

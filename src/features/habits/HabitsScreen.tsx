@@ -19,7 +19,7 @@ import { AddHabitModal } from './components/AddHabitModal';
  * Habits tracker screen (DESIGN_SPEC §5.5) — Vietnamese-first: "Thói quen",
  * completion %, weekly grid, and a scrollable list of HabitCards.
  */
-export function HabitsScreen() {
+export function HabitsScreen({ isEmbedded }: { isEmbedded?: boolean }) {
   const ready = useHabitsStore((s) => s.ready);
   const init = useHabitsStore((s) => s.init);
   useHabitsStore((s) => s.habits);
@@ -37,6 +37,7 @@ export function HabitsScreen() {
   const pct = useMemo(() => completion(), [views, ready]);
 
   if (!ready) {
+    if (isEmbedded) return <View style={styles.center} />;
     return (
       <SafeAreaView style={[styles.screen, styles.center]} edges={['top']}>
         <View style={styles.center} />
@@ -46,15 +47,17 @@ export function HabitsScreen() {
 
   const habitViews = views();
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+  const renderContent = () => (
+    <View style={{ flex: 1 }}>
+      {!isEmbedded && (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+      )}
 
       {/* Header */}
       <AnimatedCard index={0} style={styles.headerWrap}>
@@ -100,6 +103,14 @@ export function HabitsScreen() {
         visible={addVisible}
         onClose={() => setAddVisible(false)}
       />
+    </View>
+  );
+
+  if (isEmbedded) return renderContent();
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      {renderContent()}
     </SafeAreaView>
   );
 }

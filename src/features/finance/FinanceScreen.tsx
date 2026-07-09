@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,15 +7,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Svg, { Circle, G } from "react-native-svg";
 
-import { colors, glass, radius, tint } from '@/theme/colors';
+import { colors, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { Icon } from '@/theme/icons';
 import { fonts } from '@/theme/typography';
-import { GamePanel } from '@/components/game';
+
 import { AnimatedCard, PressableScale } from '@/components/motion';
 import { useFinanceStore } from '@/store/financeStore';
+import { useGoalStore } from '@/store/goalStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
 import type { MonthlyOverview, WeeklyOverview, TransactionView } from '@/types/finance';
@@ -104,10 +105,14 @@ function initials(name: string): string {
 // ===========================================================================
 
 export function FinanceScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ create?: string }>();
   const financeReady = useFinanceStore((s) => s.ready);
   const debtReady = useDebtStore((s) => s.ready);
   const savingsReady = useSavingsStore((s) => s.ready);
-  const ready = financeReady && debtReady && savingsReady;
+  const goalReady = useGoalStore((s) => s.ready);
+  const goals = useGoalStore((s) => s.goals);
+  const ready = financeReady && debtReady && savingsReady && goalReady;
   const activeMonth = useFinanceStore((s) => s.activeMonth);
 
   // Finance data
@@ -139,6 +144,13 @@ export function FinanceScreen() {
   const getWeeklyCategorySpend = useFinanceStore((s) => s.getWeeklyCategorySpend);
   const getWeeklyTrends = useFinanceStore((s) => s.getWeeklyTrends);
   const getDebtSummary = useDebtStore((s) => s.getSummary);
+
+  // Auto-open AddTransactionSheet when navigated with ?create=true (Quick Add)
+  useEffect(() => {
+    if (ready && params.create === 'true') {
+      setSheetOpen(true);
+    }
+  }, [ready, params.create]);
 
   if (!ready) {
     return <View style={styles.screen} />;
@@ -499,6 +511,30 @@ export function FinanceScreen() {
             overdueCount={overdueCount}
             upcomingCount={upcomingCount}
           />
+        </View>
+
+        {/* ---- Life Goals Quick Access ---- */}
+        <View style={styles.section}>
+          <PressableScale
+            onPress={() => router.navigate('/goals')}
+            haptic='light'
+            style={styles.goalsCard}
+          >
+            <View style={styles.goalsCardHeader}>
+              <View style={styles.goalsIconWrap}>
+                <Icon name='target' size={16} color={colors.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.goalsCardTitle}>Mục tiêu lớn</Text>
+                <Text style={styles.goalsCardSub}>
+                  {goals.length > 0
+                    ? `${goals.length} mục tiêu đang theo đuổi`
+                    : 'Đặt mục tiêu và theo dõi tiến độ'}
+                </Text>
+              </View>
+              <Icon name='chevron-right' size={16} color={colors.muted} />
+            </View>
+          </PressableScale>
         </View>
 
         {/* ---- Recent Transactions (Clean Bank-Statement List) ---- */}
@@ -1043,5 +1079,40 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  // --- Goals Card ---
+  goalsCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: radius.xl,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  goalsCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  goalsIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: tint(colors.gold, '10'),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goalsCardTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 14,
+    color: colors.text,
+    letterSpacing: -0.2,
+  },
+  goalsCardSub: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 1,
   },
 });

@@ -3,16 +3,19 @@ import { Pressable, StyleSheet, Text, View, TextInput, ScrollView } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
+import { useLocalSearchParams } from 'expo-router';
 
 import { colors, glass, radius, tint, glow } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { Icon } from '@/theme/icons';
-import { GamePanel } from '@/components/game';
 import { AnimatedCard, PressableScale } from '@/components/motion';
 import { taskTimeLabel, useTasksStore } from '@/store/tasksStore';
 import { useGoalStore } from '@/store/goalStore';
 import type { Task } from '@/types/task';
+
+import { HabitsScreen } from '@/features/habits/HabitsScreen';
+import { GymScreen } from '@/features/gym/GymScreen';
 
 import { AddTaskModal } from './components/AddTaskModal';
 import { FilterPills } from './components/FilterPills';
@@ -92,6 +95,22 @@ export function TasksScreen() {
   const toggleSubtask = useTasksStore((s) => s.toggleSubtask);
   const setFilter = useTasksStore((s) => s.setFilter);
   const addTomorrowTask = useTasksStore((s) => s.addTomorrowTask);
+
+  const params = useLocalSearchParams<{ create?: string; tab?: string }>();
+  const [activeTab, setActiveTab] = useState<'tasks' | 'habits' | 'gym'>('tasks');
+
+  useEffect(() => {
+    if (params.tab === 'habits') {
+      setActiveTab('habits');
+    } else if (params.tab === 'gym') {
+      setActiveTab('gym');
+    } else if (params.tab === 'tasks') {
+      setActiveTab('tasks');
+    }
+    if (params.create === 'true') {
+      setAddVisible(true);
+    }
+  }, [params.tab, params.create]);
 
   const [screenMode, setScreenMode] = useState<ScreenMode>('dashboard');
   const [activeTimeSegment, setActiveTimeSegment] = useState<TimeSegment>('all');
@@ -442,6 +461,29 @@ export function TasksScreen() {
 
   if (!ready) return <View style={styles.screen} />;
 
+  const renderSegmentControl = () => (
+    <View style={styles.segmentWrapper}>
+      <PressableScale
+        onPress={() => setActiveTab('tasks')}
+        style={[styles.segmentBtn, activeTab === 'tasks' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'tasks' && styles.segmentTextActive]}>Hành động</Text>
+      </PressableScale>
+      <PressableScale
+        onPress={() => setActiveTab('habits')}
+        style={[styles.segmentBtn, activeTab === 'habits' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'habits' && styles.segmentTextActive]}>Thói quen</Text>
+      </PressableScale>
+      <PressableScale
+        onPress={() => setActiveTab('gym')}
+        style={[styles.segmentBtn, activeTab === 'gym' && styles.segmentBtnActive]}
+      >
+        <Text style={[styles.segmentText, activeTab === 'gym' && styles.segmentTextActive]}>Luyện tập</Text>
+      </PressableScale>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <LinearGradient
@@ -452,8 +494,12 @@ export function TasksScreen() {
         pointerEvents='none'
       />
 
-      {/* Modern Sub-header with double view toggles */}
-      <View style={styles.headerRow}>
+      {renderSegmentControl()}
+
+      {activeTab === 'tasks' && (
+        <>
+          {/* Modern Sub-header with double view toggles */}
+          <View style={styles.headerRow}>
         <Text style={styles.title}>Nhiệm vụ</Text>
         <View style={styles.toggleContainer}>
           <Pressable
@@ -744,18 +790,28 @@ export function TasksScreen() {
           />
         </>
       )}
+      </>
+      )}
+
+      {/* Habits Tab */}
+      {activeTab === 'habits' && <HabitsScreen isEmbedded />}
+
+      {/* Gym Tab */}
+      {activeTab === 'gym' && <GymScreen isEmbedded />}
 
       {/* Floating Action Button */}
-      <PressableScale style={styles.fab} onPress={() => setAddVisible(true)} scaleTo={0.93} haptic='medium'>
-        <LinearGradient
-          colors={FAB_GRADIENT}
-          start={{ x: 0.17, y: 0 }}
-          end={{ x: 0.83, y: 1 }}
-          style={styles.fabGradient}
-        >
-          <Icon name='plus' size={28} color={colors.white} />
-        </LinearGradient>
-      </PressableScale>
+      {activeTab === 'tasks' && (
+        <PressableScale style={styles.fab} onPress={() => setAddVisible(true)} scaleTo={0.93} haptic='medium'>
+          <LinearGradient
+            colors={FAB_GRADIENT}
+            start={{ x: 0.17, y: 0 }}
+            end={{ x: 0.83, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <Icon name='plus' size={28} color={colors.white} />
+          </LinearGradient>
+        </PressableScale>
+      )}
 
       <AddTaskModal
         visible={addVisible || editingTask !== undefined}
@@ -1059,5 +1115,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  segmentWrapper: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: radius.pill,
+    padding: 3,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: radius.pill,
+  },
+  segmentBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  segmentText: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  segmentTextActive: {
+    color: colors.text,
   },
 });

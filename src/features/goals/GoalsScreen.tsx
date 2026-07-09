@@ -25,13 +25,12 @@ function bySoonestDeadline(a: Goal, b: Goal): number {
 }
 
 /** Goals screen (DESIGN_SPEC §5.6) — goal cards with milestone tracking. */
-export function GoalsScreen() {
+export function GoalsScreen({ isEmbedded }: { isEmbedded?: boolean }) {
   const router = useRouter();
   const ready = useGoalStore((s) => s.ready);
   const goals = useGoalStore((s) => s.goals);
   const toggleMilestone = useGoalStore((s) => s.toggleMilestone);
   const deleteGoal = useGoalStore((s) => s.deleteGoal);
-  // Plain-state selectors (safe per AGENTS.md) so contributing tasks stay live.
   const tasks = useTasksStore((s) => s.tasks);
   const toggleTask = useTasksStore((s) => s.toggleTask);
 
@@ -40,7 +39,6 @@ export function GoalsScreen() {
 
   const sorted = useMemo(() => [...goals].sort(bySoonestDeadline), [goals]);
 
-  // goalId -> its linked standalone tasks (my-os-8u7 cross-module progress).
   const tasksByGoal = useMemo(() => {
     const map: Record<string, typeof tasks> = {};
     for (const t of tasks) {
@@ -50,7 +48,7 @@ export function GoalsScreen() {
     return map;
   }, [tasks]);
 
-  const handleBack = () => router.navigate('/more');
+  const handleBack = () => router.back();
 
   const handleDelete = (id: string) => {
     Alert.alert(
@@ -68,29 +66,36 @@ export function GoalsScreen() {
     setCreatorOpen(true);
   };
 
+  const Wrapper = isEmbedded ? View : SafeAreaView;
+  const wrapperProps = isEmbedded ? { style: styles.screen } : { style: styles.screen, edges: ['top'] as const };
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.screenGlow}
-        pointerEvents='none'
-      />
+    <Wrapper {...wrapperProps}>
+      {!isEmbedded && (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.screenGlow}
+          pointerEvents='none'
+        />
+      )}
 
       {/* Header — flat, no card */}
       <View style={styles.headerWrap}>
-        <PressableScale
-          onPress={handleBack}
-          haptic='light'
-          hitSlop={8}
-          style={styles.back}
-          accessibilityRole='button'
-          accessibilityLabel='Quay lại'
-        >
-          <Icon name='arrow-left' size={22} color={colors.text} />
-        </PressableScale>
-        <View>
+        {!isEmbedded && (
+          <PressableScale
+            onPress={handleBack}
+            haptic='light'
+            hitSlop={8}
+            style={styles.back}
+            accessibilityRole='button'
+            accessibilityLabel='Quay lại'
+          >
+            <Icon name='arrow-left' size={22} color={colors.text} />
+          </PressableScale>
+        )}
+        <View style={isEmbedded ? { paddingLeft: spacing.xs } : undefined}>
           <Text style={styles.title}>Mục tiêu</Text>
           <Text style={styles.subtitle}>{goals.length} mục tiêu đang theo đuổi</Text>
         </View>
@@ -165,7 +170,7 @@ export function GoalsScreen() {
         }}
         editGoalId={editingGoalId}
       />
-    </SafeAreaView>
+    </Wrapper>
   );
 }
 
