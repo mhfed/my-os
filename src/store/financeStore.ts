@@ -19,7 +19,13 @@ import {
   upsertBudget as dbUpsertBudget,
 } from '@/db/database';
 import { ensureSystemCategories, seedDatabase } from '@/data/seed';
-import { addMonths, currentMonthKey, monthRange, weekRange, getWeekKey } from '@/utils/date';
+import {
+  addMonths,
+  currentMonthKey,
+  monthRange,
+  weekRange,
+  getWeekKey,
+} from '@/utils/date';
 import { getWeeklyBudget } from '@/utils/financeMath';
 import * as FileSystem from 'expo-file-system';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
@@ -37,9 +43,13 @@ import type {
 
 /** RFC4122 id when available, otherwise a sufficiently-unique fallback. */
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') {
-    return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') {
+      return c.randomUUID();
+    }
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
   }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -75,16 +85,33 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     // Auto-generate recurring transactions that have passed their dayOfMonth
     // this month and haven't been inserted yet. Idempotent — safe to re-run.
     const now = new Date();
-    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const todayMs = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    ).getTime();
     const monthKey = currentMonthKey();
     const { start, end } = monthRange(monthKey);
-    const monthTxns = transactions.filter((t) => t.date >= start && t.date < end);
+    const monthTxns = transactions.filter(
+      (t) => t.date >= start && t.date < end,
+    );
     const generated: Transaction[] = [];
 
     for (const rule of recurring) {
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const lastDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+      ).getDate();
       const day = Math.min(rule.dayOfMonth, lastDayOfMonth);
-      const targetMs = new Date(now.getFullYear(), now.getMonth(), day, 12, 0, 0).getTime();
+      const targetMs = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        day,
+        12,
+        0,
+        0,
+      ).getTime();
       if (targetMs > todayMs) continue;
       if (monthTxns.some((t) => t.recurringId === rule.id)) continue;
 
@@ -132,7 +159,13 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         const { useSavingsStore } = await import('@/store/savingsStore');
         const savings = useSavingsStore.getState();
         if (!savings.ready) await savings.init();
-        await savings.addContribution(savingsGoalId, txn.amount, txn.date, txn.note ?? '', false);
+        await savings.addContribution(
+          savingsGoalId,
+          txn.amount,
+          txn.date,
+          txn.note ?? '',
+          false,
+        );
       } catch (e) {
         console.warn('Failed to sync transaction to savings goal', e);
       }
@@ -141,7 +174,15 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         const { useDebtStore } = await import('@/store/debtStore');
         const debt = useDebtStore.getState();
         if (!debt.ready) await debt.init();
-        await debt.addPayment(debtId, txn.amount, txn.date, txn.note ?? '', 'cash', undefined, false);
+        await debt.addPayment(
+          debtId,
+          txn.amount,
+          txn.date,
+          txn.note ?? '',
+          'cash',
+          undefined,
+          false,
+        );
       } catch (e) {
         console.warn('Failed to sync transaction to debt payment', e);
       }
@@ -161,10 +202,19 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     if (!existing) return;
     const updated = { ...existing, ...patch };
     await runSql(
-      'UPDATE transactions SET type=?, amount=?, category_id=?, note=?, date=? WHERE id=?;',
-      [updated.type, updated.amount, updated.categoryId, updated.note ?? null, updated.date, id],
+      'UPDATE transactions SET type=?, amount=?, categoryId=?, note=?, date=? WHERE id=?;',
+      [
+        updated.type,
+        updated.amount,
+        updated.categoryId,
+        updated.note ?? null,
+        updated.date,
+        id,
+      ],
     );
-    set((s) => ({ transactions: s.transactions.map((t) => (t.id === id ? updated : t)) }));
+    set((s) => ({
+      transactions: s.transactions.map((t) => (t.id === id ? updated : t)),
+    }));
   },
 
   addCategory: async (input) => {
@@ -300,8 +350,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .filter((b) => b.month === activeMonth)
       .reduce((sum, b) => sum + b.amount, 0);
 
-    const budgetUsed =
-      budget > 0 ? spent / budget : 0;
+    const budgetUsed = budget > 0 ? spent / budget : 0;
 
     return {
       month: activeMonth,
@@ -331,9 +380,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     for (const category of categories) {
       const amount = totals.get(category.id) ?? 0;
       if (amount <= 0) continue;
-      const catBudget = budgets.find(
-        (b) => b.categoryId === category.id && b.month === activeMonth,
-      )?.amount ?? 0;
+      const catBudget =
+        budgets.find(
+          (b) => b.categoryId === category.id && b.month === activeMonth,
+        )?.amount ?? 0;
       result.push({
         categoryId: category.id,
         name: category.name,
@@ -421,8 +471,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
 
     const budget = getWeeklyBudget(budgets, start);
 
-    const budgetUsed =
-      budget > 0 ? spent / budget : 0;
+    const budgetUsed = budget > 0 ? spent / budget : 0;
 
     return {
       week: weekKey,

@@ -125,3 +125,113 @@ if (!ready) return null;
 | Function returning new ref (`getOverview()`, `views()`) |          ❌ never          |         ✅ always         |
 | Stable function reference (`sectionOf`, `toggleTask`)   | ✅ safe (reference stable) |          ✅ safe          |
 | Booleans/strings (`ready`, `isWorkoutActive`)           |          ✅ best           |           ✅ OK           |
+
+### 4. `globalThis.crypto.randomUUID()` crashes on Hermes release build
+
+```
+// ❌ BAD — crashes in Release mode on device
+const id = globalThis.crypto.randomUUID();
+
+// ✅ GOOD — try-catch with fallback
+function newId(): string {
+  try {
+    return globalThis.crypto.randomUUID();
+  } catch {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  }
+}
+```
+
+**Why:** Hermes in Release mode bundles JavaScript ahead-of-time. `globalThis.crypto` is a browser runtime API that may not be available in the Hermes engine even when the same code works in Debug mode (JSC engine). `Math.random()` fallback works universally since UUIDs in this app are local-only (no server coordination needed).
+
+### 5. Store init race condition — missing `await initDatabase()`
+
+```
+// ❌ BAD — queries table before initDatabase() creates it
+init: async () => {
+  const rows = await allRows('SELECT * FROM my_table;');
+  // If initDatabase() hasn't run yet → SQL error → ready stays false forever
+  set({ items: rows, ready: true });
+}
+
+// ✅ GOOD — always call initDatabase() first (idempotent, memoized)
+init: async () => {
+  await initDatabase();
+  const rows = await allRows('SELECT * FROM my_table;');
+  set({ items: rows, ready: true });
+}
+```
+
+**Why:** All 10 stores initialize in parallel via `Promise.allSettled`. `initDatabase()` is memoized (`initDbPromise`) and only creates tables once. If a store queries its table before `initDatabase()` finishes creating it, the query fails → the store's `ready` stays `false` → the feature screen renders blank/empty. **Every store's `init()` must call `await initDatabase()` before any table query**, not just the first store.
+
+### 6. Zustand `initPromise` dedup — stale rejected promise
+
+```
+// ❌ BAD — first failure is permanent
+let initPromise: Promise<void> | null = null;
+
+init: async () => {
+  if (get().ready) return;
+  if (initPromise) return initPromise;  // ← returns stale rejected promise!
+  initPromise = someAsyncInit();
+  return initPromise;
+}
+
+// ✅ GOOD — reset initPromise on error so retry can succeed
+init: async () => {
+  if (get().ready) return;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    try {
+      await initDatabase();
+      // ... init logic ...
+      set({ ready: true });
+    } catch (e) {
+      initPromise = null;  // ← allow retry
+      throw e;
+    }
+  })();
+  return initPromise;
+}
+```
+
+**Why:** When `init()` fails, the rejected promise stays stored in `initPromise`. The guard `if (initPromise) return initPromise` returns the same rejected promise on subsequent calls, making failure permanent even if the underlying issue (e.g. race condition) is transient. Resetting `initPromise = null` on error allows retries to succeed.
+
+### 7. Store init errors → feature screen blank/white
+
+```
+// ❌ BAD — blank screen when store fails to init
+if (!ready) return <View style={styles.screen} />;
+
+// ✅ GOOD — show errors with retry button
+if (!ready) {
+  return (
+    <SafeAreaView>
+      <Text>Chưa tải được dữ liệu</Text>
+      <Text>Có vấn đề khi khởi tạo các module</Text>
+      {failedStores.map(name => (
+        <Text key={name}>{name}: {initErrors[name]}</Text>
+      ))}
+      <Button title="Thử lại" onPress={() => store.init()} />
+    </SafeAreaView>
+  );
+}
+```
+
+**Why:** A blank screen gives no feedback about what went wrong. Use [`storeInitTracker.ts`](src/store/storeInitTracker.ts) to surface init errors to the UI. Add a retry button so users can recover without restarting. This is essential for debugging on device where no console is available.
+
+### 8. Free Apple Developer account → push notification entitlements
+
+```
+// ❌ BAD — xcodebuild fails with provisioning profile error
+// "Provisioning profile doesn't support the Push Notifications capability"
+
+// ✅ GOOD — clear entitlements, remove NSNotificationsUsageDescription
+// ios/PersonalOS/PersonalOS.entitlements → <dict></dict> (empty)
+// app.json → remove NSNotificationsUsageDescription
+```
+
+**Why:** Free Apple Developer accounts cannot use `aps-environment` (push) entitlement. `expo-notifications` adds this automatically even for local-only notifications. By clearing the entitlements file and removing the usage description, the build uses local notifications only (which work without push entitlements).

@@ -30,6 +30,7 @@ import { useGoalStore } from '@/store/goalStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
+import { useInitTracker } from '@/store/storeInitTracker';
 import { GlobalCapture } from '@/components/GlobalCapture';
 import { SuperAppSheet } from '@/components/SuperAppSheet';
 import { autoBackup } from '@/services/backup';
@@ -59,32 +60,47 @@ export default function RootLayout() {
     Quicksand_700Bold,
   });
 
+  const [initStarted, setInitStarted] = useState(false);
+  const [allInitAttempted, setAllInitAttempted] = useState(false);
+
+  // Kick off every module store's (idempotent) initialization exactly once.
+  // Each init() is individually wrapped so a single store crash doesn't block
+  // the entire boot sequence — the app shows UI with gracefully degraded data
+  // for any store that failed.
+  useEffect(() => {
+    if (!initStarted) {
+      setInitStarted(true);
+      const setError = useInitTracker.getState().setError;
+      const safeInit = async (name: string, fn: () => Promise<void>) => {
+        try {
+          await fn();
+        } catch (e) {
+          console.error(`[${name}] store init failed:`, e);
+          setError(name, String(e));
+        }
+      };
+      void Promise.allSettled([
+        safeInit('finance', () => useFinanceStore.getState().init()),
+        safeInit('tasks', () => useTasksStore.getState().init()),
+        safeInit('habits', () => useHabitsStore.getState().init()),
+        safeInit('journal', () => useJournalStore.getState().init()),
+        safeInit('inbox', () => useInboxStore.getState().init()),
+        safeInit('note', () => useNoteStore.getState().init()),
+        safeInit('goal', () => useGoalStore.getState().init()),
+        safeInit('settings', () => useSettingsStore.getState().init()),
+        safeInit('debt', () => useDebtStore.getState().init()),
+        safeInit('savings', () => useSavingsStore.getState().init()),
+      ]).finally(() => {
+        setAllInitAttempted(true);
+      });
+    }
+  }, [initStarted]);
+
   const financeReady = useFinanceStore((s) => s.ready);
   const tasksReady = useTasksStore((s) => s.ready);
   const habitsReady = useHabitsStore((s) => s.ready);
   const journalReady = useJournalStore((s) => s.ready);
   const inboxReady = useInboxStore((s) => s.ready);
-  const [initStarted, setInitStarted] = useState(false);
-
-  // Kick off every module store's (idempotent) initialization exactly once.
-  useEffect(() => {
-    if (!initStarted) {
-      setInitStarted(true);
-      void Promise.all([
-        useFinanceStore.getState().init(),
-        useTasksStore.getState().init(),
-        useHabitsStore.getState().init(),
-        useJournalStore.getState().init(),
-        useInboxStore.getState().init(),
-        useNoteStore.getState().init(),
-        useGoalStore.getState().init(),
-        useSettingsStore.getState().init(),
-        useDebtStore.getState().init(),
-        useSavingsStore.getState().init(),
-      ]);
-    }
-  }, [initStarted]);
-
   const noteReady = useNoteStore((s) => s.ready);
   const goalReady = useGoalStore((s) => s.ready);
   const debtReady = useDebtStore((s) => s.ready);
@@ -100,7 +116,11 @@ export default function RootLayout() {
     goalReady &&
     debtReady &&
     savingsReady;
-  const ready = fontsLoaded && storesReady;
+
+  // Show the UI once fonts are loaded AND all stores have attempted init.
+  // If a store's init() threw, its `ready` stays false but the app still
+  // renders — the feature screen handles the "not ready" state gracefully.
+  const ready = fontsLoaded && (storesReady || allInitAttempted);
 
   // ── Auto-backup (Phase 0) ──────────────────────────────────────────────
   // Back up on first ready, and whenever the app moves to background/inactive.

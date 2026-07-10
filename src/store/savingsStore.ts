@@ -1,3 +1,4 @@
+import { initDatabase } from '@/db/database';
 import { create } from 'zustand';
 
 import { allRows, runSql } from '@/db/database';
@@ -12,8 +13,12 @@ import type {
 } from '@/types/savings';
 
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
+  }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -21,7 +26,10 @@ function newId(): string {
 // View builder
 // ---------------------------------------------------------------------------
 
-function buildView(goal: SavingsGoal, contributions: SavingsContribution[]): SavingsGoalView {
+function buildView(
+  goal: SavingsGoal,
+  contributions: SavingsContribution[],
+): SavingsGoalView {
   const goalContributions = contributions.filter((c) => c.goalId === goal.id);
   const progressPct =
     goal.targetAmount > 0
@@ -39,7 +47,12 @@ function buildView(goal: SavingsGoal, contributions: SavingsContribution[]): Sav
     daysUntilDeadline = Math.round((goal.deadline - now) / 86_400_000);
     isOverdue = !isAchieved && now > goal.deadline;
     if (!isOverdue && remaining > 0) {
-      monthlyNeeded = calcMonthlyNeeded(goal.targetAmount, goal.currentAmount, goal.deadline, now);
+      monthlyNeeded = calcMonthlyNeeded(
+        goal.targetAmount,
+        goal.currentAmount,
+        goal.deadline,
+        now,
+      );
     }
   }
 
@@ -121,9 +134,14 @@ export const useSavingsStore = create<SavingsState>()((set, get) => ({
   ready: false,
 
   init: async () => {
+    await initDatabase();
     const [goals, contributions] = await Promise.all([
-      allRows<SavingsGoalRow>('SELECT * FROM savings_goals ORDER BY created_at DESC;'),
-      allRows<SavingsContributionRow>('SELECT * FROM savings_contributions ORDER BY date DESC;'),
+      allRows<SavingsGoalRow>(
+        'SELECT * FROM savings_goals ORDER BY created_at DESC;',
+      ),
+      allRows<SavingsContributionRow>(
+        'SELECT * FROM savings_contributions ORDER BY date DESC;',
+      ),
     ]);
     set({
       goals: goals.map(mapGoal),
@@ -229,8 +247,12 @@ export const useSavingsStore = create<SavingsState>()((set, get) => ({
       ],
     );
 
-    const newCurrentAmount = (get().goals.find((g) => g.id === goalId)?.currentAmount ?? 0) + amount;
-    await runSql('UPDATE savings_goals SET current_amount=? WHERE id=?;', [newCurrentAmount, goalId]);
+    const newCurrentAmount =
+      (get().goals.find((g) => g.id === goalId)?.currentAmount ?? 0) + amount;
+    await runSql('UPDATE savings_goals SET current_amount=? WHERE id=?;', [
+      newCurrentAmount,
+      goalId,
+    ]);
 
     set((s) => ({
       contributions: [contribution, ...s.contributions],
@@ -241,9 +263,14 @@ export const useSavingsStore = create<SavingsState>()((set, get) => ({
   },
 
   markAchieved: async (id) => {
-    await runSql('UPDATE savings_goals SET status=? WHERE id=?;', ['achieved', id]);
+    await runSql('UPDATE savings_goals SET status=? WHERE id=?;', [
+      'achieved',
+      id,
+    ]);
     set((s) => ({
-      goals: s.goals.map((g) => (g.id === id ? { ...g, status: 'achieved' } : g)),
+      goals: s.goals.map((g) =>
+        g.id === id ? { ...g, status: 'achieved' } : g,
+      ),
     }));
   },
 

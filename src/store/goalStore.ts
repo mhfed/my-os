@@ -34,7 +34,10 @@ function parseLinkedIds(fieldValue?: string | null): string[] {
       // fallback
     }
   }
-  return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+  return trimmed
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export function computeGoalProgress(
@@ -66,7 +69,10 @@ export function computeGoalProgress(
         const sg = savingsGoals.find((g: any) => g.id === sgId);
         if (sg) {
           total += 1;
-          const progress = sg.targetAmount > 0 ? Math.min(1, sg.currentAmount / sg.targetAmount) : 0;
+          const progress =
+            sg.targetAmount > 0
+              ? Math.min(1, sg.currentAmount / sg.targetAmount)
+              : 0;
           done += progress;
         }
       }
@@ -85,7 +91,7 @@ export function computeGoalProgress(
         const habitView = habitViews.find((h: any) => h.id === hId);
         if (habitView) {
           total += 1;
-          done += (habitView.pct / 100);
+          done += habitView.pct / 100;
         }
       }
     } catch (e) {
@@ -105,8 +111,12 @@ export function computeGoalProgress(
 }
 
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
+  }
   return `goal-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -120,45 +130,51 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     if (get().ready) return;
     if (initPromise) return initPromise;
     initPromise = (async () => {
-      await initDatabase();
-      const rows = await allRows<any>(
-        'SELECT * FROM goals ORDER BY createdAt DESC;',
-      );
-      const taskRows = await allRows<any>(
-        'SELECT * FROM tasks WHERE goalId IS NOT NULL;',
-      );
+      try {
+        await initDatabase();
+        const rows = await allRows<any>(
+          'SELECT * FROM goals ORDER BY createdAt DESC;',
+        );
+        const taskRows = await allRows<any>(
+          'SELECT * FROM tasks WHERE goalId IS NOT NULL;',
+        );
 
-      const mByGoal = taskRows.reduce(
-        (acc, t) => {
-          if (!acc[t.goalId]) acc[t.goalId] = [];
-          acc[t.goalId].push({
-            id: t.id,
-            goalId: t.goalId,
-            title: t.title,
-            done: t.done === 1,
-            linkedTaskId: t.id,
-            createdAt: t.createdAt,
-          });
-          return acc;
-        },
-        {} as Record<string, Milestone[]>,
-      );
+        const mByGoal = taskRows.reduce(
+          (acc, t) => {
+            if (!acc[t.goalId]) acc[t.goalId] = [];
+            acc[t.goalId].push({
+              id: t.id,
+              goalId: t.goalId,
+              title: t.title,
+              done: t.done === 1,
+              linkedTaskId: t.id,
+              createdAt: t.createdAt,
+            });
+            return acc;
+          },
+          {} as Record<string, Milestone[]>,
+        );
 
-      const goals: Goal[] = rows.map((r) => ({
-        id: r.id,
-        userId: r.userId ?? undefined,
-        title: r.title,
-        description: r.description ?? undefined,
-        deadline: r.deadline ?? undefined,
-        status: r.status as Goal['status'],
-        dropReason: r.dropReason ?? undefined,
-        savingsGoalId: r.savingsGoalId ?? undefined,
-        habitId: r.habitId ?? undefined,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
-        milestones: mByGoal[r.id] || [],
-      }));
-      set({ goals, ready: true });
+        const goals: Goal[] = rows.map((r) => ({
+          id: r.id,
+          userId: r.userId ?? undefined,
+          title: r.title,
+          description: r.description ?? undefined,
+          deadline: r.deadline ?? undefined,
+          status: r.status as Goal['status'],
+          dropReason: r.dropReason ?? undefined,
+          savingsGoalId: r.savingsGoalId ?? undefined,
+          habitId: r.habitId ?? undefined,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          milestones: mByGoal[r.id] || [],
+        }));
+        set({ goals, ready: true });
+      } catch (e) {
+        // Reset initPromise so a retry can succeed
+        initPromise = null;
+        throw e;
+      }
     })();
     return initPromise;
   },
@@ -168,10 +184,10 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     const now = Date.now();
     const savingsGoalIdVal = Array.isArray(input.savingsGoalId)
       ? JSON.stringify(input.savingsGoalId)
-      : input.savingsGoalId ?? null;
+      : (input.savingsGoalId ?? null);
     const habitIdVal = Array.isArray(input.habitId)
       ? JSON.stringify(input.habitId)
-      : input.habitId ?? null;
+      : (input.habitId ?? null);
 
     await runSql(
       `INSERT INTO goals (id, userId, title, description, deadline, status, savingsGoalId, habitId, createdAt, updatedAt)
@@ -221,8 +237,12 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
       description: input.description,
       deadline: input.deadline,
       status: 'active',
-      savingsGoalId: Array.isArray(input.savingsGoalId) ? JSON.stringify(input.savingsGoalId) : input.savingsGoalId,
-      habitId: Array.isArray(input.habitId) ? JSON.stringify(input.habitId) : input.habitId,
+      savingsGoalId: Array.isArray(input.savingsGoalId)
+        ? JSON.stringify(input.savingsGoalId)
+        : input.savingsGoalId,
+      habitId: Array.isArray(input.habitId)
+        ? JSON.stringify(input.habitId)
+        : input.habitId,
       createdAt: now,
       updatedAt: now,
       milestones: createdMilestones,
@@ -235,10 +255,10 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
     const now = Date.now();
     const savingsGoalIdVal = Array.isArray(updates.savingsGoalId)
       ? JSON.stringify(updates.savingsGoalId)
-      : updates.savingsGoalId ?? null;
+      : (updates.savingsGoalId ?? null);
     const habitIdVal = Array.isArray(updates.habitId)
       ? JSON.stringify(updates.habitId)
-      : updates.habitId ?? null;
+      : (updates.habitId ?? null);
 
     // Update goal base info
     await runSql(
@@ -289,8 +309,12 @@ export const useGoalStore = create<GoalState>()((set, get) => ({
           title: updates.title,
           description: updates.description,
           deadline: updates.deadline,
-          savingsGoalId: Array.isArray(updates.savingsGoalId) ? JSON.stringify(updates.savingsGoalId) : updates.savingsGoalId,
-          habitId: Array.isArray(updates.habitId) ? JSON.stringify(updates.habitId) : updates.habitId,
+          savingsGoalId: Array.isArray(updates.savingsGoalId)
+            ? JSON.stringify(updates.savingsGoalId)
+            : updates.savingsGoalId,
+          habitId: Array.isArray(updates.habitId)
+            ? JSON.stringify(updates.habitId)
+            : updates.habitId,
           updatedAt: now,
           milestones: [...g.milestones, ...createdMilestones],
         };

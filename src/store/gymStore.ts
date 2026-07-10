@@ -98,8 +98,12 @@ interface GymState {
 
 /** Generate a stable id */
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
+  }
   return `gym-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 

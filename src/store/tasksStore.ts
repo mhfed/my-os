@@ -76,9 +76,13 @@ function mapRow(r: TaskRow, subtasks: SubtaskRow[] = []): Task {
 
 /** Generate a stable id, falling back when crypto.randomUUID is unavailable. */
 function newId(): string {
-  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
-  if (c?.randomUUID) {
-    return c.randomUUID();
+  try {
+    const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+    if (c?.randomUUID) {
+      return c.randomUUID();
+    }
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
   }
   return `task-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -191,7 +195,7 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
       const startOfTodayMs = startOfToday();
       const completedDailyRows = await allRows<TaskRow>(
         "SELECT * FROM tasks WHERE recurrence = 'daily' AND done = 1 AND completedAt < ?;",
-        [startOfTodayMs]
+        [startOfTodayMs],
       );
       for (const row of completedDailyRows) {
         let newDueDate = startOfTodayMs;
@@ -200,8 +204,8 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
           newDueDate = new Date(startOfTodayMs).setHours(h, m, 0, 0);
         }
         await runSql(
-          "UPDATE tasks SET done = 0, completedAt = NULL, dueDate = ? WHERE id = ?;",
-          [newDueDate, row.id]
+          'UPDATE tasks SET done = 0, completedAt = NULL, dueDate = ? WHERE id = ?;',
+          [newDueDate, row.id],
         );
       }
 
@@ -297,7 +301,7 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
         input.recurrence ?? null,
         input.routineTime ?? null,
         id,
-      ]
+      ],
     );
 
     set((state) => ({

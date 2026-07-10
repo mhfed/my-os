@@ -14,9 +14,13 @@ import type { JournalEntry, JournalState, Mood } from '@/types/journal';
 
 /** RFC4122 id when available, otherwise a sufficiently-unique fallback. */
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') {
-    return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') {
+      return c.randomUUID();
+    }
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
   }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -115,7 +119,11 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
     const rows = await allRows<JournalEntryRow>(
       'SELECT * FROM journal_entries ORDER BY date DESC;',
     );
-    set({ entries: rows.map(mapEntry), ready: true, writtenDatesSet: new Set(rows.map(r => r.date)) });
+    set({
+      entries: rows.map(mapEntry),
+      ready: true,
+      writtenDatesSet: new Set(rows.map((r) => r.date)),
+    });
   },
 
   setActiveDate: (date) => set({ activeDate: date }),
@@ -151,7 +159,10 @@ export const useJournalStore = create<JournalState>()((set, get) => ({
     set((s) => {
       const others = s.entries.filter((e) => e.date !== date);
       const newEntries = [saved, ...others];
-      return { entries: newEntries, writtenDatesSet: new Set(newEntries.map(e => e.date)) };
+      return {
+        entries: newEntries,
+        writtenDatesSet: new Set(newEntries.map((e) => e.date)),
+      };
     });
   },
 

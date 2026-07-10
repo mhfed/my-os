@@ -23,9 +23,13 @@ import type {
 
 /** RFC4122 id when available, otherwise a sufficiently-unique fallback. */
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') {
-    return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') {
+      return c.randomUUID();
+    }
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
   }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -150,7 +154,7 @@ async function seed(): Promise<void> {
     await runSql(
       `INSERT INTO habits (id, userId, name, sub, icon, color, sortOrder, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-      [h.id, null, h.name, h.sub, h.icon, h.color, i, now]
+      [h.id, null, h.name, h.sub, h.icon, h.color, i, now],
     );
 
     // One done log per day for the last `targetStreak` consecutive days
@@ -160,7 +164,7 @@ async function seed(): Promise<void> {
       await runSql(
         `INSERT OR REPLACE INTO habit_logs (habitId, date, done)
          VALUES (?, ?, 1);`,
-        [h.id, date]
+        [h.id, date],
       );
     }
   }
@@ -183,7 +187,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
       await seed();
     }
     const habitRows = await allRows<HabitRow>(
-      'SELECT * FROM habits ORDER BY sortOrder ASC;'
+      'SELECT * FROM habits ORDER BY sortOrder ASC;',
     );
     const logRows = await allRows<HabitLogRow>('SELECT * FROM habit_logs;');
     set({
@@ -197,7 +201,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
     const now = Date.now();
     const maxOrder = get().habits.reduce(
       (max, h) => Math.max(max, h.sortOrder),
-      -1
+      -1,
     );
     const habit: Habit = {
       id: newId(),
@@ -221,7 +225,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
         habit.color,
         habit.sortOrder,
         habit.createdAt,
-      ]
+      ],
     );
 
     set((s) => ({ habits: [...s.habits, habit] }));
@@ -234,7 +238,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
 
   toggleLog: async (habitId: string, date: string) => {
     const isDone = get().logs.some(
-      (l) => l.habitId === habitId && l.date === date && l.done
+      (l) => l.habitId === habitId && l.date === date && l.done,
     );
 
     if (isDone) {
@@ -244,20 +248,18 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
         date,
       ]);
       set((s) => ({
-        logs: s.logs.filter(
-          (l) => !(l.habitId === habitId && l.date === date)
-        ),
+        logs: s.logs.filter((l) => !(l.habitId === habitId && l.date === date)),
       }));
     } else {
       // Mark the day done (upsert).
       await runSql(
         `INSERT OR REPLACE INTO habit_logs (habitId, date, done)
          VALUES (?, ?, 1);`,
-        [habitId, date]
+        [habitId, date],
       );
       set((s) => {
         const others = s.logs.filter(
-          (l) => !(l.habitId === habitId && l.date === date)
+          (l) => !(l.habitId === habitId && l.date === date),
         );
         return { logs: [...others, { habitId, date, done: true }] };
       });
@@ -282,7 +284,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
 
       // Pattern: 7-day rolling window, oldest → newest.
       const pattern: number[] = window.map((d) =>
-        done.has(logKey(h.id, d)) ? 1 : 0
+        done.has(logKey(h.id, d)) ? 1 : 0,
       );
       const doneCount = pattern.reduce((sum, v) => sum + v, 0);
       const pct = Math.round((doneCount / 7) * 100);
@@ -309,5 +311,7 @@ export const useHabitsStore = create<HabitsState>()((set, get) => ({
   },
 
   doneTodayCount: (): number =>
-    get().views().filter((v) => v.doneToday).length,
+    get()
+      .views()
+      .filter((v) => v.doneToday).length,
 }));

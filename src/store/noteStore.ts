@@ -4,8 +4,12 @@ import { allRows, initDatabase, runSql } from '@/db/database';
 import type { Note, NoteState } from '@/types/note';
 
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
+  }
   return `note-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 

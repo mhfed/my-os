@@ -1,3 +1,4 @@
+import { initDatabase } from '@/db/database';
 import { create } from 'zustand';
 
 import { allRows, runSql } from '@/db/database';
@@ -18,8 +19,12 @@ import type {
 } from '@/types/debt';
 
 function newId(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  try {
+    const c = globalThis.crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // crypto unavailable in Hermes release builds — fall through
+  }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -122,7 +127,8 @@ function mapPayment(r: DebtPaymentRow): DebtPayment {
     amount: r.amount,
     date: r.date,
     note: r.note ?? undefined,
-    paymentMethod: (r.payment_method as DebtPayment['paymentMethod']) ?? undefined,
+    paymentMethod:
+      (r.payment_method as DebtPayment['paymentMethod']) ?? undefined,
     linkedNettingId: r.linked_netting_id ?? undefined,
     createdAt: r.created_at,
   };
@@ -195,6 +201,7 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
   ready: false,
 
   init: async () => {
+    await initDatabase();
     const [entries, payments, nettings] = await Promise.all([
       allRows<DebtEntryRow>(
         'SELECT * FROM debt_entries ORDER BY created_at DESC;',
@@ -279,7 +286,15 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     cancelDebtNotifications(id);
   },
 
-  addPayment: async (debtId, amount, date, note, paymentMethod = 'cash', linkedNettingId, linkTxn = true) => {
+  addPayment: async (
+    debtId,
+    amount,
+    date,
+    note,
+    paymentMethod = 'cash',
+    linkedNettingId,
+    linkTxn = true,
+  ) => {
     const payment: DebtPayment = {
       id: newId(),
       debtId,
@@ -311,14 +326,16 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
         const { useFinanceStore } = await import('@/store/financeStore');
         const entry = get().entries.find((e) => e.id === debtId);
         if (entry) {
-          const categoryId = entry.type === 'lend' ? SYS_CAT.debtIncome : SYS_CAT.debtExpense;
+          const categoryId =
+            entry.type === 'lend' ? SYS_CAT.debtIncome : SYS_CAT.debtExpense;
           await useFinanceStore.getState().addTransaction({
             type: entry.type === 'lend' ? 'income' : 'expense',
             amount,
             categoryId,
-            note: entry.type === 'lend' 
-              ? `Thu nợ từ ${entry.party}${note ? `: ${note}` : ''}` 
-              : `Trả nợ ${entry.party}${note ? `: ${note}` : ''}`,
+            note:
+              entry.type === 'lend'
+                ? `Thu nợ từ ${entry.party}${note ? `: ${note}` : ''}`
+                : `Trả nợ ${entry.party}${note ? `: ${note}` : ''}`,
             date,
           });
         }
@@ -441,8 +458,22 @@ export const useDebtStore = create<DebtState>()((set, get) => ({
     );
 
     // Call addPayment for both debt entries
-    await get().addPayment(borrowId, amount, netting.date, netting.note, 'netting', netting.id);
-    await get().addPayment(lendId, amount, netting.date, netting.note, 'netting', netting.id);
+    await get().addPayment(
+      borrowId,
+      amount,
+      netting.date,
+      netting.note,
+      'netting',
+      netting.id,
+    );
+    await get().addPayment(
+      lendId,
+      amount,
+      netting.date,
+      netting.note,
+      'netting',
+      netting.id,
+    );
 
     set((s) => ({
       nettings: [netting, ...s.nettings],

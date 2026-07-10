@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle, G } from 'react-native-svg';
 
 import { colors, radius, tint } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -20,7 +15,12 @@ import { useFinanceStore } from '@/store/financeStore';
 import { useGoalStore } from '@/store/goalStore';
 import { useDebtStore } from '@/store/debtStore';
 import { useSavingsStore } from '@/store/savingsStore';
-import type { MonthlyOverview, WeeklyOverview, TransactionView } from '@/types/finance';
+import { useInitTracker } from '@/store/storeInitTracker';
+import type {
+  MonthlyOverview,
+  WeeklyOverview,
+  TransactionView,
+} from '@/types/finance';
 import { formatCompactVND, formatVND } from '@/utils/currency';
 import { formatTxnDate, currentWeekKey, getWeekKey } from '@/utils/date';
 
@@ -60,7 +60,7 @@ function DonutSegment({
       cx={DONUT_CX}
       cy={DONUT_CY}
       r={DONUT_R}
-      fill="none"
+      fill='none'
       stroke={color}
       strokeWidth={4}
       strokeDasharray={`${dash}, ${gap}`}
@@ -75,13 +75,31 @@ function DonutSegment({
 
 function shortMonth(monthKey: string): string {
   const [, m] = monthKey.split('-');
-  const names = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+  const names = [
+    'T1',
+    'T2',
+    'T3',
+    'T4',
+    'T5',
+    'T6',
+    'T7',
+    'T8',
+    'T9',
+    'T10',
+    'T11',
+    'T12',
+  ];
   return names[parseInt(m, 10) - 1] ?? m;
 }
 
 /** Generate a color from a string for avatar placeholders */
 function avatarColor(name: string): string {
-  const palette = [colors.primaryContainer, colors.secondaryFixedDim, colors.tertiaryFixedDim, colors.gold];
+  const palette = [
+    colors.primaryContainer,
+    colors.secondaryFixedDim,
+    colors.tertiaryFixedDim,
+    colors.gold,
+  ];
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -98,8 +116,6 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
-
-
 // ===========================================================================
 // Main Screen
 // ===========================================================================
@@ -114,6 +130,9 @@ export function FinanceScreen() {
   const goals = useGoalStore((s) => s.goals);
   const ready = financeReady && debtReady && savingsReady && goalReady;
   const activeMonth = useFinanceStore((s) => s.activeMonth);
+
+  // Init error tracking
+  const initErrors = useInitTracker((s) => s.errors);
 
   // Finance data
   const transactions = useFinanceStore((s) => s.transactions);
@@ -133,7 +152,9 @@ export function FinanceScreen() {
   // Modals
   const [sheetOpen, setSheetOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [historyFilter, setHistoryFilter] = useState<
+    'all' | 'income' | 'expense'
+  >('all');
   const [debtOpen, setDebtOpen] = useState(false);
   const [pettyCashOpen, setPettyCashOpen] = useState(false);
   const [categoryBreakdownOpen, setCategoryBreakdownOpen] = useState(false);
@@ -141,7 +162,9 @@ export function FinanceScreen() {
   const [editingTxn, setEditingTxn] = useState<TransactionView | null>(null);
 
   const getWeeklyOverview = useFinanceStore((s) => s.getWeeklyOverview);
-  const getWeeklyCategorySpend = useFinanceStore((s) => s.getWeeklyCategorySpend);
+  const getWeeklyCategorySpend = useFinanceStore(
+    (s) => s.getWeeklyCategorySpend,
+  );
   const getWeeklyTrends = useFinanceStore((s) => s.getWeeklyTrends);
   const getDebtSummary = useDebtStore((s) => s.getSummary);
 
@@ -153,25 +176,107 @@ export function FinanceScreen() {
   }, [ready, params.create]);
 
   if (!ready) {
-    return <View style={styles.screen} />;
+    const storeLabels: Record<string, string> = {
+      finance: 'Tài chính',
+      debt: 'Công nợ',
+      savings: 'Tiết kiệm',
+      goal: 'Mục tiêu',
+    };
+    const failedStores = ['finance', 'debt', 'savings', 'goal'].filter(
+      (n) =>
+        !(n === 'finance'
+          ? financeReady
+          : n === 'debt'
+            ? debtReady
+            : n === 'savings'
+              ? savingsReady
+              : goalReady),
+    );
+    return (
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        <LinearGradient
+          colors={[colors.screenBg, colors.card]}
+          style={styles.screenGlow}
+        />
+        <View style={styles.fallbackContainer}>
+          <View style={styles.fallbackIcon}>
+            <Icon name='wallet-outline' size={48} color={colors.muted} />
+          </View>
+          <Text style={styles.fallbackTitle}>Chưa tải được dữ liệu</Text>
+          <Text style={styles.fallbackSub}>
+            Có vấn đề khi khởi tạo các module tài chính
+          </Text>
+          {failedStores.length > 0 && (
+            <View style={styles.fallbackStoreList}>
+              {failedStores.map((name) => (
+                <View key={name} style={styles.fallbackStoreItem}>
+                  <Text style={styles.fallbackStoreName}>
+                    {storeLabels[name]}
+                  </Text>
+                  {initErrors[name] && (
+                    <Text style={styles.fallbackStoreError} numberOfLines={2}>
+                      {initErrors[name]}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+          <PressableScale
+            onPress={() => {
+              useFinanceStore
+                .getState()
+                .init()
+                .catch(() => {});
+              useDebtStore
+                .getState()
+                .init()
+                .catch(() => {});
+              useSavingsStore
+                .getState()
+                .init()
+                .catch(() => {});
+              useGoalStore
+                .getState()
+                .init()
+                .catch(() => {});
+            }}
+          >
+            <View style={styles.fallbackRetryBtn}>
+              <Icon name='reload' size={18} color={colors.black} />
+              <Text style={styles.fallbackRetryText}>Thử lại</Text>
+            </View>
+          </PressableScale>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   // ----- Derived values based on active period -----
   const currentWeek = currentWeekKey();
-  const overview = period === 'monthly' ? getOverview() : getWeeklyOverview(currentWeek);
-  const categoriesSpend = period === 'monthly' ? getCategorySpend() : getWeeklyCategorySpend(currentWeek);
-  const trends6 = period === 'monthly' ? getMonthlyTrends(6) : getWeeklyTrends(6);
+  const overview =
+    period === 'monthly' ? getOverview() : getWeeklyOverview(currentWeek);
+  const categoriesSpend =
+    period === 'monthly'
+      ? getCategorySpend()
+      : getWeeklyCategorySpend(currentWeek);
+  const trends6 =
+    period === 'monthly' ? getMonthlyTrends(6) : getWeeklyTrends(6);
   const { overdueCount, upcomingCount } = getDebtSummary();
 
   // Tabbed Recent Transactions
-  const [recentTab, setRecentTab] = useState<'today' | 'week' | 'month'>('today');
+  const [recentTab, setRecentTab] = useState<'today' | 'week' | 'month'>(
+    'today',
+  );
 
   const isToday = (timestamp: number) => {
     const d = new Date(timestamp);
     const now = new Date();
-    return d.getDate() === now.getDate() &&
-           d.getMonth() === now.getMonth() &&
-           d.getFullYear() === now.getFullYear();
+    return (
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+    );
   };
 
   const isCurrentWeek = (timestamp: number) => {
@@ -181,7 +286,10 @@ export function FinanceScreen() {
   const isCurrentMonth = (timestamp: number) => {
     const d = new Date(timestamp);
     const [yStr, mStr] = activeMonth.split('-');
-    return d.getFullYear() === parseInt(yStr, 10) && (d.getMonth() + 1) === parseInt(mStr, 10);
+    return (
+      d.getFullYear() === parseInt(yStr, 10) &&
+      d.getMonth() + 1 === parseInt(mStr, 10)
+    );
   };
 
   const recentFilteredTxns = useMemo(() => {
@@ -220,18 +328,22 @@ export function FinanceScreen() {
 
   // Debt entries grouped by type
   const lendEntries = useMemo(
-    () => debtEntries.filter((e) => e.type === 'lend' && e.status !== 'settled'),
+    () =>
+      debtEntries.filter((e) => e.type === 'lend' && e.status !== 'settled'),
     [debtEntries],
   );
   const borrowEntries = useMemo(
-    () => debtEntries.filter((e) => e.type === 'borrow' && e.status !== 'settled'),
+    () =>
+      debtEntries.filter((e) => e.type === 'borrow' && e.status !== 'settled'),
     [debtEntries],
   );
 
   const totalLend = useMemo(() => {
     let total = 0;
     for (const e of lendEntries) {
-      const paid = debtPayments.filter((p) => p.debtId === e.id).reduce((s, p) => s + p.amount, 0);
+      const paid = debtPayments
+        .filter((p) => p.debtId === e.id)
+        .reduce((s, p) => s + p.amount, 0);
       total += e.originalAmount - paid;
     }
     return total;
@@ -240,7 +352,9 @@ export function FinanceScreen() {
   const totalBorrow = useMemo(() => {
     let total = 0;
     for (const e of borrowEntries) {
-      const paid = debtPayments.filter((p) => p.debtId === e.id).reduce((s, p) => s + p.amount, 0);
+      const paid = debtPayments
+        .filter((p) => p.debtId === e.id)
+        .reduce((s, p) => s + p.amount, 0);
       total += e.originalAmount - paid;
     }
     return total;
@@ -340,21 +454,37 @@ export function FinanceScreen() {
           <View style={styles.periodSelectorInner}>
             <PressableScale
               onPress={() => setPeriod('monthly')}
-              style={[styles.periodSelectorBtn, period === 'monthly' && styles.periodSelectorBtnActive]}
+              style={[
+                styles.periodSelectorBtn,
+                period === 'monthly' && styles.periodSelectorBtnActive,
+              ]}
               haptic='light'
               scaleTo={0.96}
             >
-              <Text style={[styles.periodSelectorText, period === 'monthly' && styles.periodSelectorTextActive]}>
+              <Text
+                style={[
+                  styles.periodSelectorText,
+                  period === 'monthly' && styles.periodSelectorTextActive,
+                ]}
+              >
                 Báo cáo tháng
               </Text>
             </PressableScale>
             <PressableScale
               onPress={() => setPeriod('weekly')}
-              style={[styles.periodSelectorBtn, period === 'weekly' && styles.periodSelectorBtnActive]}
+              style={[
+                styles.periodSelectorBtn,
+                period === 'weekly' && styles.periodSelectorBtnActive,
+              ]}
               haptic='light'
               scaleTo={0.96}
             >
-              <Text style={[styles.periodSelectorText, period === 'weekly' && styles.periodSelectorTextActive]}>
+              <Text
+                style={[
+                  styles.periodSelectorText,
+                  period === 'weekly' && styles.periodSelectorTextActive,
+                ]}
+              >
                 Báo cáo tuần
               </Text>
             </PressableScale>
@@ -364,23 +494,50 @@ export function FinanceScreen() {
         {/* ---- Budget Overdraft Alert ---- */}
         {overview.budget > 0 && overview.spent > overview.budget && (
           <AnimatedCard index={0.6} style={styles.budgetAlertWrap}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 12,
-              backgroundColor: tint(colors.red, '11'),
-              borderWidth: 1,
-              borderColor: colors.redDeep,
-              borderRadius: radius.xl,
-              padding: 16,
-            }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                backgroundColor: tint(colors.red, '11'),
+                borderWidth: 1,
+                borderColor: colors.redDeep,
+                borderRadius: radius.xl,
+                padding: 16,
+              }}
+            >
               <Icon name='alert-circle-outline' size={24} color={colors.red} />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.red }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.bold,
+                    fontSize: 14,
+                    color: colors.red,
+                  }}
+                >
                   Vượt ngân sách {period === 'monthly' ? 'tháng' : 'tuần'}!
                 </Text>
-                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  Bạn đã tiêu <Text testID="money-display">{formatVND(overview.spent)}</Text> vượt mức <Text testID="money-display">{formatVND(overview.budget)}</Text> (+<Text testID="money-display">{formatVND(overview.spent - overview.budget)}</Text>).
+                <Text
+                  style={{
+                    fontFamily: fonts.regular,
+                    fontSize: 12,
+                    color: colors.muted,
+                    marginTop: 2,
+                  }}
+                >
+                  Bạn đã tiêu{' '}
+                  <Text testID='money-display'>
+                    {formatVND(overview.spent)}
+                  </Text>{' '}
+                  vượt mức{' '}
+                  <Text testID='money-display'>
+                    {formatVND(overview.budget)}
+                  </Text>{' '}
+                  (+
+                  <Text testID='money-display'>
+                    {formatVND(overview.spent - overview.budget)}
+                  </Text>
+                  ).
                 </Text>
               </View>
             </View>
@@ -391,9 +548,18 @@ export function FinanceScreen() {
         <View style={styles.section}>
           <AnimatedCard index={1} style={styles.analyticsPanel}>
             <View style={styles.analyticsHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[styles.analyticsDot, { backgroundColor: colors.gold }]} />
-                <Text style={styles.analyticsTitle}>Báo cáo phân bổ & Xu hướng</Text>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+              >
+                <View
+                  style={[
+                    styles.analyticsDot,
+                    { backgroundColor: colors.gold },
+                  ]}
+                />
+                <Text style={styles.analyticsTitle}>
+                  Báo cáo phân bổ & Xu hướng
+                </Text>
               </View>
               <PressableScale
                 onPress={() => setCategoryBreakdownOpen(true)}
@@ -414,7 +580,7 @@ export function FinanceScreen() {
               >
                 <View style={styles.donutLayout}>
                   <View style={styles.donutWrap}>
-                    <Svg width={72} height={72} viewBox="0 0 36 36">
+                    <Svg width={72} height={72} viewBox='0 0 36 36'>
                       <G rotation={-90} originX={18} originY={18}>
                         {donutSegments.map((seg) => (
                           <DonutSegment
@@ -428,15 +594,24 @@ export function FinanceScreen() {
                     </Svg>
                     <View style={styles.donutCenter}>
                       <Text style={styles.donutCenterText}>
-                        {period === 'monthly' ? shortMonth(activeMonth) : `W${currentWeek.split('-W')[1]}`}
+                        {period === 'monthly'
+                          ? shortMonth(activeMonth)
+                          : `W${currentWeek.split('-W')[1]}`}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.donutLegendCompact}>
                     {donutData.map((d) => (
                       <View key={d.categoryId} style={styles.legendCompactItem}>
-                        <View style={[styles.legendDot, { backgroundColor: d.color }]} />
-                        <Text style={styles.legendPctCompact}>{Math.round(d.pct)}%</Text>
+                        <View
+                          style={[
+                            styles.legendDot,
+                            { backgroundColor: d.color },
+                          ]}
+                        />
+                        <Text style={styles.legendPctCompact}>
+                          {Math.round(d.pct)}%
+                        </Text>
                       </View>
                     ))}
                   </View>
@@ -450,11 +625,21 @@ export function FinanceScreen() {
                 {trends6.length > 0 && (
                   <View style={styles.trendLegend}>
                     <View style={styles.trendLegendItem}>
-                      <View style={[styles.trendDot, { backgroundColor: colors.gold }]} />
+                      <View
+                        style={[
+                          styles.trendDot,
+                          { backgroundColor: colors.gold },
+                        ]}
+                      />
                       <Text style={styles.trendLegendText}>Thu</Text>
                     </View>
                     <View style={styles.trendLegendItem}>
-                      <View style={[styles.trendDot, { backgroundColor: colors.red }]} />
+                      <View
+                        style={[
+                          styles.trendDot,
+                          { backgroundColor: colors.red },
+                        ]}
+                      />
                       <Text style={styles.trendLegendText}>Chi</Text>
                     </View>
                   </View>
@@ -463,9 +648,18 @@ export function FinanceScreen() {
                   {trends6.map((d) => {
                     const incH = Math.max(4, (d.income / trendMax) * trendBarH);
                     const expH = Math.max(4, (d.spent / trendMax) * trendBarH);
-                    const itemKey = period === 'monthly' ? (d as MonthlyOverview).month : (d as WeeklyOverview).week;
-                    const isCurrent = period === 'monthly' ? itemKey === activeMonth : itemKey === currentWeek;
-                    const barLabel = period === 'monthly' ? shortMonth(itemKey) : `W${itemKey.split('-W')[1] || itemKey}`;
+                    const itemKey =
+                      period === 'monthly'
+                        ? (d as MonthlyOverview).month
+                        : (d as WeeklyOverview).week;
+                    const isCurrent =
+                      period === 'monthly'
+                        ? itemKey === activeMonth
+                        : itemKey === currentWeek;
+                    const barLabel =
+                      period === 'monthly'
+                        ? shortMonth(itemKey)
+                        : `W${itemKey.split('-W')[1] || itemKey}`;
                     return (
                       <View key={itemKey} style={styles.trendCol}>
                         <View style={styles.trendPair}>
@@ -540,11 +734,19 @@ export function FinanceScreen() {
         {/* ---- Recent Transactions (Clean Bank-Statement List) ---- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={[styles.analyticsDot, { backgroundColor: colors.gold }]} />
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            >
+              <View
+                style={[styles.analyticsDot, { backgroundColor: colors.gold }]}
+              />
               <Text style={styles.recentSectionTitle}>Nhật ký giao dịch</Text>
             </View>
-            <PressableScale onPress={() => setHistoryOpen(true)} haptic='light' scaleTo={0.95}>
+            <PressableScale
+              onPress={() => setHistoryOpen(true)}
+              haptic='light'
+              scaleTo={0.95}
+            >
               <Text style={styles.seeAllBtnText}>Tất cả lịch sử</Text>
             </PressableScale>
           </View>
@@ -552,7 +754,12 @@ export function FinanceScreen() {
           {/* Sub-tabs for transaction scope */}
           <View style={styles.txTabsContainer}>
             {(['today', 'week', 'month'] as const).map((tab) => {
-              const label = tab === 'today' ? 'Hôm nay' : tab === 'week' ? 'Tuần này' : 'Tháng này';
+              const label =
+                tab === 'today'
+                  ? 'Hôm nay'
+                  : tab === 'week'
+                    ? 'Tuần này'
+                    : 'Tháng này';
               const active = recentTab === tab;
               return (
                 <PressableScale
@@ -561,7 +768,11 @@ export function FinanceScreen() {
                   style={[styles.txTabBtn, active && styles.txTabBtnActive]}
                   haptic='light'
                 >
-                  <Text style={[styles.txTabText, active && styles.txTabTextActive]}>{label}</Text>
+                  <Text
+                    style={[styles.txTabText, active && styles.txTabTextActive]}
+                  >
+                    {label}
+                  </Text>
                 </PressableScale>
               );
             })}
@@ -570,21 +781,52 @@ export function FinanceScreen() {
           {/* Total values right below the tabs */}
           <View style={styles.txSummaryBanner}>
             <Text style={styles.txSummaryLabel}>Tổng chi tiêu chu kỳ:</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            >
               {recentTabIncome > 0 && (
-                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.green }}>
+                <Text
+                  testID='money-display'
+                  style={{
+                    fontFamily: fonts.monoSemibold,
+                    fontSize: 12,
+                    color: colors.green,
+                  }}
+                >
                   +{formatVND(recentTabIncome)}
                 </Text>
               )}
               {recentTabIncome > 0 && recentTabExpense > 0 && (
-                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted }}>|</Text>
+                <Text
+                  style={{
+                    fontFamily: fonts.regular,
+                    fontSize: 12,
+                    color: colors.muted,
+                  }}
+                >
+                  |
+                </Text>
               )}
               {recentTabExpense > 0 ? (
-                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.red }}>
+                <Text
+                  testID='money-display'
+                  style={{
+                    fontFamily: fonts.monoSemibold,
+                    fontSize: 12,
+                    color: colors.red,
+                  }}
+                >
                   -{formatVND(recentTabExpense)}
                 </Text>
               ) : recentTabIncome === 0 ? (
-                <Text testID="money-display" style={{ fontFamily: fonts.monoSemibold, fontSize: 12, color: colors.muted }}>
+                <Text
+                  testID='money-display'
+                  style={{
+                    fontFamily: fonts.monoSemibold,
+                    fontSize: 12,
+                    color: colors.muted,
+                  }}
+                >
                   0 ₫
                 </Text>
               ) : null}
@@ -593,10 +835,20 @@ export function FinanceScreen() {
 
           {recentFilteredTxns.length === 0 ? (
             <View style={styles.emptyStatementState}>
-              <Icon name="receipt-text-outline" size={20} color={colors.muted} />
-              <Text style={styles.emptyStatementText}>Không có giao dịch phát sinh</Text>
+              <Icon
+                name='receipt-text-outline'
+                size={20}
+                color={colors.muted}
+              />
+              <Text style={styles.emptyStatementText}>
+                Không có giao dịch phát sinh
+              </Text>
               <Text style={styles.emptyStatementSubtext}>
-                {recentTab === 'today' ? 'Chưa ghi nhận chi tiêu trong hôm nay.' : recentTab === 'week' ? 'Chưa ghi nhận chi tiêu trong tuần này.' : 'Chưa ghi nhận chi tiêu trong tháng này.'}
+                {recentTab === 'today'
+                  ? 'Chưa ghi nhận chi tiêu trong hôm nay.'
+                  : recentTab === 'week'
+                    ? 'Chưa ghi nhận chi tiêu trong tuần này.'
+                    : 'Chưa ghi nhận chi tiêu trong tháng này.'}
               </Text>
             </View>
           ) : (
@@ -625,7 +877,7 @@ export function FinanceScreen() {
                           color={txn.color}
                         />
                       </View>
-                      
+
                       <View style={styles.statementMid}>
                         <Text style={styles.statementName} numberOfLines={1}>
                           {txn.name}
@@ -635,8 +887,12 @@ export function FinanceScreen() {
                         </Text>
                       </View>
 
-                      <Text testID="money-display" style={[styles.statementAmount, { color: amountColor }]}>
-                        {amountPrefix}{formatVND(txn.amount)}
+                      <Text
+                        testID='money-display'
+                        style={[styles.statementAmount, { color: amountColor }]}
+                      >
+                        {amountPrefix}
+                        {formatVND(txn.amount)}
                       </Text>
                     </PressableScale>
                   </View>
@@ -662,7 +918,7 @@ export function FinanceScreen() {
           end={{ x: 0.83, y: 1 }}
           style={styles.fabGradient}
         >
-          <Icon name="plus" size={28} color={colors.white} />
+          <Icon name='plus' size={28} color={colors.white} />
         </LinearGradient>
       </PressableScale>
 
@@ -679,10 +935,7 @@ export function FinanceScreen() {
         }}
         initialFilter={historyFilter}
       />
-      <DebtLedgerSheet
-        visible={debtOpen}
-        onClose={() => setDebtOpen(false)}
-      />
+      <DebtLedgerSheet visible={debtOpen} onClose={() => setDebtOpen(false)} />
       <QuickPettyCashModal
         visible={pettyCashOpen}
         onClose={() => setPettyCashOpen(false)}
@@ -1114,5 +1367,72 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.muted,
     marginTop: 1,
+  },
+
+  // --- Fallback (loading/error state) ---
+  fallbackContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    gap: 12,
+  },
+  fallbackIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  fallbackTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  fallbackSub: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  fallbackStoreList: {
+    width: '100%',
+    gap: 8,
+    marginBottom: 12,
+  },
+  fallbackStoreItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: radius.md,
+    padding: 12,
+    gap: 4,
+  },
+  fallbackStoreName: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.text,
+  },
+  fallbackStoreError: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.red,
+  },
+  fallbackRetryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.gold,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: radius.pill,
+  },
+  fallbackRetryText: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.black,
   },
 });
